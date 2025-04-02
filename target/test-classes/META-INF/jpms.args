@@ -1,0 +1,4 @@
+--patch-module
+booksrecommender.booksrecommender=_
+--add-reads
+booksrecommender.booksrecommender=ALL-UNNAMED
