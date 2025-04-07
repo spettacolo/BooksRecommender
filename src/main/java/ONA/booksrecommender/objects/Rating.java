@@ -1,4 +1,4 @@
-package ONA.booksrecommender;
+package ONA.booksrecommender.objects;
 
 import java.util.Arrays;
 /**

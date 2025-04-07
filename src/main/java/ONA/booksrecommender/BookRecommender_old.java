@@ -1,5 +1,7 @@
 package ONA.booksrecommender;
 
+import ONA.booksrecommender.objects.*;
+import ONA.booksrecommender.managers.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;

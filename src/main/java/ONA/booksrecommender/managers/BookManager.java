@@ -1,5 +1,7 @@
-package ONA.booksrecommender;
+package ONA.booksrecommender.managers;
 
+import ONA.booksrecommender.objects.*;
+import ONA.booksrecommender.utils.*;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;

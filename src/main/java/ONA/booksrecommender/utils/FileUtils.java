@@ -1,4 +1,4 @@
-package ONA.booksrecommender;
+package ONA.booksrecommender.utils;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
