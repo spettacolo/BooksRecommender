@@ -6,6 +6,15 @@
     <groupId>com.example</groupId>
     <artifactId>booksrecommender</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    
+    <!-- Nota: spostare alcuni elementi nel pom del modulo ad esso associato
+         serve analizzare bene la situazione ( https://www.baeldung.com/maven-multi-module ) -->
+    <!-- Moduli Client - Server -->
+    <modules>
+        <module>client</module>
+        <module>server</module>
+    </modules>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
