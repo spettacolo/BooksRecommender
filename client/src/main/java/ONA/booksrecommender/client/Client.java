@@ -1,35 +1,26 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package ONA.booksrecommender.client;
-
-/**
- *
- * @author falzy
- */
 
 import java.io.*;
 import java.net.*;
 
 public class Client {
     public static void main(String[] args) {
+        String host = "localhost"; // oppure l'IP del server, tipo "192.168.1.100"
         int porta = 1234;
-        try (ServerSocket serverSocket = new ServerSocket(porta)) {
-            System.out.println("Server in ascolto sulla porta " + porta);
-            Socket socket = serverSocket.accept();
-            System.out.println("Connessione accettata da " + socket.getInetAddress());
+
+        try (Socket socket = new Socket(host, porta)) {
+            System.out.println("Connesso al server su " + host + ":" + porta);
 
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
-            String messaggio;
-            while ((messaggio = in.readLine()) != null) {
-                System.out.println("Ricevuto: " + messaggio);
-                out.println("Echo: " + messaggio);
-            }
+            // Scrive un messaggio al server
+            out.println("Ciao dal client!");
 
-            socket.close();
+            // Riceve la risposta
+            String risposta = in.readLine();
+            System.out.println("Risposta del server: " + risposta);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
