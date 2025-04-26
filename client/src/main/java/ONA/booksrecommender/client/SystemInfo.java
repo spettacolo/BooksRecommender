@@ -1,4 +1,4 @@
-package ONA.booksrecommender;
+package ONA.booksrecommender.client;
 
 public class SystemInfo {
 
