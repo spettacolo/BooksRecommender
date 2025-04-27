@@ -5,6 +5,7 @@ import java.net.*;
 
 public class Server implements Runnable {
     private static final int PORT = 1234;
+    private static final String SEPARATOR = ";";
     private volatile boolean running = true; // controllo per chiudere il server
 
     private ServerSocket serverSocket;
@@ -36,8 +37,18 @@ public class Server implements Runnable {
             e.printStackTrace();
         }
     }
+    
+    private void handleRequest(String req) {
+        String[] parts = req.split(SEPARATOR);
+        switch (req) {
+            case "query_command":
+                break;
+            default:
+                System.out.println("Scelta non valida.");
+        }
+    }
 
-    private void handleClient(Socket socket) {
+    private void handleClient(Socket socket) { // TODO: sistemare l'handler gestendo le richieste con handleRequest()
         try (
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true)
