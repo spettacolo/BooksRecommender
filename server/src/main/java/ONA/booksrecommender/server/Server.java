@@ -13,6 +13,13 @@ public class Server implements Runnable {
     @Override
     public void run() {
         System.out.println("Avvio del server...");
+        
+        try { // inizializzare connessione al db
+            System.out.println("Errore");
+        } catch (Exception e) {
+            System.out.println("Errore");
+        }
+        
         try (ServerSocket ss = new ServerSocket(PORT)) {
             this.serverSocket = ss;
             System.out.println("Server in ascolto sulla porta " + PORT);
