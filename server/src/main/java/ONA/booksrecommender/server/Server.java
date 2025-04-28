@@ -3,16 +3,28 @@ package ONA.booksrecommender.server;
 import java.io.*;
 import java.net.*;
 
+import ONA.booksrecommender.utils.Logger;
+
 public class Server implements Runnable {
     private static final int PORT = 1234;
     private static final String SEPARATOR = ";";
     private volatile boolean running = true; // controllo per chiudere il server
 
     private ServerSocket serverSocket;
+    
+    private Logger logger;
+    
+    private boolean initLogger() {
+        this.logger = new Logger();
+        logger.log("Logger avviato.");
+        return true;
+    }
 
     @Override
     public void run() {
         System.out.println("Avvio del server...");
+        
+        initLogger();
         
         try { // inizializzare connessione al db
             System.out.println("Errore");

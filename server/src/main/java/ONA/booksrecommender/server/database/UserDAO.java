@@ -33,4 +33,34 @@ public class UserDAO {
             return -3;
         }
     }
+    
+    public boolean signUpUser(String userId, String name, String surname, String fiscalCode, String password) {
+        String checkQuery = "SELECT * FROM users WHERE username = ?";
+        String insertQuery = "INSERT INTO users(username, nome, cognome, cf, password) VALUES (?, ?, ?, ?, ?)";
+
+        try (PreparedStatement checkStmt = conn.prepareStatement(checkQuery)) {
+
+            checkStmt.setString(1, userId);
+            ResultSet rs = checkStmt.executeQuery();
+
+            if (rs.next()) {
+                return false; // User already exists
+            }
+
+            try (PreparedStatement insertStmt = conn.prepareStatement(insertQuery)) {
+                insertStmt.setString(1, userId);
+                insertStmt.setString(2, name);
+                insertStmt.setString(3, surname);
+                insertStmt.setString(4, fiscalCode);
+                insertStmt.setString(5, password);
+
+                insertStmt.executeUpdate();
+                return true;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
