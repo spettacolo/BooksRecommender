@@ -56,6 +56,7 @@ public class Logger implements Runnable {
                 try {
                     String message = logQueue.take();
                     checkDateAndRotateFileIfNeeded();
+                    System.out.println(message);
                     writeLog(message);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();

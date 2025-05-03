@@ -1,4 +1,4 @@
-package ONA.booksrecommender.server.database;
+package ONA.booksrecommender.server.database.dao;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
