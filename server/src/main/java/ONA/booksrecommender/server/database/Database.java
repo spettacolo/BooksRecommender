@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import ONA.booksrecommender.server.database.dao.*;
+import ONA.booksrecommender.utils.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,9 +27,9 @@ public class Database {
     */ 
     private final Map<Class<? extends DAO>, DAO> daoMap = new HashMap<>();
 
-    public Database() throws SQLException {
-        addDAO(new UserDAO(createConnection()));
-        addDAO(new BookDAO(createConnection()));
+    public Database(Logger logger) throws SQLException {
+        addDAO(new UserDAO(logger));
+        addDAO(new BookDAO(logger));
         // altri DAO
     }
 

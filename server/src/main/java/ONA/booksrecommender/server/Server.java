@@ -29,9 +29,9 @@ public class Server implements Runnable {
     
     private boolean initDatabase() {
         try{
-            this.database = new Database();
-            this.userDAO = new UserDAO(database.getConnection());
-            this.bookDAO = new BookDAO(database.getConnection());
+            this.database = new Database(logger);
+            //this.userDAO = new UserDAO(database.getConnection());
+            //this.bookDAO = new BookDAO(database.getConnection());
             // TODO: Aggiungere gli altri DAO (e.g.: recensioni, consigli, librerie)
             logger.log("Database started successfully");
             return true;
