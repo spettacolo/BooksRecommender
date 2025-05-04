@@ -1,11 +1,15 @@
 package ONA.booksrecommender.server.database.dao;
 
-import java.sql.Connection;
+import ONA.booksrecommender.utils.Logger;
 
-public class BookDAO {
-    private Connection conn;
+public class BookDAO extends BaseDAO {
     
-    public BookDAO (Connection conn){
-        this.conn = conn;
+    public BookDAO (Logger logger){
+        super(logger);
+    }
+    
+    @Override
+    public void close() {
+        super.close();
     }
 }

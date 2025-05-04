@@ -32,6 +32,7 @@ public class Server implements Runnable {
             this.database = new Database();
             this.userDAO = new UserDAO(database.getConnection());
             this.bookDAO = new BookDAO(database.getConnection());
+            // TODO: Aggiungere gli altri DAO (e.g.: recensioni, consigli, librerie)
             logger.log("Database started successfully");
             return true;
         } catch (SQLException e) {
@@ -104,7 +105,7 @@ public class Server implements Runnable {
             }
         } catch (IOException e) {
             // e.printStackTrace();
-            logger.log("Error " + e.getMessage()); // TODO: cambiare in e.printStackTrace(); per ottenere l'errore completo
+            logger.log("Error " + e.getMessage()); // TODO forse: cambiare in e.printStackTrace(); per ottenere l'errore completo
         } finally {                                // per farlo, però, devo prima salvarlo in un PrintWriter
             try {                                  // StringWriter sw = new StringWriter();
                 socket.close();                    // e.printStackTrace(new PrintWriter(sw));
