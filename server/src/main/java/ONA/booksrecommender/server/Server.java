@@ -86,7 +86,27 @@ public class Server implements Runnable {
     private void handleRequest(String req) {
         String[] parts = req.split(SEPARATOR);
         switch (req) {
-            case "query_command":
+            case "get_user":
+                break;
+            case "get_book":
+                break;
+            case "get_user_library":
+                break;
+            case "get_user_libraries":
+                break;
+            case "get_book_reviews":
+                break;
+            case "get_book_advices":
+                break;
+            case "add_user":
+                break;
+            case "add_book":
+                break;
+            case "add_library":
+                break;
+            case "add_book_review":
+                break;
+            case "add_book_advice":
                 break;
             default:
                 logger.log("Invalid choice");

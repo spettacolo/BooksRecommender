@@ -1,4 +1,4 @@
-package ONA.booksrecommender.utils;
+package ONA.booksrecommender.managers;
 
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
