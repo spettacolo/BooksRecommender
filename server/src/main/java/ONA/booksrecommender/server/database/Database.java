@@ -14,7 +14,7 @@ public class Database {
 
     private static final String URL = "jdbc:postgresql://localhost:5432/BooksRecommender";
     private static final String USER = "postgres";
-    private static final String PASSWORD = "Az-3425";
+    private static final String PASSWORD = "Cicci0n3";
     
     /*
     Class<? extends DAO> è la chiave della mappa. Ogni DAO ha una classe specifica
