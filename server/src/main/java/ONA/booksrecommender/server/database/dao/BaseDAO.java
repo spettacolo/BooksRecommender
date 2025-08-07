@@ -21,9 +21,9 @@ public abstract class BaseDAO implements DAO {
 
     public Connection createConnection() throws SQLException {
         return DriverManager.getConnection(
-            "jdbc:postgresql://localhost:5432/BooksRecommender",
-            "postgres",
-            "Az-3425"
+            "jdbc:postgresql://postgres.bhklgkxycybbqhhdwphq:Cicci0n3@aws-0-eu-central-1.pooler.supabase.com:5432/postgres"
+            //"postgres",
+            //"Cicci0n3"
         );
     }
 

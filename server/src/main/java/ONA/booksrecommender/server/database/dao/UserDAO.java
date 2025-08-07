@@ -1,5 +1,7 @@
 package ONA.booksrecommender.server.database.dao;
 
+import ONA.booksrecommender.objects.User;
+import ONA.booksrecommender.server.errors.UserNotFoundException;
 import ONA.booksrecommender.utils.Logger;
 
 import java.sql.PreparedStatement;
@@ -11,12 +13,37 @@ public class UserDAO extends BaseDAO {
     public UserDAO(Logger logger) {
         super(logger); // crea la connessione nel costruttore di BaseDAO
     }
-    
+
+    public User getUser(String userId, boolean login) throws UserNotFoundException {
+        String query;
+
+        if (login)
+            query = "SELECT username, name, surname, tax_code, email, password FROM users WHERE username = ?";
+        else
+            query = "SELECT * FROM users WHERE username = ?";
+
+        try {
+            PreparedStatement stmt = connection.prepareStatement(query);
+            stmt.setString(1, userId);
+
+            ResultSet rs = stmt.executeQuery();
+
+            if (!rs.next()) return null;
+
+            return new User(rs.getString("username"), rs.getString("name"), rs.getString("surname"), rs.getString("tax_code"), rs.getString("email"), login ? rs.getString("password") : null);
+        } catch (SQLException e) {
+            // e.printStackTrace();
+            logger.log("Error during login: " + e.getMessage());
+            //return null;
+            throw new UserNotFoundException();
+        }
+    }
+
     public int login(String userId, String password) {
         String query = "SELECT * FROM users WHERE username = ?";
         
         try {
-            PreparedStatement stmt = connection.prepareStatement(query);
+            /*PreparedStatement stmt = connection.prepareStatement(query);
             stmt.setString(1, userId);
             
             ResultSet rs = stmt.executeQuery();
@@ -25,16 +52,21 @@ public class UserDAO extends BaseDAO {
             
             String storedPassword = rs.getString("password");
             
-            if (!storedPassword.equals(password)) return -2;
+            if (!storedPassword.equals(password)) return -2;*/
+
+            User user = getUser(userId, true);
+
+            if (!user.getPassword().equals(password)) return -2;
             
             return 0;
-        } catch (SQLException e) {
+        } catch (UserNotFoundException e) {
             // e.printStackTrace();
             logger.log("Error during login: " + e.getMessage());
             return -3;
         }
     }
-    
+
+    // TODO: fixare con getUser
     public boolean signUpUser(String userId, String name, String surname, String fiscalCode, String password) {
         String checkQuery = "SELECT * FROM users WHERE username = ?";
         String insertQuery = "INSERT INTO users(username, nome, cognome, cf, password) VALUES (?, ?, ?, ?, ?)";

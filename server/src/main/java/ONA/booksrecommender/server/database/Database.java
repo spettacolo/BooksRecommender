@@ -10,9 +10,9 @@ import ONA.booksrecommender.utils.Logger;
 import java.util.HashMap;
 import java.util.Map;
 
-// TODO: implementare una connection pool e quindi modificare la gestion e database e DAO
+// TODO: implementare una connection pool e quindi modificare la gestione database e DAO
 //  (al momento non è ottimizzato) poiché vengono create più connesssioni ma non è nemmeno
-//  possibile usarne solo una poiché non è thread-safe. Vedere HikariDataSource() di HikariCP
+//  possibile usarne solo una poiché non è thread-safe. Vedere Hika                                                                                                           riDataSource() di HikariCP
 public class Database {
 
     private static final String URL = "jdbc:postgresql://localhost:5432/BooksRecommender";
