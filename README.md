@@ -7,6 +7,8 @@
 ---
 
 ### Alex
+#### :heavy_check_mark: Database
+#### :heavy_check_mark: BaseDAO
 #### :heavy_check_mark: UserDAO
 #### :x: BookDAO
 #### :x: LibraryDAO**
