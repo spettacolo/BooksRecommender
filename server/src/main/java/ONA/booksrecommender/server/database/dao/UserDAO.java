@@ -14,7 +14,7 @@ public class UserDAO extends BaseDAO {
         super(logger); // crea la connessione nel costruttore di BaseDAO
     }
 
-    public User getUser(String userId, boolean login) throws UserNotFoundException {
+    public User getUser(String userId, boolean login) {
         String query;
 
         if (login)
@@ -28,38 +28,28 @@ public class UserDAO extends BaseDAO {
 
             ResultSet rs = stmt.executeQuery();
 
-            if (!rs.next()) return null;
+            if (!rs.next()) {
+                return null;
+            }
 
             return new User(rs.getString("username"), rs.getString("name"), rs.getString("surname"), rs.getString("tax_code"), rs.getString("email"), login ? rs.getString("password") : null);
         } catch (SQLException e) {
             // e.printStackTrace();
             logger.log("Error during login: " + e.getMessage());
-            //return null;
-            throw new UserNotFoundException();
+            return null;
         }
     }
 
     public int login(String userId, String password) {
-        String query = "SELECT * FROM users WHERE username = ?";
-        
         try {
-            /*PreparedStatement stmt = connection.prepareStatement(query);
-            stmt.setString(1, userId);
-            
-            ResultSet rs = stmt.executeQuery();
-            
-            if (!rs.next()) return -1;
-            
-            String storedPassword = rs.getString("password");
-            
-            if (!storedPassword.equals(password)) return -2;*/
-
             User user = getUser(userId, true);
 
+            if (user == null)
+                return -3;
             if (!user.getPassword().equals(password)) return -2;
             
             return 0;
-        } catch (UserNotFoundException e) {
+        } catch (Exception e) {
             // e.printStackTrace();
             logger.log("Error during login: " + e.getMessage());
             return -3;
@@ -68,15 +58,12 @@ public class UserDAO extends BaseDAO {
 
     // TODO: fixare con getUser
     public boolean signUpUser(String userId, String name, String surname, String fiscalCode, String password) {
-        String checkQuery = "SELECT * FROM users WHERE username = ?";
         String insertQuery = "INSERT INTO users(username, nome, cognome, cf, password) VALUES (?, ?, ?, ?, ?)";
 
-        try (PreparedStatement checkStmt = connection.prepareStatement(checkQuery)) {
+        try {
+            User user = getUser(userId, false);
 
-            checkStmt.setString(1, userId);
-            ResultSet rs = checkStmt.executeQuery();
-
-            if (rs.next()) {
+            if (user != null) {
                 return false; // User already exists
             }
 
