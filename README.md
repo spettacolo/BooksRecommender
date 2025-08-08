@@ -1,6 +1,11 @@
 # BooksRecommender
 
-## DA FARE
+## TODO
+
+---
+
+---
+
 ### Alex
 #### :heavy_check_mark: UserDAO
 #### :x: BookDAO
@@ -8,6 +13,39 @@
 #### :x: RatingDAO
 #### :x: RecommendationDAO
 
+---
 
-## NOTA BENE
+#### :x: Server Facade Pattern
+#### :x: Server
+
+---
+
+---
+
+### Nicholas
+#### :heavy_check_mark: Placeholder
+#### :x: Placeholder
+
+---
+
+#### :x: Placeholder
+
+---
+
+---
+
+### Omair
+#### :heavy_check_mark: Placeholder
+#### :x: Placeholder
+
+---
+
+#### :x: Placeholder
+
+---
+
+---
+
+
+## NB
 ### - come aggiungere i metodi iniziali del database al pom.xml > https://chatgpt.com/c/681869f2-7994-8002-a3a1-3c282ad62c41
