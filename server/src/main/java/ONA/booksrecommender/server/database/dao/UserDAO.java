@@ -4,14 +4,15 @@ import ONA.booksrecommender.objects.User;
 import ONA.booksrecommender.server.errors.UserNotFoundException;
 import ONA.booksrecommender.utils.Logger;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class UserDAO extends BaseDAO {
-    
-    public UserDAO(Logger logger) {
-        super(logger); // crea la connessione nel costruttore di BaseDAO
+public class UserDAO extends BaseDAO implements AutoCloseable {
+
+    public UserDAO(Logger logger, Connection connection) {
+        super(logger, connection); // crea la connessione nel costruttore di BaseDAO
     }
 
     public User getUser(String userId, boolean login) {
@@ -47,7 +48,7 @@ public class UserDAO extends BaseDAO {
             if (user == null)
                 return -3;
             if (!user.getPassword().equals(password)) return -2;
-            
+
             return 0;
         } catch (Exception e) {
             // e.printStackTrace();
@@ -57,8 +58,8 @@ public class UserDAO extends BaseDAO {
     }
 
     // TODO: fixare con getUser
-    public boolean signUpUser(String userId, String name, String surname, String fiscalCode, String password) {
-        String insertQuery = "INSERT INTO users(username, nome, cognome, cf, password) VALUES (?, ?, ?, ?, ?)";
+    public boolean signUpUser(String userId, String name, String surname, String fiscalCode, String email, String password) {
+        String insertQuery = "INSERT INTO users(username, name, surname, tax_code, email, password) VALUES (?, ?, ?, ?, ?, ?)";
 
         try {
             User user = getUser(userId, false);
@@ -72,7 +73,8 @@ public class UserDAO extends BaseDAO {
                 insertStmt.setString(2, name);
                 insertStmt.setString(3, surname);
                 insertStmt.setString(4, fiscalCode);
-                insertStmt.setString(5, password);
+                insertStmt.setString(5, email);
+                insertStmt.setString(6, password);
 
                 insertStmt.executeUpdate();
                 return true;
@@ -84,7 +86,7 @@ public class UserDAO extends BaseDAO {
             return false;
         }
     }
-    
+
     @Override
     public void close() {
         super.close();

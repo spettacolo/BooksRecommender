@@ -99,4 +99,8 @@ public class User {
         String[] parts = csv.split(",");
         return new User(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5]);
     }
+
+    public String getUsername() {
+        return userId;
+    }
 }
