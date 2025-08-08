@@ -2,11 +2,11 @@
 
 ## DA FARE
 ### Alex
-- :heavy_check_mark: **UserDAO**
-- :x: **BookDAO**
-- [ ] **LibraryDAO**
-- [ ] **RatingDAO**
-- [ ] **RecommendationDAO**
+:heavy_check_mark: **UserDAO**
+:x: **BookDAO**
+:x: **LibraryDAO**
+:x: **RatingDAO**
+:x: **RecommendationDAO**
 
 
 ## NOTA BENE
