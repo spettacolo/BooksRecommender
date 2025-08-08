@@ -77,30 +77,4 @@ public class User {
      * @return la password dell'utente.
      */
     public String getPassword() { return password; }
-
-     /**
-     * Converte l'oggetto `User` in una stringa CSV.
-     *
-     * @return la rappresentazione CSV dell'utente.
-     */
-    public String toCsvString() {
-        return String.join(",", Arrays.asList(
-            name, surname, fiscalCode, email, userId, password
-        ));
-    }
-
-    /**
-     * Crea un oggetto `User` a partire da una stringa CSV.
-     *
-     * @param csv la stringa CSV contenente i dati dell'utente.
-     * @return un nuovo oggetto `User` con i dati estratti dalla stringa CSV.
-     */
-    public static User fromCsvString(String csv) {
-        String[] parts = csv.split(",");
-        return new User(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5]);
-    }
-
-    public String getUsername() {
-        return userId;
-    }
 }
