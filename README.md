@@ -11,12 +11,9 @@
 #### :heavy_check_mark: BaseDAO
 #### :heavy_check_mark: UserDAO
 #### :x: BookDAO
-#### :x: LibraryDAO**
+#### :x: LibraryDAO
 #### :x: RatingDAO
 #### :x: RecommendationDAO
-
----
-
 #### :x: Server Facade Pattern
 #### :x: Server
 
@@ -27,9 +24,6 @@
 ### Nicholas
 #### :heavy_check_mark: Placeholder
 #### :x: Placeholder
-
----
-
 #### :x: Placeholder
 
 ---
@@ -39,9 +33,6 @@
 ### Omair
 #### :heavy_check_mark: Placeholder
 #### :x: Placeholder
-
----
-
 #### :x: Placeholder
 
 ---
