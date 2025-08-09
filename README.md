@@ -3,16 +3,15 @@
 ## TODO
 
 ### Alex
-| **Entities**       |                      |                      |
-| Books              | Authors              | Users                |
-|:-------------------|:---------------------|:---------------------|
-| :x:                | :heavy_check_mark:   | :heavy_check_mark:   |
-| **Entities**       |                      |                      |
-| Ratings            | Libraries            | Recommendations      |
-| :heavy_check_mark: | :heavy_check_mark:   | :x:                  |
-| **Relationships**  |                      |                      |
-| Books-Authors      | Books-Libraries      | others (da decidere) |
-| :heavy_check_mark: | :heavy_check_mark:   | :x:                  |
+#### Database Entities
+|       Books        |      Authors       |        Users         |      Ratings       |     Libraries      |   Recommendations    |
+|:------------------:|:------------------:|:--------------------:|:------------------:|:------------------:|:--------------------:|
+|        :x:         | :heavy_check_mark: |  :heavy_check_mark:  | :heavy_check_mark: | :heavy_check_mark: |         :x:          |
+
+#### Database Relationships
+|   Books-Authors    |  Books-Libraries   | others (da decidere) |
+|:------------------:|:------------------:|:--------------------:|
+| :heavy_check_mark: | :heavy_check_mark: |         :x:          |
 
 ---
 #### :x: Database (Normalizzare tabella Books)
