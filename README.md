@@ -7,7 +7,19 @@
 ---
 
 ### Alex
-#### :heavy_check_mark: Database
+|       Books        |      Authors       |        Users         |
+|:------------------:|:------------------:|:--------------------:|
+|        :x:         | :heavy_check_mark: |  :heavy_check_mark:  |
+|                    |                    |                      |
+|      Ratings       |     Libraries      |   Recommendations    |
+| :heavy_check_mark: | :heavy_check_mark: |         :x:          |
+|                    |                    |                      |
+|   Books-Authors    |  Books-Libraries   | others (da decidere) |
+| :heavy_check_mark: | :heavy_check_mark: |         :x:          |
+
+---
+#### :x: Database (Normalizzare tabella Books)
+#### :heavy_check_mark: Database Class
 #### :heavy_check_mark: BaseDAO
 #### :heavy_check_mark: UserDAO
 #### :x: BookDAO
