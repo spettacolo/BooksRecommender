@@ -29,9 +29,9 @@ public class UserDAO extends BaseDAO implements AutoCloseable {
 
             ResultSet rs = stmt.executeQuery();
 
-            if (!rs.next()) {
+            /*if (!rs.next()) {
                 return null;
-            }
+            }*/
 
             return new User(rs.getString("username"), rs.getString("name"), rs.getString("surname"), rs.getString("tax_code"), rs.getString("email"), login ? rs.getString("password") : null);
         } catch (SQLException e) {
@@ -52,7 +52,7 @@ public class UserDAO extends BaseDAO implements AutoCloseable {
             return 0;
         } catch (Exception e) {
             // e.printStackTrace();
-            logger.log("Error during login: " + e.getMessage());
+            logger.log("Error during user retrieval: " + e.getMessage());
             return -3;
         }
     }

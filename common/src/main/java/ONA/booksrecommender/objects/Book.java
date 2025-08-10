@@ -13,6 +13,7 @@ public class Book {
     private int id;
     private String title; // 0
     private List<String> authors; // 1
+    //private String description;
     private int publicationYear; // 7
     private String publisher; // 4
     private String category; // 3

@@ -18,12 +18,13 @@
 #### :heavy_check_mark: Database Class
 #### :heavy_check_mark: BaseDAO
 #### :heavy_check_mark: UserDAO
-#### :x: BookDAO
+#### :heavy_check_mark: BookDAO
 #### :x: LibraryDAO
 #### :x: RatingDAO
 #### :x: RecommendationDAO
 #### :x: Server Facade Pattern
 #### :x: Server
+#### :x: Revisione + gestione eccezioni e valori nulli
 
 ---
 
