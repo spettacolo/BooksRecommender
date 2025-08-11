@@ -11,19 +11,20 @@ import java.util.List;
 public class Library {
     private String name;
     private String userId;
-    private List<String> bookIds; // TODO: cambiare da lista di String a lista di Book
+    //private List<String> bookIds; // TODO: cambiare da lista di String a lista di Book
+    private List<Book> books;
 
     /**
      * Costruisce una nuova biblioteca con il nome, l'ID dell'utente e un elenco di ID di libri.
      *
      * @param name il nome della biblioteca.
      * @param userId l'ID dell'utente associato alla biblioteca.
-     * @param bookIds la lista degli ID dei libri contenuti nella biblioteca.
+     * @param books la lista dei libri contenuti nella biblioteca.
      */
-    public Library(String name, String userId, List<String> bookIds) {
+    public Library(String name, String userId, List<Book> books) {
         this.name = name;
         this.userId = userId;
-        this.bookIds = bookIds;
+        this.books = books;
     }
 
     // Getters
@@ -46,16 +47,27 @@ public class Library {
      *
      * @return una lista degli ID dei libri.
      */
-    public List<String> getBookIds() { return new ArrayList<>(bookIds); }
+    public List<Integer> getBookIds() {
+        List<Integer> bookIds = new ArrayList<>();
+        for (Book book : books) {
+            bookIds.add(book.getId());
+        }
+        return bookIds;
+    }
 
     /**
      * Aggiunge un ID di libro alla biblioteca, se non è già presente.
      *
-     * @param bookId l'ID del libro da aggiungere alla biblioteca.
+     * @param book il libro da aggiungere alla biblioteca.
      */
-    public void addBook(String bookId) {
+    /*public void addBook(String bookId) {
         if (!bookIds.contains(bookId)) {
             bookIds.add(bookId);
+        }
+    }*/
+    public void addBook(Book book) {
+        if (!books.contains(book)) {
+            books.add(book);
         }
     }
 }

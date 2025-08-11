@@ -22,6 +22,7 @@
 #### :x: LibraryDAO
 #### :x: RatingDAO
 #### :x: RecommendationDAO
+#### :x: Revisione di TUTTI gli oggetti del Lab A per poterli adattare alla nuova versione
 #### :x: Interazione oggetti con i DAO (il client potrà comunicare con il DB solo mediante gli oggetti)
 #### :x: Server Facade Pattern
 #### :x: Server
