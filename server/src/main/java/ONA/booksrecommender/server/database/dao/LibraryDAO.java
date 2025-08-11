@@ -20,12 +20,11 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
         this.bookDAO = bookDAO; // TODO: capire se è stato posizionato bene oppure no, al momento lo sfrutto per costruire il resto della classe
     }
 
-    public Library getLibrary(String libraryName, String username) {
-        String query = "SELECT * FROM library_books WHERE library_name = ? AND username = ?";
+    public Library getLibrary(int id) {
+        String query = "SELECT * FROM library_books WHERE library_id = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, libraryName);
-            stmt.setString(2, username);
+            stmt.setInt(1, id);
 
             ResultSet rs = stmt.executeQuery();
 
@@ -36,7 +35,17 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
                 books.add(book);
             }
 
-            return new Library(rs.getString("library_name"), rs.getString("username"), books);
+            String libraryQuery = "SELECT * FROM libraries WHERE library_id = ?";
+
+            Library library;
+
+            try (PreparedStatement libStmt = connection.prepareStatement(query)) {
+                ResultSet libRs = libStmt.executeQuery();
+
+                library = new Library(libRs.getInt("library_id"), libRs.getString("library_name"), libRs.getString("username"), books);
+            }
+
+            return library;
         } catch (SQLException e) {
             logger.log("Error during book retrieval: " + e.getMessage());
             return null;
@@ -49,6 +58,7 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
     }
 
     // Probabilmente ridondante ma utile nel caso si ha solo l'username, si risparmia una richiesta inutile, decidere se tenerle entrambe o meno
+    // DECISIONE: mantenere solo il metodo con parametro username, è inutile prendere come parametro tutto l'User
     public List<Library> getLibraries(String username) {
         String query = "SELECT * FROM libraries WHERE username = ?";
 
@@ -60,7 +70,7 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
             List<Library> libraries = new ArrayList<>();
 
             while (rs.next()) {
-                Library library = getLibrary(rs.getString("library_name"), rs.getString("username"));
+                Library library = getLibrary(rs.getInt("library_id")); //, rs.getString("library_name"), rs.getString("username"));
                 libraries.add(library);
             }
 
@@ -82,7 +92,7 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
             List<Library> libraries = new ArrayList<>();
 
             while (rs.next()) {
-                Library library = getLibrary(rs.getString("library_name"), rs.getString("username"));
+                Library library = getLibrary(rs.getInt("library_id")); // rs.getString("library_name"), rs.getString("username"));
                 libraries.add(library);
             }
 
@@ -93,12 +103,39 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
         }
     }
 
-    public boolean addLibrary(Library library) {
-        return true;
+    public boolean addLibrary(Library library, String username) {
+        String query = "INSERT INTO libraries (library_name, username) VALUES (?, ?)";
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, library.getName());
+            stmt.setString(2, username);
+
+            int rows = stmt.executeUpdate();
+
+            return rows >= 1;
+        } catch (SQLException e) {
+            logger.log("Error during book retrieval: " + e.getMessage());
+            return false;
+        }
     }
 
-    public boolean updateLibrary(Library library) {
-        return true;
+    // TODO: cambiare tabelle DB: aggiungere PKEY id a libraries e usarla come FKEY su library_books
+    //  così da poter rimuovere username e library_name poiché sono ridondanti
+    public boolean updateLibrary(Library library, Library updatedLibrary) {
+        String query = "UPDATE libraries SET library_name = ?, username = ? WHERE library_id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, updatedLibrary.getName());
+            stmt.setString(2, updatedLibrary.getUserId());
+            stmt.setInt(3, library.getId());
+
+            int rows = stmt.executeUpdate();
+
+            return rows >= 1;
+        } catch (SQLException e) {
+            logger.log("Error during book retrieval: " + e.getMessage());
+            return false;
+        }
     }
 
     public boolean removeLibrary(Library library) {
