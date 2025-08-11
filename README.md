@@ -4,9 +4,9 @@
 
 ### Alex
 #### Database Entities
-|       Books        |      Authors       |        Users         |      Ratings       |     Libraries      |   Recommendations    |
-|:------------------:|:------------------:|:--------------------:|:------------------:|:------------------:|:--------------------:|
-|        :x:         | :heavy_check_mark: |  :heavy_check_mark:  | :heavy_check_mark: | :heavy_check_mark: |         :x:          |
+| Books |      Authors       |       Users        |      Ratings       |     Libraries      |  Recommendations   |
+|:-----:|:------------------:|:------------------:|:------------------:|:------------------:|:------------------:|
+|  :x:  | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 
 #### Database Relationships
 |   Books-Authors    |  Books-Libraries   | others (da decidere) |
@@ -22,6 +22,7 @@
 #### :x: LibraryDAO
 #### :x: RatingDAO
 #### :x: RecommendationDAO
+#### :x: Interazione oggetti con i DAO (il client potrà comunicare con il DB solo mediante gli oggetti)
 #### :x: Server Facade Pattern
 #### :x: Server
 #### :x: Revisione + gestione eccezioni e valori nulli

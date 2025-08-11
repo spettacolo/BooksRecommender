@@ -10,8 +10,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-// TODO: capire se conviene fare una classe builder per la ricerca
-public class BookDAO extends BaseDAO {
+public class BookDAO extends BaseDAO implements AutoCloseable {
     
     public BookDAO (Logger logger, Connection connection){
         super(logger, connection);
