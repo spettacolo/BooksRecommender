@@ -19,7 +19,7 @@
 #### :heavy_check_mark: BaseDAO
 #### :heavy_check_mark: UserDAO
 #### :heavy_check_mark: BookDAO
-#### :x: LibraryDAO
+#### :heavy_check_mark: LibraryDAO
 #### :x: RatingDAO
 #### :x: RecommendationDAO
 #### :x: Revisione di TUTTI gli oggetti del Lab A per poterli adattare alla nuova versione

@@ -2,7 +2,7 @@ package ONA.booksrecommender.server.database.dao;
 
 import ONA.booksrecommender.objects.Book;
 import ONA.booksrecommender.objects.Library;
-import ONA.booksrecommender.objects.User;
+//import ONA.booksrecommender.objects.User;
 import ONA.booksrecommender.utils.Logger;
 
 import java.sql.Connection;
@@ -81,7 +81,7 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
         }
     }
 
-    public List<Library> getLibraries(User user) {
+    /*public List<Library> getLibraries(User user) {
         String query = "SELECT * FROM libraries WHERE username = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
@@ -101,7 +101,7 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
             logger.log("Error during book retrieval: " + e.getMessage());
             return null;
         }
-    }
+    }*/
 
     public boolean addLibrary(Library library, String username) {
         String query = "INSERT INTO libraries (library_name, username) VALUES (?, ?)";
@@ -119,8 +119,6 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
         }
     }
 
-    // TODO: cambiare tabelle DB: aggiungere PKEY id a libraries e usarla come FKEY su library_books
-    //  così da poter rimuovere username e library_name poiché sono ridondanti
     public boolean updateLibrary(Library library, Library updatedLibrary) {
         String query = "UPDATE libraries SET library_name = ?, username = ? WHERE library_id = ?";
 
@@ -139,6 +137,17 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
     }
 
     public boolean removeLibrary(Library library) {
-        return true;
+        String query = "DELETE FROM libraries WHERE library_id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, library.getId());
+
+            int rows = stmt.executeUpdate();
+
+            return rows >= 1;
+        } catch (SQLException e) {
+            logger.log("Error during book retrieval: " + e.getMessage());
+            return false;
+        }
     }
 }
