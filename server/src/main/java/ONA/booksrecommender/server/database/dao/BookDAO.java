@@ -10,44 +10,54 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
+
 public class BookDAO extends BaseDAO implements AutoCloseable {
+    private HttpClient client;
     
     public BookDAO (Logger logger, Connection connection){
         super(logger, connection);
+        this.client = HttpClient.newHttpClient();
     }
 
-    public Book getBook(int id) throws SQLException {
+    public Book getBook(int id) {
         String query = "SELECT * FROM books WHERE book_id = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, id);
-
-            ResultSet rs = stmt.executeQuery();
-
-            /*if (!rs.next()) {
-                return null;
-            }*/
-
-            List<String> authors = getBookAuthors(rs.getInt("book_id"));
-            /*List<String> authors = new ArrayList<>();
-            String authorsQuery = "SELECT a.author_name " +
-                    "FROM authors a " +
-                    "JOIN book_authors ba ON a.author_id = ba.author_id " +
-                    "WHERE ba.book_id = ?";
-
-            try (PreparedStatement authorsStmt = connection.prepareStatement(authorsQuery)) {
-                authorsStmt.setInt(1, rs.getInt("book_id"));
-
-                ResultSet authorsRs = authorsStmt.executeQuery();
-
-                while (authorsRs.next()) {
-                    authors.add(authorsRs.getString("author_name"));
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    return null; // nessun libro trovato
                 }
-            } catch (SQLException e) {
-                logger.log("Error during book's authors retrieval: " + e.getMessage());
-            }*/
 
-            return new Book(rs.getInt("book_id"), rs.getString("title"), authors, rs.getInt("publish_year"), rs.getString("publishers"), rs.getString("category"));
+                List<String> authors = getBookAuthors(rs.getInt("book_id"));
+
+                String rawQueryData = "intitle:\"" + rs.getString("title") + "\"";
+                String encodedQueryData = URLEncoder.encode(rawQueryData, StandardCharsets.UTF_8);
+                String imageUrl = getBookImageUrl(encodedQueryData);
+                //logger.log(imageUrl);
+
+                return new Book(
+                        rs.getInt("book_id"),
+                        rs.getString("title"),
+                        authors,
+                        rs.getInt("publish_year"),
+                        rs.getString("publishers"),
+                        rs.getString("category"),
+                        imageUrl
+                );
+            }
         } catch (SQLException e) {
             logger.log("Error during book retrieval: " + e.getMessage());
             return null;
@@ -55,24 +65,111 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
     }
 
     public Book getBook(String title) {
-        String query = "SELECT * FROM books WHERE title = ?";
+        //String query = "SELECT * FROM books WHERE title = ?";
+        String query = "SELECT * FROM books WHERE title ILIKE ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, title);
 
             ResultSet rs = stmt.executeQuery();
 
-            /*if (!rs.next()) {
+            if (!rs.next()) {
                 return null;
-            }*/
+            }
 
             List<String> authors = getBookAuthors(rs.getInt("book_id"));
 
-            return new Book(rs.getInt("book_id"), rs.getString("title"), authors, rs.getInt("publish_year"), rs.getString("publishers"), rs.getString("category"));
+            String rawQueryData = "intitle:\"" + rs.getString("title") + "\"";
+            String encodedQueryData = URLEncoder.encode(rawQueryData, StandardCharsets.UTF_8);
+            String imageUrl = getBookImageUrl(encodedQueryData);
+            //logger.log(imageUrl);
+
+            return new Book(rs.getInt("book_id"), rs.getString("title"), authors, rs.getInt("publish_year"), rs.getString("publishers"), rs.getString("category"), imageUrl);
         } catch (SQLException e) {
             logger.log("Error during book retrieval: " + e.getMessage());
             return null;
         }
+    }
+
+    public String getBookImageUrl(int id) {
+        // qui ci sarà un passaggio in più: ottenere il titolo del libro con getBook(int id)
+        // così da poter cercare l'url immagine con getBookImageUrl(String title)
+        Book book = getBook(id);
+        String title = book.getTitle();
+        return getBookImageUrl(title);
+    }
+
+    public String getBookImageUrl(String title) {
+        String req = "https://www.googleapis.com/books/v1/volumes?q=" + title;
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(req))
+                .GET() // Metodo GET
+                .build();
+        try {
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            System.out.println("Status Code: " + response.statusCode());
+            System.out.println("Response Body:\n" + response.body());
+
+            try {
+                // 1. Creare l'ObjectMapper
+                ObjectMapper mapper = new ObjectMapper();
+
+                String jsonResponse = response.body();
+                // 2. Parsare la stringa JSON in un nodo (albero) di oggetti
+                JsonNode rootNode = mapper.readTree(jsonResponse);
+
+                // 3. Navigare fino all'array "items"
+                // Se l'array "items" non esiste, itemsNode sarà 'null'.
+                JsonNode itemsNode = rootNode.get("items");
+
+                String selfLinkValue = null;
+
+                if (itemsNode != null && itemsNode.isArray() && !itemsNode.isEmpty()) {
+                    // 4. Accedere al primo elemento dell'array (indice 0)
+                    JsonNode firstItem = itemsNode.get(0);
+
+                    // 5. Estrarre il valore del campo "selfLink"
+                    // Se il campo non esiste, selfLinkNode sarà 'null'.
+                    JsonNode selfLinkNode = firstItem.get("selfLink");
+
+                    if (selfLinkNode != null) {
+                        // 6. Ottenere il valore come stringa
+                        selfLinkValue = selfLinkNode.asText();
+                        //System.out.println("Valore di selfLink recuperato: " + selfLinkValue);
+
+                        // Seconda request per recuperare l'url dell'immagine
+                        HttpRequest secondRequest = HttpRequest.newBuilder()
+                                .uri(URI.create(selfLinkValue))
+                                .GET()
+                                .build();
+                        HttpResponse<String> secondResponse = client.send(secondRequest, HttpResponse.BodyHandlers.ofString());
+                        String detailedJson = secondResponse.body();
+                        ObjectMapper mapper2 = new ObjectMapper();
+                        JsonNode detailedRootNode = mapper2.readTree(detailedJson);
+                        JsonNode imageNode = detailedRootNode
+                                .path("volumeInfo")
+                                .path("imageLinks")
+                                .get("extraLarge");
+
+                        if (imageNode != null) {
+                            return imageNode.asText();
+                        } else {
+                            System.out.println("URL immagine non trovato nel dettaglio del volume.");
+                        }
+                    } else {
+                        System.out.println("Il campo 'selfLink' non è stato trovato nel primo elemento.");
+                    }
+                } else {
+                    System.out.println("L'array 'items' non esiste o è vuoto.");
+                }
+            } catch (IOException e) {
+                System.err.println("Errore durante il parsing JSON: " + e.getMessage());
+            }
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public List<Book> getAuthorBooks(String author) {
@@ -176,3 +273,18 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
         super.close();
     }
 }
+
+
+/*
+https://www.googleapis.com/books/v1/volumes?q=intitle:!Trato%hecho!:%Spanish%for%Real%Life,%Combined%Edition
+https://www.googleapis.com/books/v1/volumes?q=intitle:harry+intitle:potter+intitle:e+intitle:il+intitle:calice+intitle:di+intitle:fuoco
+https://www.googleapis.com/books/v1/volumes?q=intitle:harry%potter+intitle:e+intitle:il+intitle:calice+intitle:di+intitle:fuoco
+
+https://www.googleapis.com/books/v1/volumes/4dvptppOG8MC
+
+
+https://developers.google.com/books/docs/v1/using?utm_source=chatgpt.com&hl=it
+
+
+https://www.digitalocean.com/community/tutorials/java-socket-programming-server-client
+ */

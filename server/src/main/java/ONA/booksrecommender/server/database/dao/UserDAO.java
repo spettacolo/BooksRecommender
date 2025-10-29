@@ -27,13 +27,28 @@ public class UserDAO extends BaseDAO implements AutoCloseable {
             PreparedStatement stmt = connection.prepareStatement(query);
             stmt.setString(1, userId);
 
-            ResultSet rs = stmt.executeQuery();
+            //ResultSet rs = stmt.executeQuery();
 
             /*if (!rs.next()) {
                 return null;
             }*/
 
-            return new User(rs.getString("username"), rs.getString("name"), rs.getString("surname"), rs.getString("tax_code"), rs.getString("email"), login ? rs.getString("password") : null);
+            //logger.log(rs.getString("username"));
+            //return new User(rs.getString("username"), rs.getString("name"), rs.getString("surname"), rs.getString("tax_code"), rs.getString("email"), login ? rs.getString("password") : null);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    return null; // nessun utente trovato
+                }
+                return new User(
+                        rs.getString("username"),
+                        rs.getString("name"),
+                        rs.getString("surname"),
+                        rs.getString("tax_code"),
+                        rs.getString("email"),
+                        login ? rs.getString("password") : null
+                );
+            }
         } catch (SQLException e) {
             // e.printStackTrace();
             logger.log("Error during login: " + e.getMessage());
@@ -60,7 +75,6 @@ public class UserDAO extends BaseDAO implements AutoCloseable {
     // TODO: fixare con getUser
     public boolean signUpUser(String userId, String name, String surname, String fiscalCode, String email, String password) {
         String insertQuery = "INSERT INTO users(username, name, surname, tax_code, email, password) VALUES (?, ?, ?, ?, ?, ?)";
-
         try {
             User user = getUser(userId, false);
 

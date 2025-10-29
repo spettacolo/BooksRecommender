@@ -22,10 +22,11 @@
 #### :heavy_check_mark: LibraryDAO
 #### :x: RatingDAO
 #### :x: RecommendationDAO
+#### :heavy_check_mark: Gestione immagini copertine libri
 #### :x: Revisione di TUTTI gli oggetti del Lab A per poterli adattare alla nuova versione
-#### :x: Interazione oggetti con i DAO (il client potrà comunicare con il DB solo mediante gli oggetti)
-#### :x: Server Facade Pattern
-#### :x: Server
+#### :x: Interazione oggetti con i DAO (il client potrà comunicare con il DB solo mediante gli oggetti, i quali comunicheranno con il server)
+#### :heavy_check_mark: Server Facade Pattern
+#### :heavy_check_mark: Server
 #### :x: Revisione + gestione eccezioni e valori nulli
 
 ---

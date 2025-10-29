@@ -11,18 +11,31 @@ public class Client {
         try (Socket socket = new Socket(host, porta)) {
             System.out.println("Connesso al server su " + host + ":" + porta);
 
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            String risposta = getString(socket);
+            System.out.println("Server response: " + risposta);
 
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static String getString(Socket socket) throws IOException {
+        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+
+            /*
             // Scrive un messaggio al server
             out.println("Ciao dal client!");
 
             // Riceve la risposta
             String risposta = in.readLine();
             System.out.println("Risposta del server: " + risposta);
+            */
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        //out.println("get_user;luigi");
+        //out.println("get_book;title;1 is one");
+        //out.println("test_get_book_image");
+        out.println("add_library;test;luigi");
+        return in.readLine();
     }
 }

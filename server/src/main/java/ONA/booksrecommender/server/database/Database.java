@@ -22,7 +22,8 @@ public class Database implements AutoCloseable {
     public Database(Logger logger) throws SQLException {
         Connection conn = createConnection();
         addDAO(new UserDAO(logger, conn));
-        // addDAO(new BookDAO(logger, conn));
+        addDAO(new BookDAO(logger, conn));
+        addDAO(new LibraryDAO(logger, conn, getDAO(BookDAO.class)));
     }
 
     private void addDAO(DAO dao) {

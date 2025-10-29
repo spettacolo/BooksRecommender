@@ -18,11 +18,13 @@ public class Server implements Runnable {
     
     private Logger logger;
     private Database database;
+    private ServerFacade serverFacade;
     private UserDAO userDAO;
     private BookDAO bookDAO;
     
     private boolean initLogger() {
         this.logger = new Logger();
+        new Thread(this.logger, "LoggerThread").start();
         logger.log("Logger started successfully.");
         return true;
     }
@@ -34,6 +36,8 @@ public class Server implements Runnable {
             //this.bookDAO = new BookDAO(database.getConnection());
             // TODO: Aggiungere gli altri DAO (e.g.: recensioni, consigli, librerie)
             logger.log("Database started successfully");
+            this.serverFacade = new ServerFacade(logger, database);
+            logger.log("Server facade initialized successfully");
             return true;
         } catch (SQLException e) {
             logger.log("Database connection error: " + e.getMessage());
@@ -43,8 +47,8 @@ public class Server implements Runnable {
 
     @Override
     public void run() {
-        logger.log("Starting server . . .");
         initLogger();
+        logger.log("Starting server . . .");
         
         logger.log("Starting database . . .");        
         if (!initDatabase()) {
@@ -52,11 +56,11 @@ public class Server implements Runnable {
             return;
         }
         
-        try { // inizializzare connessione al db
+        /*try { // inizializzare connessione al db
             System.out.println("Errore");
         } catch (Exception e) {
             logger.log("Error: " + e);
-        }
+        }*/
         
         try (ServerSocket ss = new ServerSocket(PORT)) {
             this.serverSocket = ss;
@@ -82,38 +86,8 @@ public class Server implements Runnable {
             e.printStackTrace();
         }
     }
-    
-    private void handleRequest(String req) {
-        String[] parts = req.split(SEPARATOR);
-        switch (req) {
-            case "get_user":
-                break;
-            case "get_book":
-                break;
-            case "get_user_library":
-                break;
-            case "get_user_libraries":
-                break;
-            case "get_book_reviews":
-                break;
-            case "get_book_advices":
-                break;
-            case "add_user":
-                break;
-            case "add_book":
-                break;
-            case "add_library":
-                break;
-            case "add_book_review":
-                break;
-            case "add_book_advice":
-                break;
-            default:
-                logger.log("Invalid choice");
-        }
-    }
 
-    private void handleClient(Socket socket) { // TODO: sistemare l'handler gestendo le richieste con handleRequest()
+    private void handleClient(Socket socket) {
         try (
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true)
@@ -121,7 +95,16 @@ public class Server implements Runnable {
             String message;
             while ((message = in.readLine()) != null) {
                 logger.log("Received: " + message); // TODO: sistemare il logger gestendo i tipi di log
-                out.println("Echo: " + message);
+                String response;
+
+                try {
+                    response = serverFacade.handleRequest(message);
+                } catch (Exception e) {
+                    logger.log("Error handling request: " + e.getMessage());
+                    response = "ERROR;" + e.getMessage();
+                }
+
+                out.println(response);
             }
         } catch (IOException e) {
             // e.printStackTrace();

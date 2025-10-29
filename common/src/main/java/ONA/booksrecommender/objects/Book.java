@@ -17,6 +17,7 @@ public class Book {
     private int publicationYear; // 7
     private String publisher; // 4
     private String category; // 3
+    private String coverImageUrl;
 
     /**
      * Costruttore della classe Book. Inizializza tutti i campi del libro.
@@ -29,13 +30,14 @@ public class Book {
      * @param category La categoria del libro.
      */
 
-    public Book(int id, String title, List<String> authors, int publicationYear, String publisher, String category) {
+    public Book(int id, String title, List<String> authors, int publicationYear, String publisher, String category, String coverImageUrl) {
         this.id = id;
         this.title = title;
         this.authors = authors;
         this.publicationYear = publicationYear;
         this.publisher = publisher;
         this.category = category;
+        this.coverImageUrl = coverImageUrl;
     }
 
     // Getters
@@ -76,6 +78,12 @@ public class Book {
      * @return La categoria del libro.
      */
     public String getCategory() { return category; }
+    /**
+     * Restituisce la copertina del libro.
+     *
+     * @return La copertina del libro.
+     */
+    public String getCoverImageUrl() { return coverImageUrl; }
 
     /**
      * Restituisce una rappresentazione in formato stringa dell'oggetto, 
@@ -87,6 +95,6 @@ public class Book {
      */
     @Override
     public String toString() {
-        return String.format("%s by %s (%d)", title, String.join(", ", authors), publicationYear);
+        return String.format("%s by %s (%d)", title, String.join(", ", authors), publicationYear, coverImageUrl);
     }
 }

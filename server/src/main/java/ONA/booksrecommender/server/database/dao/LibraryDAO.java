@@ -52,6 +52,21 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
         }
     } // chiama una query sql per ottenere i campi in library_books e chiama il getBook(book_id) per restituire un oggetto completo
 
+    public Library getLibrary(String name) {
+        String query = "SELECT * FROM libraries WHERE library_name = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, name);
+
+            ResultSet rs = stmt.executeQuery();
+
+            return getLibrary(rs.getInt("library_id"));
+        } catch (SQLException e) {
+            logger.log("Error during book retrieval: " + e.getMessage());
+            return null;
+        }
+    }
+
     // Nota: potrebbe restituire una lista di librerie, motivo per cui non sarà getLibrary bensì getLibraries
     public List<Library> getLibraries(Book book) {
         return null;
@@ -103,11 +118,11 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
         }
     }*/
 
-    public boolean addLibrary(Library library, String username) {
+    public boolean addLibrary(String library, String username) {
         String query = "INSERT INTO libraries (library_name, username) VALUES (?, ?)";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, library.getName());
+            stmt.setString(1, library);
             stmt.setString(2, username);
 
             int rows = stmt.executeUpdate();
@@ -149,5 +164,29 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
             logger.log("Error during book retrieval: " + e.getMessage());
             return false;
         }
+    }
+
+    public boolean addBook(Book book, Library library) {
+        String query = "INSERT INTO library_books (book_id, library_id) VALUES (?, ?)";
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, book.getId());
+            stmt.setInt(2, library.getId());
+
+            int rows = stmt.executeUpdate();
+
+            return rows >= 1;
+        } catch (SQLException e) {
+            logger.log("Error during book retrieval: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean updateBookLinkedLibrary(Book book, Library library) {
+        return true;
+    }
+
+    public boolean removeBook(Book book, Library library) {
+        return true;
     }
 }
