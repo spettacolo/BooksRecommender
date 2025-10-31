@@ -9,6 +9,7 @@ import ONA.booksrecommender.utils.Logger;
 import ONA.booksrecommender.objects.User;
 import ONA.booksrecommender.objects.Book;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.xml.crypto.Data;
 import java.sql.SQLException;
@@ -76,15 +77,25 @@ public class ServerFacade {
                             List<String> authors = book.getAuthors();
                             String authorsString = String.join(", ", authors);
                             // TODO: valutare l'utilizzo di book.toString() in base a cosa è più comodo
-                            return String.join(SEPARATOR, Integer.toString(book.getId()), book.getTitle(), authorsString, Integer.toString(book.getPublicationYear()), book.getPublisher(), book.getCoverImageUrl());
+                            return String.join(SEPARATOR, Integer.toString(book.getId()), book.getTitle(), authorsString, Integer.toString(book.getPublicationYear()), book.getPublisher(), book.getCategory(), book.getCoverImageUrl());
                         }
                         case "title": {
-                            Book book = bookDAO.getBook(parts[2]);
-                            logger.log(book.toString());
-                            List<String> authors = book.getAuthors();
-                            String authorsString = String.join(", ", authors);
+                            //Book book = bookDAO.getBook(parts[2]);
+                            List<Book> booksObj = bookDAO.getBooks(parts[2]);
+                            //logger.log(booksObj.toString());
+                            //logger.log(book.toString());
+                            //List<String> authors = book.getAuthors();
+                            //String authorsString = String.join(", ", authors);
                             // TODO: valutare l'utilizzo di book.toString() in base a cosa è più comodo
-                            return String.join(SEPARATOR, Integer.toString(book.getId()), book.getTitle(), authorsString, Integer.toString(book.getPublicationYear()), book.getPublisher(), book.getCoverImageUrl());
+                            StringBuilder books = new StringBuilder();
+                            for (Book book : booksObj) {
+                                List<String> authors = book.getAuthors();
+                                String authorsString = String.join(", ", authors);
+                                books.append(String.join(SEPARATOR, Integer.toString(book.getId()), book.getTitle(), authorsString, Integer.toString(book.getPublicationYear()), book.getPublisher(), book.getCategory(), book.getCoverImageUrl()));
+                                books.append("|");
+                            }
+
+                            return books.toString();
                         }
                         case "author": {
                             List<String> authors = bookDAO.getBookAuthors(Integer.parseInt(parts[2]));

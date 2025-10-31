@@ -64,7 +64,7 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
         }
     }
 
-    public Book getBook(String title) {
+    /*public Book getBook(String title) {
         //String query = "SELECT * FROM books WHERE title = ?";
         String query = "SELECT * FROM books WHERE title ILIKE ?";
 
@@ -85,6 +85,39 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
             //logger.log(imageUrl);
 
             return new Book(rs.getInt("book_id"), rs.getString("title"), authors, rs.getInt("publish_year"), rs.getString("publishers"), rs.getString("category"), imageUrl);
+        } catch (SQLException e) {
+            logger.log("Error during book retrieval: " + e.getMessage());
+            return null;
+        }
+    }*/
+
+    public List<Book> getBooks(String title) {
+        //String query = "SELECT * FROM books WHERE title = ?";
+        String query = "SELECT * FROM books WHERE title ILIKE ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            // 💡 Modifica Aggiunta: avvolgi il titolo con i caratteri wildcard
+            // Se title è "harry potter", searchPattern sarà "%harry potter%"
+            String searchPattern = "%" + title + "%";
+            stmt.setString(1, searchPattern);
+
+            ResultSet rs = stmt.executeQuery();
+
+            /*if (!rs.next()) {
+                return null;
+            }*/
+            List<Book> books = new ArrayList<>();
+            while (rs.next()) {
+                List<String> authors = getBookAuthors(rs.getInt("book_id"));
+
+                String rawQueryData = "intitle:\"" + rs.getString("title") + "\"";
+                String encodedQueryData = URLEncoder.encode(rawQueryData, StandardCharsets.UTF_8);
+                String imageUrl = getBookImageUrl(encodedQueryData);
+                //logger.log(imageUrl);
+                books.add(new Book(rs.getInt("book_id"), rs.getString("title"), authors, rs.getInt("publish_year"), rs.getString("publishers"), rs.getString("category"), imageUrl));
+            }
+
+            return books;
         } catch (SQLException e) {
             logger.log("Error during book retrieval: " + e.getMessage());
             return null;

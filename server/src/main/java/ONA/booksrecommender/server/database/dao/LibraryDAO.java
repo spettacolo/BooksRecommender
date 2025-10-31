@@ -31,7 +31,7 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
             List<Book> books = new ArrayList<>();
 
             while (rs.next()) {
-                Book book = bookDAO.getBook(rs.getString("book_id"));
+                Book book = bookDAO.getBook(Integer.parseInt(rs.getString("book_id")));
                 books.add(book);
             }
 
