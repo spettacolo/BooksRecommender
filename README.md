@@ -40,14 +40,6 @@
 
 ---
 
----
-
-### Omair
-#### :heavy_check_mark: Placeholder
-#### :x: Placeholder
-#### :x: Placeholder
-
----
 
 ---
 
