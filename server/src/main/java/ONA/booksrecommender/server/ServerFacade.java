@@ -126,10 +126,6 @@ public class ServerFacade {
                             .map(String::valueOf)       // 2. Converte l'ID numerico in String
                             .collect(Collectors.joining(",")); // 3. Unisce tutte le Stringhe con la virgola come delimitatore
                     return libraryIds; // restituisco solo gli id (o i nomi, nicho cosa preferisci?) per comodità, poi verranno fatte richieste a parte lato client per le singole librerie
-                case "get_book_reviews":
-                    return "UNKNOWN_COMMAND";
-                case "get_book_advices":
-                    return "UNKNOWN_COMMAND";
                 /*case "add_user":
                     if (parts.length < 7) { return "ERROR;missing_args"; }
                     return userDAO.signUpUser(parts[1], );
@@ -142,6 +138,10 @@ public class ServerFacade {
                     String username = parts[2];
                     boolean ok = libraryDAO.addLibrary(library, username);
                     return ok ? "ADD_LIBRARY" + SEPARATOR + "OK" : "ADD_LIBRARY" + SEPARATOR + "FAIL";
+                case "get_book_reviews":
+                    return "UNKNOWN_COMMAND";
+                case "get_book_advices":
+                    return "UNKNOWN_COMMAND";
                 case "add_book_review":
                     return "UNKNOWN_COMMAND";
                 case "add_book_advice":
