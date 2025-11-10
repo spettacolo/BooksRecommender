@@ -93,7 +93,7 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
 
     public List<Book> getBooks(String title) {
         //String query = "SELECT * FROM books WHERE title = ?";
-        String query = "SELECT * FROM books WHERE title ILIKE ? LIMIT 10";
+        String query = "SELECT * FROM books WHERE title ILIKE ? ORDER BY publish_year ASC LIMIT 3";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             // 💡 Modifica Aggiunta: avvolgi il titolo con i caratteri wildcard
