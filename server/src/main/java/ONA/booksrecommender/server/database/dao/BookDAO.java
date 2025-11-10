@@ -93,8 +93,8 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
 
     public List<Book> getBooks(String title) {
         //String query = "SELECT * FROM books WHERE title = ?";
-        String query = "SELECT * FROM books WHERE title ILIKE ? ORDER BY publish_year ASC LIMIT 3";
-
+        String query = "SELECT * FROM books WHERE title ILIKE ? ORDER BY publish_year ASC LIMIT 20";
+        logger.log("invio la richiesta ora");
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             // 💡 Modifica Aggiunta: avvolgi il titolo con i caratteri wildcard
             // Se title è "harry potter", searchPattern sarà "%harry potter%"
@@ -141,8 +141,9 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-            System.out.println("Status Code: " + response.statusCode());
-            System.out.println("Response Body:\n" + response.body());
+            // Decommentare se servono i log
+            // System.out.println("Status Code: " + response.statusCode());
+            // System.out.println("Response Body:\n" + response.body());
 
             try {
                 // 1. Creare l'ObjectMapper
@@ -180,10 +181,38 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
                         String detailedJson = secondResponse.body();
                         ObjectMapper mapper2 = new ObjectMapper();
                         JsonNode detailedRootNode = mapper2.readTree(detailedJson);
+
+                        JsonNode imageLinksNode = detailedRootNode
+                                .path("volumeInfo")
+                                .path("imageLinks");
+
+                        JsonNode imageNode = imageLinksNode.path("extraLarge");
+
+                        if (imageNode.isMissingNode()) {
+                            imageNode = imageLinksNode.path("large");
+                        }
+
+                        if (imageNode.isMissingNode()) {
+                            imageNode = imageLinksNode.path("medium");
+                        }
+
+                        if (imageNode.isMissingNode()) {
+                            imageNode = imageLinksNode.path("small");
+                        }
+
+                        if (imageNode.isMissingNode()) {
+                            imageNode = imageLinksNode.path("thumbnail");
+                        }
+
+                        if (imageNode.isMissingNode()) {
+                            imageNode = imageLinksNode.path("smallThumbnail");
+                        }
+
+                        /*
                         JsonNode imageNode = detailedRootNode
                                 .path("volumeInfo")
                                 .path("imageLinks")
-                                .get("extraLarge");
+                                .get("extraLarge");*/
 
                         if (imageNode != null) {
                             return imageNode.asText();
