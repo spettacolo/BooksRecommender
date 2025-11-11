@@ -67,7 +67,7 @@ public class ServerFacade {
                     boolean ok = userDAO.signUpUser(username, name, surname, fiscalCode, email, password);
                     return ok ? "SIGNUP" + SEPARATOR + "OK" : "SIGNUP" + SEPARATOR + "FAIL";
                 }
-                case "get_book":
+                case "get_book": {
                     // get_book;search_type;[id]/[title]/[author[;year]]
                     if (parts.length < 3) return ERROR_MESSAGE;
                     switch (parts[1]) {
@@ -102,9 +102,54 @@ public class ServerFacade {
                             // , anziché ; perché è una lista di elementi e non più elementi differenti
                             return String.join(",", authors);
                         }
-                        default:
-                            return "UNKNOW_SEARCH_TYPE";
+                        case "top": { // top inteso come i 20 libri più frequenti nelle librerie
+                            List<Book> booksObj = bookDAO.getBooks(parts[2], Integer.parseInt(parts[3]));
+                            //logger.log(booksObj.toString());
+                            StringBuilder books = new StringBuilder();
+                            for (Book book : booksObj) {
+                                List<String> authors = book.getAuthors();
+                                String authorsString = String.join(", ", authors);
+                                books.append(String.join(SEPARATOR, Integer.toString(book.getId()), book.getTitle(), authorsString, Integer.toString(book.getPublicationYear()), book.getPublisher(), book.getCategory(), book.getCoverImageUrl()));
+                                books.append("|");
+                                // logger.log(book.toString());
+                            }
+                            return books.toString();
+
+                            /*switch (parts[2]) {
+                                case "general": {
+                                    List<Book> booksObj = bookDAO.getBooks(parts[2]);
+                                    //logger.log(booksObj.toString());
+                                    StringBuilder books = new StringBuilder();
+                                    for (Book book : booksObj) {
+                                        List<String> authors = book.getAuthors();
+                                        String authorsString = String.join(", ", authors);
+                                        books.append(String.join(SEPARATOR, Integer.toString(book.getId()), book.getTitle(), authorsString, Integer.toString(book.getPublicationYear()), book.getPublisher(), book.getCategory(), book.getCoverImageUrl()));
+                                        books.append("|");
+                                }
+                                case "thrillers": {
+
+                                }
+                                case "romance": {
+
+                                }
+                                case "fiction": {
+
+                                }
+                                case "gardening": {
+
+                                }
+                                case "regional & ethnic": {
+
+                                }
+                                case "business & economics": {
+
+                                }
+                                default: {
+                                    // senza filtri
+                                }*/
+                        }
                     }
+                }
                 /*case "test_get_book_image":
                     return bookDAO.getBookImageUrl("%22Harry+Potter+e+il+calice+di+fuoco%22");*/
                 case "get_user_library":

@@ -11,7 +11,8 @@ public class Client {
         try (Socket socket = new Socket(host, porta)) {
             System.out.println("Connesso al server su " + host + ":" + porta);
 
-            String risposta = getString(socket, "get_book;title;harry potter");
+            String risposta = getString(socket, "get_book;top;history;10");
+            //String risposta = getString(socket, "get_book;title;harry potter");
             System.out.println("Server response: " + risposta);
 
         } catch (IOException e) {
