@@ -132,10 +132,10 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
     }
     // Proposta che forse mi dimenticherò di proporre: usare le immagini thumbnail (recuperabili nella prima query) nel caso non ci siano quelle HQ
     public List<Book> getBooks(String category, int limit) {
-        //String query = "SELECT * FROM books WHERE title = ?";
         // se limit è 0 significa che si vuole applicare il filtro di default di 20 risultati per request
         if (limit == 0) limit = 20;
-        String query = "SELECT * FROM books WHERE category ILIKE ? ORDER BY publish_year ASC LIMIT ?" ;
+        // String query = "SELECT * FROM books WHERE category ILIKE ? ORDER BY publish_year ASC LIMIT ?" ;
+        String query = "SELECT b.book_id, b.title, b.publish_year, b.publishers, b.category, COUNT(lb.book_id) AS frequency_count FROM books b INNER JOIN library_books lb ON b.book_id = lb.book_id WHERE b.category ILIKE ? GROUP BY b.book_id, b.title, b.publish_year, b.publishers, b.category ORDER BY frequency_count DESC LIMIT ?";
         logger.log("invio la richiesta ora");
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             String searchPattern = "%" + category + "%";

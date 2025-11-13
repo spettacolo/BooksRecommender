@@ -164,7 +164,8 @@ public class ServerFacade {
                             return String.join(SEPARATOR, Integer.toString(library.getId()), library.getName(), library.getUserId(), bookIds);
                         }
                         case "name": {
-                            Library library = libraryDAO.getLibrary(parts[2]);
+                            if (parts.length < 4) return ERROR_MESSAGE;
+                            Library library = libraryDAO.getLibrary(parts[2], parts[3]);
                             List<Integer> bookIdIntegers = library.getBookIds();
                             String bookIds = bookIdIntegers.stream() // 1. Create a Stream<Integer>
                                     .map(String::valueOf)   // 2. Map each Integer to a String
@@ -174,7 +175,7 @@ public class ServerFacade {
                         default:
                             return "UNKNOW_SEARCH_TYPE";
                     }
-                case "get_user_libraries":
+                case "get_user_libraries": {
                     if (parts.length < 2) return ERROR_MESSAGE;
                     List<Library> libraries = libraryDAO.getLibraries(parts[1]);
                     String libraryIds = libraries.stream()
@@ -182,18 +183,37 @@ public class ServerFacade {
                             .map(String::valueOf)       // 2. Converte l'ID numerico in String
                             .collect(Collectors.joining(",")); // 3. Unisce tutte le Stringhe con la virgola come delimitatore
                     return libraryIds; // restituisco solo gli id (o i nomi, nicho cosa preferisci?) per comodità, poi verranno fatte richieste a parte lato client per le singole librerie
+                }
                 /*case "add_user":
                     if (parts.length < 7) { return "ERROR;missing_args"; }
                     return userDAO.signUpUser(parts[1], );
                     return "UNKNOWN_COMMAND";*/
                 /*case "add_book":
                     return "UNKNOWN_COMMAND";*/
-                case "add_library":
+                case "add_library": {
                     if (parts.length < 3) return ERROR_MESSAGE;
                     String library = parts[1];
                     String username = parts[2];
                     boolean ok = libraryDAO.addLibrary(library, username);
                     return ok ? "ADD_LIBRARY" + SEPARATOR + "OK" : "ADD_LIBRARY" + SEPARATOR + "FAIL";
+                }
+                case "add_book_to_library": {
+                    // opzione 1: method, lib_name, username, book_id
+                    Book book;
+                    Library library;
+                    if (parts.length < 4) {
+                        // opzione 2: method, lib_id, book_id
+                        if (parts.length == 3) {
+                            book = bookDAO.getBook(Integer.parseInt(parts[2]));
+                            library = libraryDAO.getLibrary(Integer.parseInt(parts[1]));
+                        } else return ERROR_MESSAGE;
+                    } else {
+                        book = bookDAO.getBook(Integer.parseInt(parts[3]));
+                        library = libraryDAO.getLibrary(parts[1], parts[2]);
+                    }
+                    boolean ok = libraryDAO.addBook(book, library);
+                    return ok ? "ADD_BOOK_TO_LIBRARY" + SEPARATOR + "OK" : "ADD_BOOK_TO_LIBRARY" + SEPARATOR + "FAIL";
+                }
                 case "get_book_reviews":
                     return "UNKNOWN_COMMAND";
                 case "get_book_advices":
