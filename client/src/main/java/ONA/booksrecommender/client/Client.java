@@ -13,7 +13,7 @@ public class Client {
             System.out.println("Connesso al server su " + host + ":" + porta);
 
             // 1. Esegui la funzione di popolamento
-            populateLibraries(socket);
+            // populateLibraries(socket);
 
             String risposta = getString(socket, "get_book;top;business & economics;10");
             //String risposta = getString(socket, "get_book;title;harry potter");

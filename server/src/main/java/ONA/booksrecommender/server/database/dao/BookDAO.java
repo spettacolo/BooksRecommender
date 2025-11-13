@@ -94,7 +94,7 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
     public List<Book> getBooks(String title) {
         //String query = "SELECT * FROM books WHERE title = ?";
         String query = "SELECT * FROM books WHERE title ILIKE ? ORDER BY publish_year ASC LIMIT 20";
-        logger.log("invio la richiesta ora");
+        // logger.log("invio la richiesta ora");
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             // 💡 Modifica Aggiunta: avvolgi il titolo con i caratteri wildcard
             // Se title è "harry potter", searchPattern sarà "%harry potter%"
@@ -136,7 +136,7 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
         if (limit == 0) limit = 20;
         // String query = "SELECT * FROM books WHERE category ILIKE ? ORDER BY publish_year ASC LIMIT ?" ;
         String query = "SELECT b.book_id, b.title, b.publish_year, b.publishers, b.category, COUNT(lb.book_id) AS frequency_count FROM books b INNER JOIN library_books lb ON b.book_id = lb.book_id WHERE b.category ILIKE ? GROUP BY b.book_id, b.title, b.publish_year, b.publishers, b.category ORDER BY frequency_count DESC LIMIT ?";
-        logger.log("invio la richiesta ora");
+        // logger.log("invio la richiesta ora");
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             String searchPattern = "%" + category + "%";
             stmt.setString(1, searchPattern);
