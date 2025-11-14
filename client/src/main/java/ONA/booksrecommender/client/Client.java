@@ -15,9 +15,12 @@ public class Client {
             // 1. Esegui la funzione di popolamento
             // populateLibraries(socket);
 
-            String risposta = getString(socket, "get_book;top;business & economics;10");
-            //String risposta = getString(socket, "get_book;title;harry potter");
+            // String risposta = getString(socket, "get_book;top;business & economics;10");
+            // String risposta = getString(socket, "get_book;title;harry potter");
+            String risposta = getString(socket, "sign_up;cocomero;nicholias;mariio;abcmammt;cocomo@gmail.com;C0c0m3r0");
             System.out.println("Server response: " + risposta);
+            String risposta2 = getString(socket, "login;cocomero;C0c0m3r0");
+            System.out.println("Server response: " + risposta2);
 
         } catch (IOException e) {
             e.printStackTrace();
