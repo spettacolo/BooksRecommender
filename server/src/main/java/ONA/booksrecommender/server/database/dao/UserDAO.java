@@ -3,6 +3,7 @@ package ONA.booksrecommender.server.database.dao;
 import ONA.booksrecommender.objects.User;
 import ONA.booksrecommender.server.errors.UserNotFoundException;
 import ONA.booksrecommender.utils.Logger;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -62,7 +63,13 @@ public class UserDAO extends BaseDAO implements AutoCloseable {
 
             if (user == null)
                 return -3;
-            if (!user.getPassword().equals(password)) return -2;
+
+            BCryptPasswordEncoder passwordManager = new BCryptPasswordEncoder();
+            // Verifica della password
+            boolean isMatch = passwordManager.matches(password, user.getPassword());
+
+            // if (!user.getPassword().equals(password)) return -2;
+            if (!isMatch) return -2;
 
             return 0;
         } catch (Exception e) {
@@ -82,13 +89,20 @@ public class UserDAO extends BaseDAO implements AutoCloseable {
                 return false; // User already exists
             }
 
+            BCryptPasswordEncoder passwordManager = new BCryptPasswordEncoder();
+            // Hash the password
+            // The BCrypt algorithm handles salting internally, making it easy to use.
+            String hashedPassword = passwordManager.encode(password);
+            // Verifica che la password sia stata cryptata correttamente
+            // boolean isMatch = passwordEncoder.matches(password, hashedPassword);
+
             try (PreparedStatement insertStmt = connection.prepareStatement(insertQuery)) {
                 insertStmt.setString(1, userId);
                 insertStmt.setString(2, name);
                 insertStmt.setString(3, surname);
                 insertStmt.setString(4, fiscalCode);
                 insertStmt.setString(5, email);
-                insertStmt.setString(6, password);
+                insertStmt.setString(6, hashedPassword);
 
                 insertStmt.executeUpdate();
                 return true;

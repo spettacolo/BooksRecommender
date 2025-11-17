@@ -4,6 +4,7 @@ module booksrecommender.server {
     requires java.xml.crypto;
     requires java.net.http;
     requires com.fasterxml.jackson.databind;
+    requires spring.security.crypto;
 
     exports ONA.booksrecommender.server;
 }

@@ -1,14 +1,16 @@
 package ONA.booksrecommender.client.view;
 
+import ONA.booksrecommender.client.Client;
+import ONA.booksrecommender.client.controller.RegLog;
 import ONA.booksrecommender.client.controller.SearchHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
 
 public class HomeView extends HBox {
 
@@ -16,10 +18,10 @@ public class HomeView extends HBox {
     private VBox mainContent;
     private SearchHandler searchHandler;
     private RegLog regLog = new RegLog();
-
+    private Client client =  new Client();
     public HomeView() {
         this.setSpacing(0);
-        searchHandler = new SearchHandler();
+        searchHandler = new SearchHandler(client);
 
         // === SIDEBAR SINISTRA ===
         ScrollPane sidebar = createSidebar();
@@ -97,7 +99,7 @@ public class HomeView extends HBox {
 
         Label loginLabel = new Label("Login");
         loginLabel.setOnMouseClicked(event -> {
-            regLog.showLoginForm(this);
+            regLog.showLoginForm(this, this.client);
         });
 
         userSection.getChildren().add(loginLabel);
@@ -188,7 +190,7 @@ public class HomeView extends HBox {
 
         // Barra di ricerca gestita da SearchHandler
         searchBar = searchHandler.createSearchBar(mainContent);
-        mainContent.getChildren().addAll(header, searchBar);
+        mainContent.getChildren().addAll(searchBar, header);
 
         // Nascondi la barra di ricerca cliccando fuori da essa
         mainContent.setOnMouseClicked(event -> {
@@ -201,10 +203,10 @@ public class HomeView extends HBox {
         // Aggiunta della sezione "I più popolari"
         mainContent.getChildren().add(createPopularSection());
 
-        mainContent.getChildren().add(createGenreSection("Fantascienza"));
-        mainContent.getChildren().add(createGenreSection("Romanzi Storici"));
-        mainContent.getChildren().add(createGenreSection("Gialli e Thriller"));
-        mainContent.getChildren().add(createGenreSection("Fantasy"));
+        mainContent.getChildren().add(createGenreSection("General"));
+        mainContent.getChildren().add(createGenreSection("Romance"));
+        mainContent.getChildren().add(createGenreSection("Thrillers"));
+        mainContent.getChildren().add(createGenreSection("Fiction"));
 
         ScrollPane scrollPane = new ScrollPane(mainContent);
         scrollPane.setFitToWidth(true);
@@ -214,88 +216,6 @@ public class HomeView extends HBox {
         return scrollPane;
     }
 
-    private HBox createFeaturedSection() {
-        HBox featuredSection = new HBox(20);
-        HBox.setHgrow(featuredSection, Priority.ALWAYS);
-
-        VBox featuredCard = createFeaturedCard(
-                "FEATURED COLLECTION",
-                "Check out summer's hottest listens."
-        );
-
-        VBox staffCard = createFeaturedCard(
-                "STAFF PICKS",
-                "Dig into 25 captivating true stories."
-        );
-
-        VBox thirdCard = createFeaturedCard(
-                "STAFF PICKS",
-                "Check out this collection."
-        );
-
-        featuredSection.getChildren().addAll(featuredCard, staffCard, thirdCard);
-        return featuredSection;
-    }
-
-    private VBox createFeaturedCard(String category, String title) {
-        VBox card = new VBox(10);
-        card.setPrefSize(300, 200);
-        card.setMinSize(300, 200);
-        card.setPadding(new Insets(20));
-
-        Label categoryLabel = new Label(category);
-        Label titleLabel = new Label(title);
-        titleLabel.setWrapText(true);
-
-        Region decoration = new Region();
-        decoration.setPrefSize(80, 80);
-
-        card.getChildren().addAll(categoryLabel, titleLabel, decoration);
-        return card;
-    }
-
-    private ScrollPane createBooksHorizontalScroll() {
-        HBox booksList = new HBox(15);
-        booksList.setFillHeight(true);
-        booksList.setPadding(new Insets(10, 0, 10, 0));
-        booksList.setAlignment(Pos.CENTER_LEFT);
-        booksList.setPrefWidth(Region.USE_COMPUTED_SIZE);
-
-        String[] bookTitles = {
-                "Literary Genius", "Walking Robot", "A Book", "Adult Reading",
-                "Book Cover", "Another Book", "Yet Another", "Final Book"
-        };
-
-        for (String bookTitle : bookTitles) {
-            VBox bookItem = createBookItem(bookTitle);
-            booksList.getChildren().add(bookItem);
-        }
-
-        // === Scroll SOLO orizzontale per le righe di libri ===
-        ScrollPane scrollPane = new ScrollPane(booksList);
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED); // orizzontale
-        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);     // no verticale
-        scrollPane.setFitToHeight(false);
-        scrollPane.setFitToWidth(false); // evita resize orizzontale
-        scrollPane.setPannable(true);
-        scrollPane.setMinViewportWidth(200);
-        scrollPane.setPrefHeight(160);
-        scrollPane.setPrefViewportHeight(160);
-        HBox.setHgrow(scrollPane, Priority.ALWAYS);
-
-        return scrollPane;
-    }
-
-    private VBox createBookItem(String title) {
-        VBox bookItem = new VBox(8);
-        bookItem.setAlignment(Pos.TOP_CENTER);
-
-        StackPane cover = new StackPane();
-        cover.setPrefSize(90, 120);
-        bookItem.getChildren().add(cover);
-
-        return bookItem;
-    }
 
     // Sezione "I più popolari >" con scroll orizzontale di placeholder
     private VBox createPopularSection() {
@@ -305,6 +225,8 @@ public class HomeView extends HBox {
         Label subtitle = new Label("I più popolari >");
         subtitle.setPadding(new Insets(12, 0, 12, 0));
 
+        String risposta = client.send("get_book;top;business&economics;20");
+
         ScrollPane popularScroll = createPopularBooksScroll();
 
         section.getChildren().addAll(subtitle, popularScroll);
@@ -313,19 +235,36 @@ public class HomeView extends HBox {
 
     // ScrollPane orizzontale con 20 placeholder rettangolari
     private ScrollPane createPopularBooksScroll() {
-        HBox placeholders = new HBox(15);
-        placeholders.setAlignment(Pos.CENTER_LEFT);
-        placeholders.setPadding(new Insets(0, 0, 0, 0));
-        for (int i = 0; i < 20; i++) {
-            Region rect = new Region();
-            rect.setPrefSize(80, 120);
-            rect.setMinSize(80, 120);
-            rect.setMaxSize(80, 120);
-            rect.setStyle("-fx-background-color: #e0e0e0; -fx-background-radius: 8;");
-            placeholders.getChildren().add(rect);
+        HBox booksRow = new HBox(15);
+        booksRow.setAlignment(Pos.CENTER_LEFT);
+        booksRow.setPadding(new Insets(0, 0, 0, 0));
+
+        String risposta = client.send("get_book;top;;20");
+        System.out.println(risposta);
+        if (risposta != null && !risposta.isEmpty()) {
+            String[] entries = risposta.split("\\|");
+            for (String entry : entries) {
+                String[] parts = entry.split(";");
+                if (parts.length >= 7) {
+                    String coverUrl = parts[6];
+
+                    ImageView cover = new ImageView();
+                    try {
+                        if (coverUrl != null && !coverUrl.equalsIgnoreCase("null")) {
+                            Image img = new Image(coverUrl, 80, 120, true, true);
+                            cover.setImage(img);
+                        }
+                    } catch (Exception ignored) {}
+
+                    cover.setFitWidth(80);
+                    cover.setFitHeight(120);
+                    cover.setPreserveRatio(true);
+                    booksRow.getChildren().add(cover);
+                }
+            }
         }
 
-        ScrollPane scrollPane = new ScrollPane(placeholders);
+        ScrollPane scrollPane = new ScrollPane(booksRow);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.setFitToHeight(false);
@@ -345,25 +284,44 @@ public class HomeView extends HBox {
         Label subtitle = new Label(genreName + " >");
         subtitle.setPadding(new Insets(12, 0, 12, 0));
 
-        ScrollPane genreScroll = createGenreBooksScroll();
+        ScrollPane genreScroll = createGenreBooksScroll(genreName);
 
         section.getChildren().addAll(subtitle, genreScroll);
         return section;
     }
 
-    private ScrollPane createGenreBooksScroll() {
-        HBox placeholders = new HBox(15);
-        placeholders.setAlignment(Pos.CENTER_LEFT);
-        placeholders.setPadding(new Insets(0, 0, 0, 0));
-        for (int i = 0; i < 20; i++) {
-            Region rect = new Region();
-            rect.setPrefSize(80, 120);
-            rect.setMinSize(80, 120);
-            rect.setMaxSize(80, 120);
-            rect.setStyle("-fx-background-color: #e0e0e0; -fx-background-radius: 8;");
-            placeholders.getChildren().add(rect);
+    private ScrollPane createGenreBooksScroll(String genreName) {
+        HBox booksRow = new HBox(15);
+        booksRow.setAlignment(Pos.CENTER_LEFT);
+        booksRow.setPadding(new Insets(0, 0, 0, 0));
+
+        String risposta = client.send("get_book;top;" + genreName.toLowerCase() + ";20");
+        System.out.println("GENRE " + genreName + " -> " + risposta);
+
+        if (risposta != null && !risposta.isEmpty()) {
+            String[] entries = risposta.split("\\|");
+            for (String entry : entries) {
+                String[] parts = entry.split(";");
+                if (parts.length >= 7) {
+                    String coverUrl = parts[6];
+
+                    ImageView cover = new ImageView();
+                    try {
+                        if (coverUrl != null && !coverUrl.equalsIgnoreCase("null")) {
+                            Image img = new Image(coverUrl, 80, 120, true, true);
+                            cover.setImage(img);
+                        }
+                    } catch (Exception ignored) {}
+
+                    cover.setFitWidth(80);
+                    cover.setFitHeight(120);
+                    cover.setPreserveRatio(true);
+                    booksRow.getChildren().add(cover);
+                }
+            }
         }
-        ScrollPane scrollPane = new ScrollPane(placeholders);
+
+        ScrollPane scrollPane = new ScrollPane(booksRow);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.setFitToHeight(false);

@@ -1,12 +1,12 @@
-package ONA.booksrecommender.client.view;
+package ONA.booksrecommender.client.controller;
 
+import ONA.booksrecommender.client.Client;
+import ONA.booksrecommender.client.view.LoggedView;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -17,7 +17,7 @@ public class RegLog {
     /**
      * Mostra la finestra di login come overlay centrato all’interno della finestra principale.
      */
-    public void showLoginForm(Pane root) {
+    public void showLoginForm(Pane root, Client client) {
         if (activeOverlay != null) return;
 
         Stage popupStage = new Stage();
@@ -50,12 +50,13 @@ public class RegLog {
                 return;
             }
 
-            boolean accessoConsentito = checkLogin(username, password);
+            boolean accessoConsentito = checkLogin(client, username, password);
 
             if (accessoConsentito) {
                 feedbackLabel.setText("Accesso riuscito!");
                 popupStage.close();
                 activeOverlay = null;
+
             } else {
                 feedbackLabel.setText("Credenziali non valide.");
             }
@@ -167,8 +168,18 @@ public class RegLog {
     /**
      * Metodo fittizio di controllo login — da collegare alla classe Registrazione.java
      */
-    private boolean checkLogin(String username, String password) {
+    private boolean checkLogin(Client client, String username, String password) {
         // simulazione
-        return "utente".equals(username) && "password".equals(password);
+        String risposta = client.send("login;" + username + ";" + password);
+        if (risposta != null) return true;
+        return false;
+    }
+
+    private boolean signUp(Client client, String username, String name, String surname, String taxId, String email, String password) {
+        // simulazione
+        String risposta = client.send("signUp;" + username + ";" + name + ";" + surname + ";" + taxId + ";" + email + ";" + password + ";");
+        if (risposta != null) return true;
+        return false;
     }
 }
+

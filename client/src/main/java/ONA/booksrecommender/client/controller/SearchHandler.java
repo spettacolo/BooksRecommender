@@ -1,17 +1,17 @@
 package ONA.booksrecommender.client.controller;
 
+import ONA.booksrecommender.client.Client;
 import ONA.booksrecommender.objects.Book;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,18 +22,9 @@ import java.util.List;
  */
 public class SearchHandler {
 
-    private Socket socket;
-    public SearchHandler() {
-        String host = "localhost"; // oppure l'IP del server, tipo "192.168.1.100"
-        int porta = 1234;
-
-        try {
-            socket = new Socket(host, porta);
-            System.out.println("Connesso al server su " + host + ":" + porta);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private Client client;
+    public SearchHandler(Client client) {
+        this.client = client;
     }
 
     /**
@@ -92,7 +83,7 @@ public class SearchHandler {
         List<Book> results = new ArrayList<>();
 
         try {
-            String risposta = getString(socket, "get_book;title;" + query);
+            String risposta = this.client.send("get_book;title;" + query);
 
             // Gestione errori o risposta vuota
             if (risposta == null || risposta.isBlank() || risposta.equalsIgnoreCase("ERROR")) {
@@ -119,13 +110,13 @@ public class SearchHandler {
                         parts[6]                     // genere o altro
                 ));
             }
-        } catch (IOException e) {
-            Label errorLabel = new Label("Errore di connessione al server.");
-            resultsBox.getChildren().add(errorLabel);
-            return resultsBox;
-        } catch (NumberFormatException e) {
+        } catch(NumberFormatException e) {
             Label parseError = new Label("Formato dati non valido ricevuto dal server.");
             resultsBox.getChildren().add(parseError);
+            return resultsBox;
+        } catch (Exception e) {
+            Label errorLabel = new Label("Errore di connessione al server.");
+            resultsBox.getChildren().add(errorLabel);
             return resultsBox;
         }
 
@@ -146,8 +137,22 @@ public class SearchHandler {
 
         if (!results.isEmpty()) {
             for (Book b : results) {
-                Label resultLabel = new Label("📘 " + b.getTitle() + " — " + String.join(", ", b.getAuthors()));
-                resultsBox.getChildren().add(resultLabel);
+                HBox bookBox = new HBox(15);
+                bookBox.setPadding(new Insets(5, 0, 5, 0));
+
+                ImageView cover = new ImageView();
+                try {
+                    if (b.getCoverImageUrl() != null && !b.getCoverImageUrl().equalsIgnoreCase("null")) {
+                        Image img = new Image(b.getCoverImageUrl(), 100, 150, true, true);
+                        cover.setImage(img);
+                    }
+                } catch (Exception ignored) {}
+
+                Label info = new Label(b.getTitle() + "\n" + String.join(", ", b.getAuthors()));
+                info.setWrapText(true);
+
+                bookBox.getChildren().addAll(cover, info);
+                resultsBox.getChildren().add(bookBox);
             }
         } else {
             Label noResult = new Label("Nessun libro trovato per \"" + query + "\"");
@@ -166,4 +171,3 @@ public class SearchHandler {
         return in.readLine();
     }
 }
-
