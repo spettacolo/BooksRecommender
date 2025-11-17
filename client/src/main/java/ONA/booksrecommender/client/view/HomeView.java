@@ -11,6 +11,11 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.concurrent.Task;
+import javafx.application.Platform;
+import javafx.scene.control.ProgressIndicator;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Region;
 
 public class HomeView extends HBox {
 
@@ -239,31 +244,6 @@ public class HomeView extends HBox {
         booksRow.setAlignment(Pos.CENTER_LEFT);
         booksRow.setPadding(new Insets(0, 0, 0, 0));
 
-        String risposta = client.send("get_book;top;;20");
-        System.out.println(risposta);
-        if (risposta != null && !risposta.isEmpty()) {
-            String[] entries = risposta.split("\\|");
-            for (String entry : entries) {
-                String[] parts = entry.split(";");
-                if (parts.length >= 7) {
-                    String coverUrl = parts[6];
-
-                    ImageView cover = new ImageView();
-                    try {
-                        if (coverUrl != null && !coverUrl.equalsIgnoreCase("null")) {
-                            Image img = new Image(coverUrl, 80, 120, true, true);
-                            cover.setImage(img);
-                        }
-                    } catch (Exception ignored) {}
-
-                    cover.setFitWidth(80);
-                    cover.setFitHeight(120);
-                    cover.setPreserveRatio(true);
-                    booksRow.getChildren().add(cover);
-                }
-            }
-        }
-
         ScrollPane scrollPane = new ScrollPane(booksRow);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -274,6 +254,60 @@ public class HomeView extends HBox {
         scrollPane.setPrefHeight(120);
         scrollPane.setPrefViewportHeight(120);
         HBox.setHgrow(scrollPane, Priority.ALWAYS);
+
+        // Caricamento asincrono delle copertine
+        Task<Void> loadImagesTask = new Task<>() {
+            @Override
+            protected Void call() {
+                String risposta = client.send("get_book;top;;20");
+                if (risposta != null && !risposta.isEmpty()) {
+                    String[] entries = risposta.split("\\|");
+                    for (String entry : entries) {
+                        String[] parts = entry.split(";");
+                        if (parts.length >= 7) {
+                            String coverUrl = parts[6];
+
+                            StackPane coverContainer = new StackPane();
+                            coverContainer.setPrefSize(80, 120);
+
+                            if (coverUrl != null && !coverUrl.equalsIgnoreCase("null")) {
+                                ProgressIndicator progress = new ProgressIndicator();
+                                progress.setMaxSize(30, 30);
+                                coverContainer.getChildren().add(progress);
+
+                                ImageView cover = new ImageView();
+                                cover.setFitWidth(80);
+                                cover.setFitHeight(120);
+                                cover.setPreserveRatio(true);
+
+                                Image img = new Image(coverUrl, 80, 120, true, true, true);
+                                img.progressProperty().addListener((obs, oldProgress, newProgress) -> {
+                                    if (newProgress.doubleValue() >= 1.0) {
+                                        Platform.runLater(() -> {
+                                            cover.setImage(img);
+                                            coverContainer.getChildren().remove(progress);
+                                        });
+                                    }
+                                });
+
+                                coverContainer.getChildren().add(cover);
+                            } else {
+                                Region placeholder = new Region();
+                                placeholder.setPrefSize(80, 120);
+                                placeholder.setStyle("-fx-background-color: #e0e0e0; -fx-background-radius: 6;");
+                                coverContainer.getChildren().add(placeholder);
+                            }
+
+                            Platform.runLater(() -> booksRow.getChildren().add(coverContainer));
+                        }
+                    }
+                }
+                return null;
+            }
+        };
+
+        new Thread(loadImagesTask).start();
+
         return scrollPane;
     }
 
@@ -295,32 +329,6 @@ public class HomeView extends HBox {
         booksRow.setAlignment(Pos.CENTER_LEFT);
         booksRow.setPadding(new Insets(0, 0, 0, 0));
 
-        String risposta = client.send("get_book;top;" + genreName.toLowerCase() + ";20");
-        System.out.println("GENRE " + genreName + " -> " + risposta);
-
-        if (risposta != null && !risposta.isEmpty()) {
-            String[] entries = risposta.split("\\|");
-            for (String entry : entries) {
-                String[] parts = entry.split(";");
-                if (parts.length >= 7) {
-                    String coverUrl = parts[6];
-
-                    ImageView cover = new ImageView();
-                    try {
-                        if (coverUrl != null && !coverUrl.equalsIgnoreCase("null")) {
-                            Image img = new Image(coverUrl, 80, 120, true, true);
-                            cover.setImage(img);
-                        }
-                    } catch (Exception ignored) {}
-
-                    cover.setFitWidth(80);
-                    cover.setFitHeight(120);
-                    cover.setPreserveRatio(true);
-                    booksRow.getChildren().add(cover);
-                }
-            }
-        }
-
         ScrollPane scrollPane = new ScrollPane(booksRow);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -332,6 +340,60 @@ public class HomeView extends HBox {
         scrollPane.setMinHeight(120);
         scrollPane.setPrefViewportHeight(120);
         HBox.setHgrow(scrollPane, Priority.ALWAYS);
+
+        // Caricamento asincrono delle copertine
+        Task<Void> loadImagesTask = new Task<>() {
+            @Override
+            protected Void call() {
+                String risposta = client.send("get_book;top;" + genreName.toLowerCase() + ";20");
+                if (risposta != null && !risposta.isEmpty()) {
+                    String[] entries = risposta.split("\\|");
+                    for (String entry : entries) {
+                        String[] parts = entry.split(";");
+                        if (parts.length >= 7) {
+                            String coverUrl = parts[6];
+
+                            StackPane coverContainer = new StackPane();
+                            coverContainer.setPrefSize(80, 120);
+
+                            if (coverUrl != null && !coverUrl.equalsIgnoreCase("null")) {
+                                ProgressIndicator progress = new ProgressIndicator();
+                                progress.setMaxSize(30, 30);
+                                coverContainer.getChildren().add(progress);
+
+                                ImageView cover = new ImageView();
+                                cover.setFitWidth(80);
+                                cover.setFitHeight(120);
+                                cover.setPreserveRatio(true);
+
+                                Image img = new Image(coverUrl, 80, 120, true, true, true);
+                                img.progressProperty().addListener((obs, oldProgress, newProgress) -> {
+                                    if (newProgress.doubleValue() >= 1.0) {
+                                        Platform.runLater(() -> {
+                                            cover.setImage(img);
+                                            coverContainer.getChildren().remove(progress);
+                                        });
+                                    }
+                                });
+
+                                coverContainer.getChildren().add(cover);
+                            } else {
+                                Region placeholder = new Region();
+                                placeholder.setPrefSize(80, 120);
+                                placeholder.setStyle("-fx-background-color: #e0e0e0; -fx-background-radius: 6;");
+                                coverContainer.getChildren().add(placeholder);
+                            }
+
+                            Platform.runLater(() -> booksRow.getChildren().add(coverContainer));
+                        }
+                    }
+                }
+                return null;
+            }
+        };
+
+        new Thread(loadImagesTask).start();
+
         return scrollPane;
     }
 }

@@ -256,15 +256,19 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
                                 .get("extraLarge");*/
 
                         if (imageNode != null) {
+                            System.out.println(imageNode.asText());
                             return imageNode.asText();
                         } else {
-                            System.out.println("URL immagine non trovato nel dettaglio del volume.");
+                            System.out.println("URL immagine non trovato nel dettaglio del volume. Uso placeholder");
+                            return "https://i.ibb.co/QLTNDQc/bookplaceholder.png";
                         }
                     } else {
                         System.out.println("Il campo 'selfLink' non è stato trovato nel primo elemento.");
+                        return "https://i.ibb.co/QLTNDQc/bookplaceholder.png";
                     }
                 } else {
                     System.out.println("L'array 'items' non esiste o è vuoto.");
+                    return "https://i.ibb.co/QLTNDQc/bookplaceholder.png";
                 }
             } catch (IOException e) {
                 System.err.println("Errore durante il parsing JSON: " + e.getMessage());
