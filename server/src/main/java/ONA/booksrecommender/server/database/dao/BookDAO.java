@@ -135,12 +135,23 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
         // se limit è 0 significa che si vuole applicare il filtro di default di 20 risultati per request
         if (limit == 0) limit = 20;
         // String query = "SELECT * FROM books WHERE category ILIKE ? ORDER BY publish_year ASC LIMIT ?" ;
-        String query = "SELECT b.book_id, b.title, b.publish_year, b.publishers, b.category, COUNT(lb.book_id) AS frequency_count FROM books b INNER JOIN library_books lb ON b.book_id = lb.book_id WHERE b.category ILIKE ? GROUP BY b.book_id, b.title, b.publish_year, b.publishers, b.category ORDER BY frequency_count DESC LIMIT ?";
-        // logger.log("invio la richiesta ora");
+        String query;
+        if (category.equals("none"))
+            // Query 1: Calcola la frequenza di tutti i libri (o filtra se necessario)
+            query = "SELECT b.book_id, b.title, b.publish_year, b.publishers, b.category, COUNT(lb.book_id) AS frequency_count FROM books b INNER JOIN library_books lb ON b.book_id = lb.book_id GROUP BY b.book_id, b.title, b.publish_year, b.publishers, b.category ORDER BY frequency_count DESC LIMIT ?";
+        else {
+            // Query 2: Ricerca per categoria e ordinamento casuale, la frequenza è impostata a 0
+            String query1 = "SELECT b.book_id, b.title, b.publish_year, b.publishers, b.category, 0 AS frequency_count FROM books b WHERE b.category ILIKE ? ORDER BY RANDOM() DESC LIMIT ?";
+            query = query1;
+        }        // logger.log("invio la richiesta ora");
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            String searchPattern = "%" + category + "%";
-            stmt.setString(1, searchPattern);
-            stmt.setInt(2, limit);
+            if (category.equals("none"))
+                stmt.setInt(1, limit);
+            else {
+                String searchPattern = "%" + category + "%";
+                stmt.setString(1, searchPattern);
+                stmt.setInt(2, limit);
+            }
 
             ResultSet rs = stmt.executeQuery();
 
@@ -163,14 +174,6 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
             logger.log("Error during book retrieval: " + e.getMessage());
             return null;
         }
-    }
-
-    public String getBookImageUrl(int id) {
-        // qui ci sarà un passaggio in più: ottenere il titolo del libro con getBook(int id)
-        // così da poter cercare l'url immagine con getBookImageUrl(String title)
-        Book book = getBook(id);
-        String title = book.getTitle();
-        return getBookImageUrl(title);
     }
 
     public String getBookImageUrl(String title) {
@@ -258,6 +261,7 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
                         if (imageNode != null) {
                             System.out.println(imageNode.asText());
                             return imageNode.asText();
+
                         } else {
                             System.out.println("URL immagine non trovato nel dettaglio del volume. Uso placeholder");
                             return "https://i.ibb.co/QLTNDQc/bookplaceholder.png";

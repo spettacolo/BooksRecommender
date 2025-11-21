@@ -5,6 +5,8 @@ module booksrecommender.server {
     requires java.net.http;
     requires com.fasterxml.jackson.databind;
     requires spring.security.crypto;
+    requires javafx.graphics;
+    requires javafx.base;
 
     exports ONA.booksrecommender.server;
 }

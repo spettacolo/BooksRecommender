@@ -230,11 +230,12 @@ public class HomeView extends HBox {
         Label subtitle = new Label("I più popolari >");
         subtitle.setPadding(new Insets(12, 0, 12, 0));
 
-        String risposta = client.send("get_book;top;business&economics;20");
+        //String risposta = client.send("get_book;top;none;20");
 
         ScrollPane popularScroll = createPopularBooksScroll();
 
         section.getChildren().addAll(subtitle, popularScroll);
+
         return section;
     }
 
@@ -259,47 +260,47 @@ public class HomeView extends HBox {
         Task<Void> loadImagesTask = new Task<>() {
             @Override
             protected Void call() {
-                String risposta = client.send("get_book;top;;20");
-                if (risposta != null && !risposta.isEmpty()) {
-                    String[] entries = risposta.split("\\|");
-                    for (String entry : entries) {
-                        String[] parts = entry.split(";");
-                        if (parts.length >= 7) {
-                            String coverUrl = parts[6];
+                // Chiamata aggiornata per i libri più popolari (top globali)
+                String risposta = client.send("get_book;top;none;20");
+                if (risposta == null || risposta.isEmpty()) return null;
+                String[] entries = risposta.split("\\|");
+                for (String entry : entries) {
+                    String[] parts = entry.split(";");
+                    if (parts.length >= 7) {
+                        String coverUrl = parts[6];
 
-                            StackPane coverContainer = new StackPane();
-                            coverContainer.setPrefSize(80, 120);
+                        StackPane coverContainer = new StackPane();
+                        coverContainer.setPrefSize(80, 120);
 
-                            if (coverUrl != null && !coverUrl.equalsIgnoreCase("null")) {
-                                ProgressIndicator progress = new ProgressIndicator();
-                                progress.setMaxSize(30, 30);
-                                coverContainer.getChildren().add(progress);
+                        if (coverUrl != null && !coverUrl.equalsIgnoreCase("null")) {
+                            ProgressIndicator progress = new ProgressIndicator();
+                            progress.setMaxSize(30, 30);
+                            coverContainer.getChildren().add(progress);
 
-                                ImageView cover = new ImageView();
-                                cover.setFitWidth(80);
-                                cover.setFitHeight(120);
-                                cover.setPreserveRatio(true);
+                            ImageView cover = new ImageView();
+                            cover.setFitWidth(80);
+                            cover.setFitHeight(120);
+                            cover.setPreserveRatio(true);
 
-                                Image img = new Image(coverUrl, 80, 120, true, true, true);
-                                img.progressProperty().addListener((obs, oldProgress, newProgress) -> {
-                                    if (newProgress.doubleValue() >= 1.0) {
-                                        Platform.runLater(() -> {
-                                            cover.setImage(img);
-                                            coverContainer.getChildren().remove(progress);
-                                        });
-                                    }
-                                });
+                            Image img = new Image(coverUrl, 80, 120, true, true, true);
+                            img.progressProperty().addListener((obs, oldProgress, newProgress) -> {
+                                if (newProgress.doubleValue() >= 1.0) {
+                                    Platform.runLater(() -> {
+                                        cover.setImage(img);
+                                        coverContainer.getChildren().remove(progress);
+                                    });
+                                }
+                            });
 
-                                coverContainer.getChildren().add(cover);
-                            } else {
-                                Region placeholder = new Region();
-                                placeholder.setPrefSize(80, 120);
-                                placeholder.setStyle("-fx-background-color: #e0e0e0; -fx-background-radius: 6;");
-                                coverContainer.getChildren().add(placeholder);
-                            }
-
-                            Platform.runLater(() -> booksRow.getChildren().add(coverContainer));
+                            coverContainer.getChildren().add(cover);
+                        } else {
+                            Region placeholder = new Region();
+                            placeholder.setPrefSize(80, 120);
+                            placeholder.setStyle("-fx-background-color: #e0e0e0; -fx-background-radius: 6;");
+                            coverContainer.getChildren().add(placeholder);
                         }
+
+                        Platform.runLater(() -> booksRow.getChildren().add(coverContainer));
                     }
                 }
                 return null;
@@ -345,7 +346,7 @@ public class HomeView extends HBox {
         Task<Void> loadImagesTask = new Task<>() {
             @Override
             protected Void call() {
-                String risposta = client.send("get_book;top;" + genreName.toLowerCase() + ";20");
+                String risposta = client.send("get_book;top;" + genreName + ";20");
                 if (risposta != null && !risposta.isEmpty()) {
                     String[] entries = risposta.split("\\|");
                     for (String entry : entries) {
