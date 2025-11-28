@@ -86,4 +86,12 @@ public class Client {
             return false;
         }
     }
+
+    // Metodo per aggiungere una libreria inviando la richiesta al server
+    // Restituisce true se la risposta del server è "ADD_LIBRARY;OK"
+    public boolean addLibrary(String libraryName, String username) {
+        String request = "add_library;" + libraryName + ";" + username;
+        String response = send(request);
+        return response != null && response.equals("ADD_LIBRARY;OK");
+    }
 }

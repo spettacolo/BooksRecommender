@@ -23,7 +23,13 @@ public class HomeView extends HBox {
     private VBox mainContent;
     private SearchHandler searchHandler;
     private RegLog regLog = new RegLog();
-    private Client client =  new Client();
+    private Client client = new Client();
+    // Sidebar user section
+    private HBox userSection;
+    // Sidebar login label reference
+    private Label loginLabel;
+    private Label loginLabelReference;
+    private LoggedView loggedView;
     public HomeView() {
         this.setSpacing(0);
         searchHandler = new SearchHandler(client);
@@ -77,7 +83,6 @@ public class HomeView extends HBox {
             alert.showAndWait();
         });
 
-
         topContent.getChildren().addAll(cercaLabel, homeLabel);
 
         // "Le mie librerie" label (non cliccabile)
@@ -89,24 +94,52 @@ public class HomeView extends HBox {
         Label newLibraryLabel = new Label("Nuova libreria");
         newLibraryLabel.setPadding(new Insets(5, 20, 5, 20));
         newLibraryLabel.setOnMouseClicked(event -> {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Informazione");
-            alert.setHeaderText(null);
-            alert.setContentText("Nuova libreria");
-            alert.showAndWait();
+            if (loggedView == null) {
+                // Utente non loggato -> apri login
+                regLog.showLoginForm(this, client);
+            } else {
+                // Utente loggato -> crea nuova libreria
+                javafx.scene.control.TextInputDialog dialog = new javafx.scene.control.TextInputDialog();
+                dialog.setTitle("Nuova Libreria");
+                dialog.setHeaderText("Crea una nuova libreria");
+                dialog.setContentText("Nome libreria:");
+
+                dialog.showAndWait().ifPresent(libraryName -> {
+                    if (!libraryName.trim().isEmpty()) {
+                        boolean ok = client.addLibrary(libraryName, loggedView.getUsername());
+                        if (ok) {
+                            updateLibrariesInSidebar(loggedView.getUsername());
+                            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                            alert.setTitle("Successo");
+                            alert.setHeaderText(null);
+                            alert.setContentText("Libreria creata correttamente!");
+                            alert.showAndWait();
+                        } else {
+                            Alert alert = new Alert(Alert.AlertType.ERROR);
+                            alert.setTitle("Errore");
+                            alert.setHeaderText(null);
+                            alert.setContentText("Impossibile creare la libreria.");
+                            alert.showAndWait();
+                        }
+                    }
+                });
+            }
         });
         topContent.getChildren().add(newLibraryLabel);
 
         sidebarContent.setCenter(topContent);
 
-        HBox userSection = new HBox();
-        userSection.setAlignment(Pos.BOTTOM_CENTER);
+        // User section at the bottom (class-level field)
+        userSection = new HBox(10);
+        userSection.setAlignment(Pos.CENTER_LEFT);
+        userSection.setPadding(new Insets(10));
 
-        Label loginLabel = new Label("Login");
+        loginLabel = new Label("Login");
+        loginLabelReference = loginLabel;
+
         loginLabel.setOnMouseClicked(event -> {
             regLog.showLoginForm(this, this.client);
         });
-
         userSection.getChildren().add(loginLabel);
 
         sidebarContent.setBottom(userSection);
@@ -124,61 +157,51 @@ public class HomeView extends HBox {
         return scrollPane;
     }
 
-    private HBox createMenuItem(String text, String iconClass, boolean isSelected) {
-        HBox item = new HBox(12);
-        item.setAlignment(Pos.CENTER_LEFT);
-        item.setPadding(new Insets(8, 12, 8, 12));
-        item.setPickOnBounds(true);
+    public void updateLibrariesInSidebar(String username) {
+        Platform.runLater(() -> {
+            // Trova VBox che contiene le etichette "Le mie librerie" e "Nuova libreria"
+            BorderPane sidebarContent = (BorderPane)((ScrollPane)this.getChildren().get(0)).getContent();
+            VBox topContent = (VBox) sidebarContent.getCenter();
 
-        if (iconClass.equals("search-icon") || iconClass.equals("home-icon") || iconClass.equals("plus-icon")) {
-            try {
-                ImageView icon = new ImageView(new Image(getClass().getResourceAsStream("/" + iconClass + ".png")));
-                icon.setFitWidth(16);
-                icon.setFitHeight(16);
-                icon.setPreserveRatio(true);
-
-                Label label = new Label(text);
-                item.getChildren().addAll(icon, label);
-            } catch (Exception e) {
-                Region fallbackIcon = new Region();
-                fallbackIcon.setPrefSize(16, 16);
-
-                Label label = new Label(text);
-                item.getChildren().addAll(fallbackIcon, label);
-            }
-        } else {
-            Region icon = new Region();
-            icon.setPrefSize(16, 16);
-
-            Label label = new Label(text);
-            item.getChildren().addAll(icon, label);
-        }
-
-        if ("Cerca".equals(text)) {
-            item.setOnMouseClicked(event -> {
-                if (searchBar != null) {
-                    searchBar.setVisible(true);
-                    searchBar.setManaged(true);
-                    searchBar.toFront();
+            // Trova l’indice di "Le mie librerie"
+            int index = -1;
+            for (int i = 0; i < topContent.getChildren().size(); i++) {
+                if (topContent.getChildren().get(i) instanceof Label) {
+                    Label lbl = (Label) topContent.getChildren().get(i);
+                    if (lbl.getText().equals("Le mie librerie")) {
+                        index = i;
+                        break;
+                    }
                 }
-            });
-        }
+            }
+            if (index == -1) return;
 
-        return item;
-    }
+            // Rimuovi eventuali librerie già presenti
+            while (topContent.getChildren().size() > index + 1 &&
+                    topContent.getChildren().get(index + 1) instanceof Label &&
+                    !((Label)topContent.getChildren().get(index + 1)).getText().equals("Nuova libreria")) {
+                topContent.getChildren().remove(index + 1);
+            }
 
-    private HBox createUserProfile() {
-        HBox userProfile = new HBox(10);
-        userProfile.setPadding(new Insets(15, 20, 20, 20));
-        userProfile.setAlignment(Pos.CENTER_LEFT);
-
-        Region avatar = new Region();
-        avatar.setPrefSize(32, 32);
-
-        Label userName = new Label("Login");
-
-        userProfile.getChildren().addAll(avatar, userName);
-        return userProfile;
+            // Recupera librerie dal server
+            String risposta = client.send("get_user_libraries;" + username);
+            if (risposta != null && !risposta.isEmpty()) {
+                String[] libraryNames = risposta.split(",");
+                for (String libName : libraryNames) {
+                    Label libLabel = new Label(libName.trim());
+                    libLabel.setPadding(new Insets(5, 20, 5, 40)); // leggero rientro
+                    libLabel.setOnMouseClicked(e -> {
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Libreria");
+                        alert.setHeaderText(null);
+                        alert.setContentText("Hai selezionato la libreria: " + libName);
+                        alert.showAndWait();
+                    });
+                    topContent.getChildren().add(index + 1, libLabel);
+                    index++; // inserimento in sequenza
+                }
+            }
+        });
     }
 
     private ScrollPane createMainContent() {
@@ -396,5 +419,13 @@ public class HomeView extends HBox {
         new Thread(loadImagesTask).start();
 
         return scrollPane;
+    }
+
+    public Label getLoginLabel() {
+        return loginLabelReference;
+    }
+
+    public void setLoggedView(LoggedView lv) {
+        this.loggedView = lv;
     }
 }

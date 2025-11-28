@@ -1,6 +1,7 @@
 package ONA.booksrecommender.client.controller;
 
 import ONA.booksrecommender.client.Client;
+import ONA.booksrecommender.client.view.HomeView;
 import ONA.booksrecommender.client.view.LoggedView;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -55,8 +56,23 @@ public class RegLog {
             if (accessoConsentito) {
                 feedbackLabel.setText("Accesso riuscito!");
                 popupStage.close();
-                activeOverlay = null;
 
+                // ottieni HomeView, prendi il label e applica l'UI loggata
+                ONA.booksrecommender.client.view.HomeView hv = (ONA.booksrecommender.client.view.HomeView) root;
+
+                // crea LoggedView passandogli username e il riferimento al label della sidebar
+                ONA.booksrecommender.client.view.LoggedView lv = new ONA.booksrecommender.client.view.LoggedView(username, hv.getLoginLabel());
+
+                // applica l'aspetto "loggato" al bottone (avatar + username)
+                lv.applyLoggedUI();
+
+                // opzionale: mostra popup di benvenuto se vuoi (se LoggedView ha showWelcomePopup)
+                // lv.showWelcomePopup(true); // decommenta solo se LoggedView implementa questo metodo
+
+                // conserva riferimento in HomeView per future operazioni (es. logout)
+                hv.setLoggedView(lv);
+
+                activeOverlay = null;
             } else {
                 feedbackLabel.setText("Credenziali non valide.");
             }
@@ -75,7 +91,7 @@ public class RegLog {
         goToSignUp.setOnAction(e -> {
             popupStage.close();
             activeOverlay = null;
-            javafx.application.Platform.runLater(() -> showSignUpForm(root));
+            javafx.application.Platform.runLater(() -> showSignUpForm(root, client));
         });
 
         popupContent.getChildren().addAll(title, usernameField, passwordField, feedbackLabel, buttons, goToSignUp);
@@ -91,7 +107,7 @@ public class RegLog {
     /**
      * Mostra la finestra di registrazione come overlay centrato all’interno della finestra principale.
      */
-    public void showSignUpForm(Pane root) {
+    public void showSignUpForm(Pane root, Client client) {
         if (activeOverlay != null) return;
 
         Stage popupStage = new Stage();
@@ -140,9 +156,23 @@ public class RegLog {
                 return;
             }
 
-            // TODO: collegare a Registrazione.java per la registrazione effettiva
+            boolean registrato = signUp(client, username, nome, cognome, cf, email, password);
+
+            if (!registrato) {
+                feedbackLabel.setText("Username già esistente!");
+                return;
+            }
+
             feedbackLabel.setText("Registrazione completata!");
             popupStage.close();
+
+            HomeView hv = (HomeView) root;
+
+            LoggedView lv = new LoggedView(username, hv.getLoginLabel());
+            lv.applyLoggedUI();          // aggiorna sidebar
+
+            hv.setLoggedView(lv);        // salva riferimento
+
             activeOverlay = null;
         });
 
@@ -169,17 +199,38 @@ public class RegLog {
      * Metodo fittizio di controllo login — da collegare alla classe Registrazione.java
      */
     private boolean checkLogin(Client client, String username, String password) {
-        // simulazione
+        // invia richiesta al server
         String risposta = client.send("login;" + username + ";" + password);
-        if (risposta != null) return true;
-        return false;
+
+        if (risposta == null) return false;
+
+        // Il server risponde nel formato: LOGIN;codice
+        // dove codice può essere 0, -2, -3
+        if (!risposta.contains(";")) return false;
+
+        String[] parts = risposta.split(";");
+        if (parts.length < 2) return false;
+
+        String codiceStr = parts[1].trim();
+
+        return codiceStr.equals("0");
     }
 
     private boolean signUp(Client client, String username, String name, String surname, String taxId, String email, String password) {
-        // simulazione
-        String risposta = client.send("signUp;" + username + ";" + name + ";" + surname + ";" + taxId + ";" + email + ";" + password + ";");
-        if (risposta != null) return true;
-        return false;
+        // invia richiesta al server usando il comando corretto "sign_up"
+        String comando = "sign_up;" + username + ";" + name + ";" + surname + ";" + taxId + ";" + email + ";" + password;
+        String risposta = client.send(comando);
+
+        if (risposta == null) return false;
+
+        // Il server risponde ad esempio: SIGNUP;OK oppure SIGNUP;FAIL
+        if (!risposta.contains(";")) return false;
+
+        String[] parts = risposta.split(";");
+        if (parts.length < 2) return false;
+
+        String codice = parts[1].trim();
+
+        return codice.equals("OK");
     }
 }
-
