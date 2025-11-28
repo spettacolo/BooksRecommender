@@ -15,9 +15,6 @@ public class RegLog {
 
     private Pane activeOverlay = null;
 
-    /**
-     * Mostra la finestra di login come overlay centrato all’interno della finestra principale.
-     */
     public void showLoginForm(Pane root, Client client) {
         if (activeOverlay != null) return;
 
@@ -43,6 +40,7 @@ public class RegLog {
         Button loginButton = new Button("Accedi");
         loginButton.setDefaultButton(true);
         loginButton.setOnAction(e -> {
+
             String username = usernameField.getText().trim();
             String password = passwordField.getText().trim();
 
@@ -57,22 +55,14 @@ public class RegLog {
                 feedbackLabel.setText("Accesso riuscito!");
                 popupStage.close();
 
-                // ottieni HomeView, prendi il label e applica l'UI loggata
-                ONA.booksrecommender.client.view.HomeView hv = (ONA.booksrecommender.client.view.HomeView) root;
-
-                // crea LoggedView passandogli username e il riferimento al label della sidebar
-                ONA.booksrecommender.client.view.LoggedView lv = new ONA.booksrecommender.client.view.LoggedView(username, hv.getLoginLabel());
-
-                // applica l'aspetto "loggato" al bottone (avatar + username)
-                lv.applyLoggedUI();
-
-                // opzionale: mostra popup di benvenuto se vuoi (se LoggedView ha showWelcomePopup)
-                // lv.showWelcomePopup(true); // decommenta solo se LoggedView implementa questo metodo
-
-                // conserva riferimento in HomeView per future operazioni (es. logout)
+                HomeView hv = (HomeView) root;
+                LoggedView lv = new LoggedView(username, hv.getLoginLabel());
                 hv.setLoggedView(lv);
 
+                lv.applyLoggedUI(hv);
+
                 activeOverlay = null;
+
             } else {
                 feedbackLabel.setText("Credenziali non valide.");
             }
@@ -98,15 +88,12 @@ public class RegLog {
 
         Scene scene = new Scene(popupContent, 350, 300);
         popupStage.setScene(scene);
-        popupStage.centerOnScreen();
         popupStage.showAndWait();
 
         activeOverlay = null;
     }
 
-    /**
-     * Mostra la finestra di registrazione come overlay centrato all’interno della finestra principale.
-     */
+
     public void showSignUpForm(Pane root, Client client) {
         if (activeOverlay != null) return;
 
@@ -151,7 +138,8 @@ public class RegLog {
             String email = emailField.getText().trim();
             String password = passwordField.getText().trim();
 
-            if (nome.isEmpty() || cognome.isEmpty() || username.isEmpty() || cf.isEmpty() || email.isEmpty() || password.isEmpty()) {
+            if (nome.isEmpty() || cognome.isEmpty() || username.isEmpty() ||
+                    cf.isEmpty() || email.isEmpty() || password.isEmpty()) {
                 feedbackLabel.setText("Compila tutti i campi!");
                 return;
             }
@@ -167,11 +155,10 @@ public class RegLog {
             popupStage.close();
 
             HomeView hv = (HomeView) root;
-
             LoggedView lv = new LoggedView(username, hv.getLoginLabel());
-            lv.applyLoggedUI();          // aggiorna sidebar
+            hv.setLoggedView(lv);
 
-            hv.setLoggedView(lv);        // salva riferimento
+            lv.applyLoggedUI(hv);
 
             activeOverlay = null;
         });
@@ -185,52 +172,37 @@ public class RegLog {
         HBox buttons = new HBox(10, registerButton, cancelButton);
         buttons.setAlignment(Pos.CENTER);
 
-        popupContent.getChildren().addAll(title, nomeField, cognomeField, usernameField, cfField, emailField, passwordField, feedbackLabel, buttons);
+        popupContent.getChildren().addAll(
+                title, nomeField, cognomeField, usernameField,
+                cfField, emailField, passwordField,
+                feedbackLabel, buttons
+        );
 
         Scene scene = new Scene(popupContent, 400, 400);
         popupStage.setScene(scene);
-        popupStage.centerOnScreen();
         popupStage.showAndWait();
 
         activeOverlay = null;
     }
 
-    /**
-     * Metodo fittizio di controllo login — da collegare alla classe Registrazione.java
-     */
+
     private boolean checkLogin(Client client, String username, String password) {
-        // invia richiesta al server
         String risposta = client.send("login;" + username + ";" + password);
 
-        if (risposta == null) return false;
-
-        // Il server risponde nel formato: LOGIN;codice
-        // dove codice può essere 0, -2, -3
-        if (!risposta.contains(";")) return false;
+        if (risposta == null || !risposta.contains(";")) return false;
 
         String[] parts = risposta.split(";");
-        if (parts.length < 2) return false;
-
-        String codiceStr = parts[1].trim();
-
-        return codiceStr.equals("0");
+        return parts.length >= 2 && parts[1].trim().equals("0");
     }
 
     private boolean signUp(Client client, String username, String name, String surname, String taxId, String email, String password) {
-        // invia richiesta al server usando il comando corretto "sign_up"
+
         String comando = "sign_up;" + username + ";" + name + ";" + surname + ";" + taxId + ";" + email + ";" + password;
         String risposta = client.send(comando);
 
-        if (risposta == null) return false;
-
-        // Il server risponde ad esempio: SIGNUP;OK oppure SIGNUP;FAIL
-        if (!risposta.contains(";")) return false;
+        if (risposta == null || !risposta.contains(";")) return false;
 
         String[] parts = risposta.split(";");
-        if (parts.length < 2) return false;
-
-        String codice = parts[1].trim();
-
-        return codice.equals("OK");
+        return parts.length >= 2 && parts[1].trim().equals("OK");
     }
 }

@@ -3,42 +3,68 @@ package ONA.booksrecommender.client.view;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 
 public class LoggedView {
 
-    private String username;
-    private Label loginButton;     // riferimento al tasto nella sidebar
+    private final String username;
+    private final Label loginButton;
 
     public LoggedView(String username, Label loginButton) {
         this.username = username;
         this.loginButton = loginButton;
     }
 
-    /** Cambia il pulsante "Login" -> username */
-    public void applyLoggedUI() {
+    public void applyLoggedUI(HomeView home) {
         Platform.runLater(() -> {
+
             loginButton.setText(username);
 
-            // Aggiorna librerie nella sidebar
-            if (loginButton.getScene() != null) {
-                HomeView hv = (HomeView) loginButton.getScene().getRoot();
-                hv.updateLibrariesInSidebar(username);
-            }
+            loginButton.setOnMouseClicked(e -> {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Area Utente");
+                alert.setHeaderText(null);
+                alert.setContentText("Ecco la tua area utente, " + username);
+                alert.showAndWait();
+            });
+
+            home.updateLibrariesInSidebar(username);
+
+            attachNewLibraryAction(home);
         });
     }
 
-    /** Torna allo stato "Login" */
-    public void applyLoggedOutUI(Runnable loginAction) {
-        Platform.runLater(() -> {
-            loginButton.setText("Login");
-            loginButton.setGraphic(null);
-            loginButton.setOnMouseClicked(e -> loginAction.run());
+    private void attachNewLibraryAction(HomeView home) {
+        Label newLibraryLabel = home.getNewLibraryLabel();
+
+        newLibraryLabel.setOnMouseClicked(e -> {
+            javafx.scene.control.TextInputDialog dialog =
+                    new javafx.scene.control.TextInputDialog();
+            dialog.setTitle("Nuova Libreria");
+            dialog.setHeaderText("Crea una nuova libreria");
+            dialog.setContentText("Nome libreria:");
+
+            dialog.showAndWait().ifPresent(libraryName -> {
+                if (!libraryName.trim().isEmpty()) {
+                    boolean ok = home.getClient().addLibrary(libraryName, username);
+
+                    if (ok) {
+                        home.updateLibrariesInSidebar(username);
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Successo");
+                        alert.setHeaderText(null);
+                        alert.setContentText("Libreria creata correttamente!");
+                        alert.showAndWait();
+                    } else {
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Errore");
+                        alert.setHeaderText(null);
+                        alert.setContentText("Impossibile creare la libreria.");
+                        alert.showAndWait();
+                    }
+                }
+            });
         });
     }
 
-    public String getUsername() {
-        return username;
-    }
+    public String getUsername() { return username; }
 }

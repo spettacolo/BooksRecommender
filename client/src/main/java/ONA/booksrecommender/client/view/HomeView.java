@@ -24,28 +24,28 @@ public class HomeView extends HBox {
     private SearchHandler searchHandler;
     private RegLog regLog = new RegLog();
     private Client client = new Client();
-    // Sidebar user section
+
     private HBox userSection;
-    // Sidebar login label reference
     private Label loginLabel;
     private Label loginLabelReference;
+
     private LoggedView loggedView;
+
     public HomeView() {
         this.setSpacing(0);
         searchHandler = new SearchHandler(client);
 
-        // === SIDEBAR SINISTRA ===
         ScrollPane sidebar = createSidebar();
-
-        // === CONTENUTO PRINCIPALE ===
         ScrollPane mainContent = createMainContent();
 
-        // Aggiunta dei componenti principali
         this.getChildren().addAll(sidebar, mainContent);
 
-        // Configurazione delle proporzioni
-        HBox.setHgrow(sidebar, Priority.NEVER);
-        VBox.setVgrow(sidebar, Priority.ALWAYS);
+        // Sidebar = fissa
+        sidebar.setPrefWidth(200);
+        sidebar.setMinWidth(200);
+        sidebar.setMaxWidth(200);
+
+        // Main content prende tutto lo spazio restante
         HBox.setHgrow(mainContent, Priority.ALWAYS);
     }
 
@@ -54,154 +54,118 @@ public class HomeView extends HBox {
 
         VBox topContent = new VBox();
         topContent.setPrefWidth(200);
-        topContent.setMinWidth(200);
-        topContent.setMaxWidth(200);
         topContent.setFillWidth(true);
         VBox.setVgrow(topContent, Priority.ALWAYS);
-        topContent.setPrefHeight(Double.MAX_VALUE);
 
+        // === LABELS SIDEBAR ===
         Label cercaLabel = new Label("Cerca");
-        cercaLabel.setPadding(new Insets(5, 20, 5, 20));
+        cercaLabel.setPadding(new Insets(10, 20, 10, 20));
         cercaLabel.setOnMouseClicked(event -> {
             if (searchBar != null) {
-                boolean currentlyVisible = searchBar.isVisible();
-                searchBar.setVisible(!currentlyVisible);
-                searchBar.setManaged(!currentlyVisible);
-                if (!currentlyVisible) {
-                    searchBar.toFront();
-                }
+                boolean show = !searchBar.isVisible();
+                searchBar.setVisible(show);
+                searchBar.setManaged(show);
             }
         });
 
         Label homeLabel = new Label("Home");
-        homeLabel.setPadding(new Insets(5, 20, 5, 20));
-        homeLabel.setOnMouseClicked(event -> {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Informazione");
-            alert.setHeaderText(null);
-            alert.setContentText("home");
-            alert.showAndWait();
-        });
+        homeLabel.setPadding(new Insets(10, 20, 10, 20));
 
-        topContent.getChildren().addAll(cercaLabel, homeLabel);
-
-        // "Le mie librerie" label (non cliccabile)
         Label librariesLabel = new Label("Le mie librerie");
-        librariesLabel.setPadding(new Insets(5, 20, 5, 20));
-        topContent.getChildren().add(librariesLabel);
+        librariesLabel.setPadding(new Insets(10, 20, 10, 20));
 
-        // "Nuova libreria" label (cliccabile, mostra alert)
         Label newLibraryLabel = new Label("Nuova libreria");
-        newLibraryLabel.setPadding(new Insets(5, 20, 5, 20));
-        newLibraryLabel.setOnMouseClicked(event -> {
+        newLibraryLabel.setPadding(new Insets(10, 20, 10, 20));
+        newLibraryLabel.setOnMouseClicked(e -> {
             if (loggedView == null) {
-                // Utente non loggato -> apri login
                 regLog.showLoginForm(this, client);
-            } else {
-                // Utente loggato -> crea nuova libreria
-                javafx.scene.control.TextInputDialog dialog = new javafx.scene.control.TextInputDialog();
-                dialog.setTitle("Nuova Libreria");
-                dialog.setHeaderText("Crea una nuova libreria");
-                dialog.setContentText("Nome libreria:");
-
-                dialog.showAndWait().ifPresent(libraryName -> {
-                    if (!libraryName.trim().isEmpty()) {
-                        boolean ok = client.addLibrary(libraryName, loggedView.getUsername());
-                        if (ok) {
-                            updateLibrariesInSidebar(loggedView.getUsername());
-                            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                            alert.setTitle("Successo");
-                            alert.setHeaderText(null);
-                            alert.setContentText("Libreria creata correttamente!");
-                            alert.showAndWait();
-                        } else {
-                            Alert alert = new Alert(Alert.AlertType.ERROR);
-                            alert.setTitle("Errore");
-                            alert.setHeaderText(null);
-                            alert.setContentText("Impossibile creare la libreria.");
-                            alert.showAndWait();
-                        }
-                    }
-                });
             }
         });
-        topContent.getChildren().add(newLibraryLabel);
+
+        topContent.getChildren().addAll(
+                cercaLabel,
+                homeLabel,
+                librariesLabel,
+                newLibraryLabel
+        );
 
         sidebarContent.setCenter(topContent);
 
-        // User section at the bottom (class-level field)
+        // === USER SECTION ===
         userSection = new HBox(10);
         userSection.setAlignment(Pos.CENTER_LEFT);
-        userSection.setPadding(new Insets(10));
+        userSection.setPadding(new Insets(15));
 
         loginLabel = new Label("Login");
         loginLabelReference = loginLabel;
 
-        loginLabel.setOnMouseClicked(event -> {
-            regLog.showLoginForm(this, this.client);
-        });
-        userSection.getChildren().add(loginLabel);
+        loginLabel.setOnMouseClicked(e -> regLog.showLoginForm(this, client));
 
+        userSection.getChildren().add(loginLabel);
         sidebarContent.setBottom(userSection);
 
+        // === SCROLLPANE SIDEBAR ===
         ScrollPane scrollPane = new ScrollPane(sidebarContent);
         scrollPane.setFitToWidth(true);
-        scrollPane.setFitToHeight(true);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        scrollPane.setPrefWidth(200);
-        scrollPane.setMinWidth(200);
-        scrollPane.setMaxWidth(200);
-        scrollPane.setMaxHeight(Double.MAX_VALUE);
 
         return scrollPane;
     }
 
     public void updateLibrariesInSidebar(String username) {
         Platform.runLater(() -> {
-            // Trova VBox che contiene le etichette "Le mie librerie" e "Nuova libreria"
-            BorderPane sidebarContent = (BorderPane)((ScrollPane)this.getChildren().get(0)).getContent();
+            ScrollPane sidebar = (ScrollPane) this.getChildren().get(0);
+            BorderPane sidebarContent = (BorderPane) sidebar.getContent();
             VBox topContent = (VBox) sidebarContent.getCenter();
 
-            // Trova l’indice di "Le mie librerie"
             int index = -1;
             for (int i = 0; i < topContent.getChildren().size(); i++) {
-                if (topContent.getChildren().get(i) instanceof Label) {
-                    Label lbl = (Label) topContent.getChildren().get(i);
+                if (topContent.getChildren().get(i) instanceof Label lbl) {
                     if (lbl.getText().equals("Le mie librerie")) {
                         index = i;
                         break;
                     }
                 }
             }
+
             if (index == -1) return;
 
-            // Rimuovi eventuali librerie già presenti
+            // Rimuovi le vecchie librerie
             while (topContent.getChildren().size() > index + 1 &&
-                    topContent.getChildren().get(index + 1) instanceof Label &&
-                    !((Label)topContent.getChildren().get(index + 1)).getText().equals("Nuova libreria")) {
+                    topContent.getChildren().get(index + 1) instanceof Label lbl &&
+                    !lbl.getText().equals("Nuova libreria")) {
                 topContent.getChildren().remove(index + 1);
             }
 
-            // Recupera librerie dal server
             String risposta = client.send("get_user_libraries;" + username);
+            System.out.println("Id delle librerie: " + risposta);
             if (risposta != null && !risposta.isEmpty()) {
-                String[] libraryNames = risposta.split(",");
-                for (String libName : libraryNames) {
-                    Label libLabel = new Label(libName.trim());
-                    libLabel.setPadding(new Insets(5, 20, 5, 40)); // leggero rientro
-                    libLabel.setOnMouseClicked(e -> {
-                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                        alert.setTitle("Libreria");
-                        alert.setHeaderText(null);
-                        alert.setContentText("Hai selezionato la libreria: " + libName);
-                        alert.showAndWait();
-                    });
+
+                String[] libs = risposta.split(",");
+                for (String lib : libs) {
+                    String nomeLibreria = client.send("get_user_library;id;" + lib);
+                    Label libLabel = new Label((nomeLibreria.trim()).split(";")[1]);
+                    libLabel.setPadding(new Insets(5, 20, 5, 40));
                     topContent.getChildren().add(index + 1, libLabel);
-                    index++; // inserimento in sequenza
+                    index++;
                 }
             }
         });
+    }
+
+    public Client getClient() { return client; }
+
+    public Label getNewLibraryLabel() {
+        ScrollPane sidebar = (ScrollPane) this.getChildren().get(0);
+        BorderPane sidebarContent = (BorderPane) sidebar.getContent();
+        VBox topContent = (VBox) sidebarContent.getCenter();
+
+        for (var n : topContent.getChildren()) {
+            if (n instanceof Label lbl && lbl.getText().equals("Nuova libreria"))
+                return lbl;
+        }
+        return null;
     }
 
     private ScrollPane createMainContent() {
@@ -211,26 +175,13 @@ public class HomeView extends HBox {
         HBox header = new HBox();
         header.setAlignment(Pos.CENTER_LEFT);
         header.setPadding(new Insets(20, 0, 20, 40));
+        header.getChildren().add(new Label("Home"));
 
-        Label title = new Label("Home");
-
-        header.getChildren().addAll(title);
-
-        // Barra di ricerca gestita da SearchHandler
         searchBar = searchHandler.createSearchBar(mainContent);
         mainContent.getChildren().addAll(searchBar, header);
 
-        // Nascondi la barra di ricerca cliccando fuori da essa
-        mainContent.setOnMouseClicked(event -> {
-            if (searchBar.isVisible() && !searchBar.isHover()) {
-                searchBar.setVisible(false);
-                searchBar.setManaged(false);
-            }
-        });
-
-        // Aggiunta della sezione "I più popolari"
+        // === SEZIONI RIPRISTINATE COME PRIMA ===
         mainContent.getChildren().add(createPopularSection());
-
         mainContent.getChildren().add(createGenreSection("General"));
         mainContent.getChildren().add(createGenreSection("Romance"));
         mainContent.getChildren().add(createGenreSection("Thrillers"));
@@ -238,14 +189,15 @@ public class HomeView extends HBox {
 
         ScrollPane scrollPane = new ScrollPane(mainContent);
         scrollPane.setFitToWidth(true);
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
         return scrollPane;
     }
 
+    // ======================
+    // SEZIONI LIBRI – VERSIONE BELLA
+    // ======================
 
-    // Sezione "I più popolari >" con scroll orizzontale di placeholder
     private VBox createPopularSection() {
         VBox section = new VBox(0);
         section.setPadding(new Insets(0, 0, 0, 40));
@@ -253,86 +205,74 @@ public class HomeView extends HBox {
         Label subtitle = new Label("I più popolari >");
         subtitle.setPadding(new Insets(12, 0, 12, 0));
 
-        //String risposta = client.send("get_book;top;none;20");
+        ScrollPane scroll = createPopularBooksScroll();
 
-        ScrollPane popularScroll = createPopularBooksScroll();
-
-        section.getChildren().addAll(subtitle, popularScroll);
-
+        section.getChildren().addAll(subtitle, scroll);
         return section;
     }
 
-    // ScrollPane orizzontale con 20 placeholder rettangolari
     private ScrollPane createPopularBooksScroll() {
-        HBox booksRow = new HBox(15);
-        booksRow.setAlignment(Pos.CENTER_LEFT);
-        booksRow.setPadding(new Insets(0, 0, 0, 0));
+        HBox row = new HBox(15);
+        row.setAlignment(Pos.CENTER_LEFT);
 
-        ScrollPane scrollPane = new ScrollPane(booksRow);
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.setFitToHeight(false);
-        scrollPane.setFitToWidth(false);
-        scrollPane.setPannable(true);
-        scrollPane.setMinViewportWidth(200);
-        scrollPane.setPrefHeight(120);
-        scrollPane.setPrefViewportHeight(120);
-        HBox.setHgrow(scrollPane, Priority.ALWAYS);
+        ScrollPane scroll = new ScrollPane(row);
+        scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scroll.setFitToHeight(false);
+        scroll.setFitToWidth(false);
+        scroll.setPannable(true);
+        scroll.setPrefHeight(140);
 
-        // Caricamento asincrono delle copertine
-        Task<Void> loadImagesTask = new Task<>() {
+        Task<Void> task = new Task<>() {
             @Override
             protected Void call() {
-                // Chiamata aggiornata per i libri più popolari (top globali)
                 String risposta = client.send("get_book;top;none;20");
                 if (risposta == null || risposta.isEmpty()) return null;
+
                 String[] entries = risposta.split("\\|");
                 for (String entry : entries) {
                     String[] parts = entry.split(";");
-                    if (parts.length >= 7) {
-                        String coverUrl = parts[6];
+                    if (parts.length < 7) continue;
 
-                        StackPane coverContainer = new StackPane();
-                        coverContainer.setPrefSize(80, 120);
+                    String coverUrl = parts[6];
 
-                        if (coverUrl != null && !coverUrl.equalsIgnoreCase("null")) {
-                            ProgressIndicator progress = new ProgressIndicator();
-                            progress.setMaxSize(30, 30);
-                            coverContainer.getChildren().add(progress);
+                    StackPane coverContainer = new StackPane();
 
-                            ImageView cover = new ImageView();
-                            cover.setFitWidth(80);
-                            cover.setFitHeight(120);
-                            cover.setPreserveRatio(true);
+                    if (coverUrl != null && !coverUrl.equalsIgnoreCase("null")) {
 
-                            Image img = new Image(coverUrl, 80, 120, true, true, true);
-                            img.progressProperty().addListener((obs, oldProgress, newProgress) -> {
-                                if (newProgress.doubleValue() >= 1.0) {
-                                    Platform.runLater(() -> {
-                                        cover.setImage(img);
-                                        coverContainer.getChildren().remove(progress);
-                                    });
-                                }
-                            });
+                        ProgressIndicator loading = new ProgressIndicator();
+                        loading.setMaxSize(25, 25);
 
-                            coverContainer.getChildren().add(cover);
-                        } else {
-                            Region placeholder = new Region();
-                            placeholder.setPrefSize(80, 120);
-                            placeholder.setStyle("-fx-background-color: #e0e0e0; -fx-background-radius: 6;");
-                            coverContainer.getChildren().add(placeholder);
-                        }
+                        ImageView cover = new ImageView();
+                        cover.setPreserveRatio(true);
 
-                        Platform.runLater(() -> booksRow.getChildren().add(coverContainer));
+                        Image img = new Image(coverUrl);
+                        img.progressProperty().addListener((obs, oldV, newV) -> {
+                            if (newV.doubleValue() >= 1.0) {
+                                Platform.runLater(() -> {
+                                    cover.setImage(img);
+                                    coverContainer.getChildren().remove(loading);
+                                });
+                            }
+                        });
+
+                        coverContainer.getChildren().addAll(loading, cover);
+                    } else {
+                        Region placeholder = new Region();
+                        placeholder.setPrefSize(80, 120);
+                        placeholder.setStyle("-fx-background-color: #d9d9d9; -fx-background-radius: 6;");
+                        coverContainer.getChildren().add(placeholder);
                     }
+
+                    Platform.runLater(() -> row.getChildren().add(coverContainer));
                 }
+
                 return null;
             }
         };
 
-        new Thread(loadImagesTask).start();
-
-        return scrollPane;
+        new Thread(task).start();
+        return scroll;
     }
 
     private VBox createGenreSection(String genreName) {
@@ -342,88 +282,72 @@ public class HomeView extends HBox {
         Label subtitle = new Label(genreName + " >");
         subtitle.setPadding(new Insets(12, 0, 12, 0));
 
-        ScrollPane genreScroll = createGenreBooksScroll(genreName);
-
-        section.getChildren().addAll(subtitle, genreScroll);
+        section.getChildren().addAll(subtitle, createGenreBooksScroll(genreName));
         return section;
     }
 
     private ScrollPane createGenreBooksScroll(String genreName) {
-        HBox booksRow = new HBox(15);
-        booksRow.setAlignment(Pos.CENTER_LEFT);
-        booksRow.setPadding(new Insets(0, 0, 0, 0));
+        HBox row = new HBox(15);
+        row.setAlignment(Pos.CENTER_LEFT);
 
-        ScrollPane scrollPane = new ScrollPane(booksRow);
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.setFitToHeight(false);
-        scrollPane.setFitToWidth(false);
-        scrollPane.setPannable(true);
-        scrollPane.setMinViewportWidth(200);
-        scrollPane.setPrefHeight(120);
-        scrollPane.setMinHeight(120);
-        scrollPane.setPrefViewportHeight(120);
-        HBox.setHgrow(scrollPane, Priority.ALWAYS);
+        ScrollPane scroll = new ScrollPane(row);
+        scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scroll.setPannable(true);
+        scroll.setPrefHeight(140);
 
-        // Caricamento asincrono delle copertine
-        Task<Void> loadImagesTask = new Task<>() {
+        Task<Void> task = new Task<>() {
             @Override
             protected Void call() {
                 String risposta = client.send("get_book;top;" + genreName + ";20");
-                if (risposta != null && !risposta.isEmpty()) {
-                    String[] entries = risposta.split("\\|");
-                    for (String entry : entries) {
-                        String[] parts = entry.split(";");
-                        if (parts.length >= 7) {
-                            String coverUrl = parts[6];
+                if (risposta == null || risposta.isEmpty()) return null;
 
-                            StackPane coverContainer = new StackPane();
-                            coverContainer.setPrefSize(80, 120);
+                String[] entries = risposta.split("\\|");
+                for (String entry : entries) {
+                    String[] parts = entry.split(";");
+                    if (parts.length < 7) continue;
 
-                            if (coverUrl != null && !coverUrl.equalsIgnoreCase("null")) {
-                                ProgressIndicator progress = new ProgressIndicator();
-                                progress.setMaxSize(30, 30);
-                                coverContainer.getChildren().add(progress);
+                    String coverUrl = parts[6];
 
-                                ImageView cover = new ImageView();
-                                cover.setFitWidth(80);
-                                cover.setFitHeight(120);
-                                cover.setPreserveRatio(true);
+                    StackPane coverContainer = new StackPane();
 
-                                Image img = new Image(coverUrl, 80, 120, true, true, true);
-                                img.progressProperty().addListener((obs, oldProgress, newProgress) -> {
-                                    if (newProgress.doubleValue() >= 1.0) {
-                                        Platform.runLater(() -> {
-                                            cover.setImage(img);
-                                            coverContainer.getChildren().remove(progress);
-                                        });
-                                    }
+                    if (coverUrl != null && !coverUrl.equalsIgnoreCase("null")) {
+
+                        ProgressIndicator loading = new ProgressIndicator();
+                        loading.setMaxSize(25, 25);
+
+                        ImageView cover = new ImageView();
+                        cover.setPreserveRatio(true);
+
+                        Image img = new Image(coverUrl, 80, 120, true, true, true);
+                        img.progressProperty().addListener((obs, oldV, newV) -> {
+                            if (newV.doubleValue() >= 1.0) {
+                                Platform.runLater(() -> {
+                                    cover.setImage(img);
+                                    coverContainer.getChildren().remove(loading);
                                 });
-
-                                coverContainer.getChildren().add(cover);
-                            } else {
-                                Region placeholder = new Region();
-                                placeholder.setPrefSize(80, 120);
-                                placeholder.setStyle("-fx-background-color: #e0e0e0; -fx-background-radius: 6;");
-                                coverContainer.getChildren().add(placeholder);
                             }
+                        });
 
-                            Platform.runLater(() -> booksRow.getChildren().add(coverContainer));
-                        }
+                        coverContainer.getChildren().addAll(loading, cover);
+                    } else {
+                        Region placeholder = new Region();
+                        placeholder.setPrefSize(80, 120);
+                        placeholder.setStyle("-fx-background-color: #d9d9d9; -fx-background-radius: 6;");
+                        coverContainer.getChildren().add(placeholder);
                     }
+
+                    Platform.runLater(() -> row.getChildren().add(coverContainer));
                 }
                 return null;
             }
         };
 
-        new Thread(loadImagesTask).start();
-
-        return scrollPane;
+        new Thread(task).start();
+        return scroll;
     }
 
-    public Label getLoginLabel() {
-        return loginLabelReference;
-    }
+    public Label getLoginLabel() { return loginLabelReference; }
 
     public void setLoggedView(LoggedView lv) {
         this.loggedView = lv;
