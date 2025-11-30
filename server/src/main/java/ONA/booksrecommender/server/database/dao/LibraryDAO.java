@@ -20,6 +20,7 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
         this.bookDAO = bookDAO; // TODO: capire se è stato posizionato bene oppure no, al momento lo sfrutto per costruire il resto della classe
     }
 
+    /* mio metodo
     public Library getLibrary(int id) {
         String query = "SELECT * FROM library_books WHERE library_id = ?";
 
@@ -51,16 +52,64 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
             return null;
         }
     } // chiama una query sql per ottenere i campi in library_books e chiama il getBook(book_id) per restituire un oggetto completo
+    */
 
-    public Library getLibrary(String name) {
-        String query = "SELECT * FROM libraries WHERE library_name = ?";
+    public Library getLibrary(int id) {
+        List<Book> books = new ArrayList<>();
+
+        // 1. Recupero dei libri: usa book_id dalla tabella library_books
+        String booksQuery = "SELECT book_id FROM library_books WHERE library_id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(booksQuery)) {
+            stmt.setInt(1, id); // <-- CORREZIONE 1: Imposta il parametro ID
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Book book = bookDAO.getBook(rs.getInt("book_id"));
+                if (book != null) books.add(book);
+            }
+        } catch (SQLException e) {
+            logger.log("Error retrieving books for library ID " + id + ": " + e.getMessage());
+            return null;
+        }
+
+        // 2. Recupero dei dettagli della libreria dalla tabella libraries
+        String libraryQuery = "SELECT * FROM libraries WHERE library_id = ?";
+        try (PreparedStatement libStmt = connection.prepareStatement(libraryQuery)) {
+            libStmt.setInt(1, id); // <-- CORREZIONE 2: Imposta il parametro ID (CAUSA del tuo errore)
+
+            ResultSet libRs = libStmt.executeQuery();
+
+            if (libRs.next()) {
+                // La libreria è stata trovata, la restituisco
+                return new Library(libRs.getInt("library_id"),
+                        libRs.getString("library_name"),
+                        libRs.getString("username"), books);
+            }
+            // Se non trova il risultato, restituisce null
+            return null;
+
+        } catch (SQLException e) {
+            logger.log("Error retrieving library details for ID " + id + ": " + e.getMessage());
+            return null;
+        }
+    }
+
+    public Library getLibrary(String name, String username) {
+        String query = "SELECT * FROM libraries WHERE library_name = ? AND username = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, name);
+            stmt.setString(2, username);
 
             ResultSet rs = stmt.executeQuery();
 
-            return getLibrary(rs.getInt("library_id"));
+            if (rs.next()) {
+                // Se esiste un risultato, restituisci la libreria usando l'ID
+                return getLibrary(rs.getInt("library_id"));
+            } else {
+                // Se non c'è nessuna riga, la libreria non esiste
+                return null;
+            }
         } catch (SQLException e) {
             logger.log("Error during book retrieval: " + e.getMessage());
             return null;

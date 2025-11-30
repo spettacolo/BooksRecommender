@@ -93,13 +93,54 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
 
     public List<Book> getBooks(String title) {
         //String query = "SELECT * FROM books WHERE title = ?";
-        String query = "SELECT * FROM books WHERE title ILIKE ? ORDER BY publish_year ASC LIMIT 3";
-
+        String query = "SELECT * FROM books WHERE title ILIKE ? ORDER BY publish_year ASC LIMIT 20";
+        // logger.log("invio la richiesta ora");
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             // 💡 Modifica Aggiunta: avvolgi il titolo con i caratteri wildcard
             // Se title è "harry potter", searchPattern sarà "%harry potter%"
             String searchPattern = "%" + title + "%";
             stmt.setString(1, searchPattern);
+
+            ResultSet rs = stmt.executeQuery();
+
+            /*if (!rs.next()) {
+                return null;
+            }*/
+            List<Book> books = new ArrayList<>();
+            while (rs.next()) {
+                List<String> authors = getBookAuthors(rs.getInt("book_id"));
+
+                String rawQueryData = "intitle:\"" + rs.getString("title") + "\"";
+                String encodedQueryData = URLEncoder.encode(rawQueryData, StandardCharsets.UTF_8);
+                // String imageUrl = getBookImageUrl(encodedQueryData);
+                String imageUrl;
+                try {
+                    imageUrl = getBookImageUrl(encodedQueryData);
+                } catch (Exception e) {
+                    imageUrl = "null";
+                }
+                // imageUrl = imageUrl==null ? imageUrl : "null";
+                // logger.log(imageUrl);
+                books.add(new Book(rs.getInt("book_id"), rs.getString("title"), authors, rs.getInt("publish_year"), rs.getString("publishers"), rs.getString("category"), imageUrl));
+            }
+
+            return books;
+        } catch (SQLException e) {
+            logger.log("Error during book retrieval: " + e.getMessage());
+            return null;
+        }
+    }
+    // Proposta che forse mi dimenticherò di proporre: usare le immagini thumbnail (recuperabili nella prima query) nel caso non ci siano quelle HQ
+    public List<Book> getBooks(String category, int limit) {
+        // se limit è 0 significa che si vuole applicare il filtro di default di 20 risultati per request
+        if (limit == 0) limit = 20;
+        // String query = "SELECT * FROM books WHERE category ILIKE ? ORDER BY publish_year ASC LIMIT ?" ;
+        String query = "SELECT b.book_id, b.title, b.publish_year, b.publishers, b.category, COUNT(lb.book_id) AS frequency_count FROM books b INNER JOIN library_books lb ON b.book_id = lb.book_id WHERE b.category ILIKE ? GROUP BY b.book_id, b.title, b.publish_year, b.publishers, b.category ORDER BY frequency_count DESC LIMIT ?";
+        // logger.log("invio la richiesta ora");
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            String searchPattern = "%" + category + "%";
+            stmt.setString(1, searchPattern);
+            stmt.setInt(2, limit);
 
             ResultSet rs = stmt.executeQuery();
 
@@ -141,8 +182,9 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-            System.out.println("Status Code: " + response.statusCode());
-            System.out.println("Response Body:\n" + response.body());
+            // Decommentare se servono i log
+            // System.out.println("Status Code: " + response.statusCode());
+            // System.out.println("Response Body:\n" + response.body());
 
             try {
                 // 1. Creare l'ObjectMapper
@@ -180,10 +222,38 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
                         String detailedJson = secondResponse.body();
                         ObjectMapper mapper2 = new ObjectMapper();
                         JsonNode detailedRootNode = mapper2.readTree(detailedJson);
+
+                        JsonNode imageLinksNode = detailedRootNode
+                                .path("volumeInfo")
+                                .path("imageLinks");
+
+                        JsonNode imageNode = imageLinksNode.path("extraLarge");
+
+                        if (imageNode.isMissingNode()) {
+                            imageNode = imageLinksNode.path("large");
+                        }
+
+                        if (imageNode.isMissingNode()) {
+                            imageNode = imageLinksNode.path("medium");
+                        }
+
+                        if (imageNode.isMissingNode()) {
+                            imageNode = imageLinksNode.path("small");
+                        }
+
+                        if (imageNode.isMissingNode()) {
+                            imageNode = imageLinksNode.path("thumbnail");
+                        }
+
+                        if (imageNode.isMissingNode()) {
+                            imageNode = imageLinksNode.path("smallThumbnail");
+                        }
+
+                        /*
                         JsonNode imageNode = detailedRootNode
                                 .path("volumeInfo")
                                 .path("imageLinks")
-                                .get("extraLarge");
+                                .get("extraLarge");*/
 
                         if (imageNode != null) {
                             return imageNode.asText();
