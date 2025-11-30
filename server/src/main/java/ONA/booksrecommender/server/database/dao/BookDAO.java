@@ -25,7 +25,7 @@ import java.io.IOException;
 
 public class BookDAO extends BaseDAO implements AutoCloseable {
     private HttpClient client;
-    
+
     public BookDAO (Logger logger, Connection connection){
         super(logger, connection);
         this.client = HttpClient.newHttpClient();
