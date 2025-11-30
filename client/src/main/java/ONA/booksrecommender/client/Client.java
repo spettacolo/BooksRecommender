@@ -54,4 +54,44 @@ public class Client {
         out.println(richiesta);
         return in.readLine();
     }
+
+    // Metodo per filtrare immagini in base a larghezza e altezza
+    // Restituisce true se l'immagine è verticale o quadrata (height >= width)
+    public boolean isPortraitOrSquare(String imageUrl) {
+        if (imageUrl.equals("https://i.ibb.co/QLTNDQc/bookplaceholder.png")) return false;
+        try {
+            // Carica l'immagine in background
+            javafx.scene.image.Image img = new javafx.scene.image.Image(imageUrl, true);
+            if (img.getProgress() < 1.0) {
+                // L'immagine non è ancora caricata completamente
+                // Puoi aggiungere un listener per gestire il caricamento asincrono
+                img.progressProperty().addListener((obs, oldProgress, newProgress) -> {
+                    if (newProgress.doubleValue() >= 1.0) {
+                        System.out.println("Risposta " + newProgress.doubleValue());
+                        double width = img.getWidth();
+                        double height = img.getHeight();
+                        if (height >= width) {
+                            System.out.println("Immagine " + imageUrl + " verticale o quadrata");
+                        } else {
+                            System.out.println("Immagine " + imageUrl + " orizzontale, scartata");
+                        }
+                    }
+                });
+                return false; // ritorna false temporaneamente, la decisione finale avverrà nel listener
+            } else {
+                return img.getHeight() >= img.getWidth();
+            }
+        } catch (Exception e) {
+            System.err.println("Errore nel caricamento immagine: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Metodo per aggiungere una libreria inviando la richiesta al server
+    // Restituisce true se la risposta del server è "ADD_LIBRARY;OK"
+    public boolean addLibrary(String libraryName, String username) {
+        String request = "add_library;" + libraryName + ";" + username;
+        String response = send(request);
+        return response != null && response.equals("ADD_LIBRARY;OK");
+    }
 }
