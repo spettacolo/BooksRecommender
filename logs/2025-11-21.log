@@ -1,0 +1,126 @@
+[2025-11-21] Logger started successfully.
+[2025-11-21] Starting server . . .
+[2025-11-21] Starting database . . .
+[2025-11-21] Database started successfully
+[2025-11-21] Server facade initialized successfully
+[2025-11-21] Server listening on port 1234
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;business&economics;20
+[2025-11-21] Error during book retrieval: ERROR: missing FROM-clause entry for table "lb"
+  Posizione: 76
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;;20
+[2025-11-21] Error during book retrieval: ERROR: missing FROM-clause entry for table "lb"
+  Posizione: 76
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;general;20
+[2025-11-21] Error during book retrieval: ERROR: missing FROM-clause entry for table "lb"
+  Posizione: 76
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;romance;20
+[2025-11-21] Error during book retrieval: ERROR: missing FROM-clause entry for table "lb"
+  Posizione: 76
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;thrillers;20
+[2025-11-21] Error during book retrieval: ERROR: missing FROM-clause entry for table "lb"
+  Posizione: 76
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;fiction;20
+[2025-11-21] Error during book retrieval: ERROR: missing FROM-clause entry for table "lb"
+  Posizione: 76
+[2025-11-21] Logger started successfully.
+[2025-11-21] Starting server . . .
+[2025-11-21] Starting database . . .
+[2025-11-21] Database started successfully
+[2025-11-21] Server facade initialized successfully
+[2025-11-21] Server listening on port 1234
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;business&economics;20
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;;20
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;general;20
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;romance;20
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;thrillers;20
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;fiction;20
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;none;20
+[2025-11-21] Error during book retrieval: Indice di colonna, 2, è maggiore del numero di colonne 1.
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;;20
+[2025-11-21] Error during book's authors retrieval: ERROR: prepared statement "S_4" already exists
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;general;20
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;business&economics;20
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;;20
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;general;20
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;romance;20
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;thrillers;20
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;fiction;20
+[2025-11-21] Logger started successfully.
+[2025-11-21] Starting server . . .
+[2025-11-21] Starting database . . .
+[2025-11-21] Database started successfully
+[2025-11-21] Server facade initialized successfully
+[2025-11-21] Server listening on port 1234
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;none;20
+[2025-11-21] Error during book retrieval: Indice di colonna, 2, è maggiore del numero di colonne 1.
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;;20
+[2025-11-21] Logger started successfully.
+[2025-11-21] Starting server . . .
+[2025-11-21] Starting database . . .
+[2025-11-21] Database started successfully
+[2025-11-21] Server facade initialized successfully
+[2025-11-21] Server listening on port 1234
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;none;20
+[2025-11-21] Error during book retrieval: Indice di colonna, 2, è maggiore del numero di colonne 1.
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;;20
+[2025-11-21] Error during book's authors retrieval: ERROR: prepared statement "S_1" already exists
+[2025-11-21] Logger started successfully.
+[2025-11-21] Starting server . . .
+[2025-11-21] Starting database . . .
+[2025-11-21] Database started successfully
+[2025-11-21] Server facade initialized successfully
+[2025-11-21] Server listening on port 1234
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;none;20
+[2025-11-21] Error during book retrieval: Indice di colonna, 2, è maggiore del numero di colonne 1.
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;none;20
+[2025-11-21] Error during book retrieval: Indice di colonna, 2, è maggiore del numero di colonne 1.
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;general;20
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;romance;20
+[2025-11-21] Error Connection reset
+[2025-11-21] Logger started successfully.
+[2025-11-21] Starting server . . .
+[2025-11-21] Starting database . . .
+[2025-11-21] Database started successfully
+[2025-11-21] Server facade initialized successfully
+[2025-11-21] Server listening on port 1234
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;none;20
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;none;20
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;general;20
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;romance;20
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;thrillers;20
+[2025-11-21] Connection accepted by /127.0.0.1
+[2025-11-21] Received: get_book;top;fiction;20

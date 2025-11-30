@@ -1,0 +1,238 @@
+[2025-11-17] Logger started successfully.
+[2025-11-17] Starting server . . .
+[2025-11-17] Starting database . . .
+[2025-11-17] Database started successfully
+[2025-11-17] Server facade initialized successfully
+[2025-11-17] Server listening on port 1234
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Logger started successfully.
+[2025-11-17] Starting server . . .
+[2025-11-17] Starting database . . .
+[2025-11-17] Database started successfully
+[2025-11-17] Server facade initialized successfully
+[2025-11-17] Server listening on port 1234
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;business&economics;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;business&economics;20
+[2025-11-17] Logger started successfully.
+[2025-11-17] Starting server . . .
+[2025-11-17] Starting database . . .
+[2025-11-17] Database started successfully
+[2025-11-17] Server facade initialized successfully
+[2025-11-17] Server listening on port 1234
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;business&economics;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;business & economics;20
+[2025-11-17] Logger started successfully.
+[2025-11-17] Starting server . . .
+[2025-11-17] Starting database . . .
+[2025-11-17] Database started successfully
+[2025-11-17] Server facade initialized successfully
+[2025-11-17] Server listening on port 1234
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;business&economics;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;business & economics;20
+[2025-11-17] Logger started successfully.
+[2025-11-17] Starting server . . .
+[2025-11-17] Starting database . . .
+[2025-11-17] Database started successfully
+[2025-11-17] Server facade initialized successfully
+[2025-11-17] Server listening on port 1234
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;business&economics;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;business&economics;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;general;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;business&economics;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;business&economics;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;general;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;romance;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;thrillers;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;fiction;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;business&economics;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;business&economics;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;general;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;romance;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;thrillers;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;fiction;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;title;harry potter
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;title;the picture
+[2025-11-17] Logger started successfully.
+[2025-11-17] Starting server . . .
+[2025-11-17] Starting database . . .
+[2025-11-17] Database started successfully
+[2025-11-17] Server facade initialized successfully
+[2025-11-17] Server listening on port 1234
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;business&economics;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;;20
+[2025-11-17] Logger started successfully.
+[2025-11-17] Starting server . . .
+[2025-11-17] Starting database . . .
+[2025-11-17] Database started successfully
+[2025-11-17] Server facade initialized successfully
+[2025-11-17] Server listening on port 1234
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;business&economics;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;;20
+[2025-11-17] Error during book's authors retrieval: ERROR: prepared statement "S_1" already exists
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;general;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;romance;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;thrillers;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;fiction;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;title;moby
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;title;moby
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;business&economics;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;general;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;romance;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;thrillers;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;fiction;20
+[2025-11-17] Logger started successfully.
+[2025-11-17] Starting server . . .
+[2025-11-17] Starting database . . .
+[2025-11-17] Database started successfully
+[2025-11-17] Server facade initialized successfully
+[2025-11-17] Server listening on port 1234
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;business&economics;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;general;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;romance;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;thrillers;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;fiction;20
+[2025-11-17] Logger started successfully.
+[2025-11-17] Starting server . . .
+[2025-11-17] Starting database . . .
+[2025-11-17] Database started successfully
+[2025-11-17] Server facade initialized successfully
+[2025-11-17] Server listening on port 1234
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;business&economics;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;;20
+[2025-11-17] Error during book's authors retrieval: ERROR: prepared statement "S_1" already exists
+[2025-11-17] Error during book's authors retrieval: ERROR: prepared statement "S_2" already exists
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;general;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;romance;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;thrillers;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;fiction;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;title;dio
+[2025-11-17] Logger started successfully.
+[2025-11-17] Starting server . . .
+[2025-11-17] Starting database . . .
+[2025-11-17] Database started successfully
+[2025-11-17] Server facade initialized successfully
+[2025-11-17] Server listening on port 1234
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;business&economics;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;general;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;romance;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;thrillers;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;fiction;20
+[2025-11-17] Logger started successfully.
+[2025-11-17] Starting server . . .
+[2025-11-17] Starting database . . .
+[2025-11-17] Database started successfully
+[2025-11-17] Server facade initialized successfully
+[2025-11-17] Server listening on port 1234
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;business&economics;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;general;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;romance;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;thrillers;20
+[2025-11-17] Error during book retrieval: ERROR: prepared statement "S_2" already exists
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;fiction;20
+[2025-11-17] Error during book retrieval: ERROR: prepared statement "S_3" already exists
+[2025-11-17] Logger started successfully.
+[2025-11-17] Starting server . . .
+[2025-11-17] Starting database . . .
+[2025-11-17] Database started successfully
+[2025-11-17] Server facade initialized successfully
+[2025-11-17] Server listening on port 1234
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;business&economics;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;;20
+[2025-11-17] Error during book's authors retrieval: ERROR: prepared statement "S_1" already exists
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;general;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;romance;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;thrillers;20
+[2025-11-17] Error during book retrieval: ERROR: prepared statement "S_3" already exists
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;fiction;20
+[2025-11-17] Logger started successfully.
+[2025-11-17] Starting server . . .
+[2025-11-17] Starting database . . .
+[2025-11-17] Database started successfully
+[2025-11-17] Server facade initialized successfully
+[2025-11-17] Server listening on port 1234
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;business&economics;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;general;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;romance;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;thrillers;20
+[2025-11-17] Connection accepted by /127.0.0.1
+[2025-11-17] Received: get_book;top;fiction;20
