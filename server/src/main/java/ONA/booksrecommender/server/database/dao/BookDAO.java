@@ -26,7 +26,7 @@ import java.io.IOException;
 public class BookDAO extends BaseDAO implements AutoCloseable {
     private HttpClient client;
 
-    public BookDAO (Logger logger, Connection connection){
+    public BookDAO(Logger logger, Connection connection) {
         super(logger, connection);
         this.client = HttpClient.newHttpClient();
     }
@@ -38,7 +38,7 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
             stmt.setInt(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (!rs.next()) {
-                    return null; // nessun libro trovato
+                    return null;
                 }
 
                 List<String> authors = getBookAuthors(rs.getInt("book_id"));
@@ -46,7 +46,6 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
                 String rawQueryData = "intitle:\"" + rs.getString("title") + "\"";
                 String encodedQueryData = URLEncoder.encode(rawQueryData, StandardCharsets.UTF_8);
                 String imageUrl = getBookImageUrl(encodedQueryData);
-                //logger.log(imageUrl);
 
                 return new Book(
                         rs.getInt("book_id"),
@@ -64,112 +63,91 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
         }
     }
 
-    /*public Book getBook(String title) {
-        //String query = "SELECT * FROM books WHERE title = ?";
-        String query = "SELECT * FROM books WHERE title ILIKE ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, title);
-
-            ResultSet rs = stmt.executeQuery();
-
-            if (!rs.next()) {
-                return null;
-            }
-
-            List<String> authors = getBookAuthors(rs.getInt("book_id"));
-
-            String rawQueryData = "intitle:\"" + rs.getString("title") + "\"";
-            String encodedQueryData = URLEncoder.encode(rawQueryData, StandardCharsets.UTF_8);
-            String imageUrl = getBookImageUrl(encodedQueryData);
-            //logger.log(imageUrl);
-
-            return new Book(rs.getInt("book_id"), rs.getString("title"), authors, rs.getInt("publish_year"), rs.getString("publishers"), rs.getString("category"), imageUrl);
-        } catch (SQLException e) {
-            logger.log("Error during book retrieval: " + e.getMessage());
-            return null;
-        }
-    }*/
-
     public List<Book> getBooks(String title) {
-        //String query = "SELECT * FROM books WHERE title = ?";
         String query = "SELECT * FROM books WHERE title ILIKE ? ORDER BY publish_year ASC LIMIT 20";
-        // logger.log("invio la richiesta ora");
+
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            // 💡 Modifica Aggiunta: avvolgi il titolo con i caratteri wildcard
-            // Se title è "harry potter", searchPattern sarà "%harry potter%"
             String searchPattern = "%" + title + "%";
             stmt.setString(1, searchPattern);
 
-            ResultSet rs = stmt.executeQuery();
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Book> books = new ArrayList<>();
+                while (rs.next()) {
+                    List<String> authors = getBookAuthors(rs.getInt("book_id"));
 
-            /*if (!rs.next()) {
-                return null;
-            }*/
-            List<Book> books = new ArrayList<>();
-            while (rs.next()) {
-                List<String> authors = getBookAuthors(rs.getInt("book_id"));
+                    String rawQueryData = "intitle:\"" + rs.getString("title") + "\"";
+                    String encodedQueryData = URLEncoder.encode(rawQueryData, StandardCharsets.UTF_8);
+                    String imageUrl;
+                    try {
+                        imageUrl = getBookImageUrl(encodedQueryData);
+                    } catch (Exception e) {
+                        imageUrl = "null";
+                    }
 
-                String rawQueryData = "intitle:\"" + rs.getString("title") + "\"";
-                String encodedQueryData = URLEncoder.encode(rawQueryData, StandardCharsets.UTF_8);
-                // String imageUrl = getBookImageUrl(encodedQueryData);
-                String imageUrl;
-                try {
-                    imageUrl = getBookImageUrl(encodedQueryData);
-                } catch (Exception e) {
-                    imageUrl = "null";
+                    books.add(new Book(
+                            rs.getInt("book_id"),
+                            rs.getString("title"),
+                            authors,
+                            rs.getInt("publish_year"),
+                            rs.getString("publishers"),
+                            rs.getString("category"),
+                            imageUrl
+                    ));
                 }
-                // imageUrl = imageUrl==null ? imageUrl : "null";
-                // logger.log(imageUrl);
-                books.add(new Book(rs.getInt("book_id"), rs.getString("title"), authors, rs.getInt("publish_year"), rs.getString("publishers"), rs.getString("category"), imageUrl));
-            }
 
-            return books;
+                return books;
+            }
         } catch (SQLException e) {
             logger.log("Error during book retrieval: " + e.getMessage());
             return null;
         }
     }
-    // Proposta che forse mi dimenticherò di proporre: usare le immagini thumbnail (recuperabili nella prima query) nel caso non ci siano quelle HQ
+
     public List<Book> getBooks(String category, int limit) {
-        // se limit è 0 significa che si vuole applicare il filtro di default di 20 risultati per request
         if (limit == 0) limit = 20;
-        // String query = "SELECT * FROM books WHERE category ILIKE ? ORDER BY publish_year ASC LIMIT ?" ;
+
         String query;
-        if (category.equals("none"))
-            // Query 1: Calcola la frequenza di tutti i libri (o filtra se necessario)
-            query = "SELECT b.book_id, b.title, b.publish_year, b.publishers, b.category, COUNT(lb.book_id) AS frequency_count FROM books b INNER JOIN library_books lb ON b.book_id = lb.book_id GROUP BY b.book_id, b.title, b.publish_year, b.publishers, b.category ORDER BY frequency_count DESC LIMIT ?";
-        else {
-            // Query 2: Ricerca per categoria e ordinamento casuale, la frequenza è impostata a 0
-            String query1 = "SELECT b.book_id, b.title, b.publish_year, b.publishers, b.category, 0 AS frequency_count FROM books b WHERE b.category ILIKE ? ORDER BY RANDOM() DESC LIMIT ?";
-            query = query1;
-        }        // logger.log("invio la richiesta ora");
+        if (category.equals("none")) {
+            query = "SELECT b.book_id, b.title, b.publish_year, b.publishers, b.category, COUNT(lb.book_id) AS frequency_count " +
+                    "FROM books b INNER JOIN library_books lb ON b.book_id = lb.book_id " +
+                    "GROUP BY b.book_id, b.title, b.publish_year, b.publishers, b.category " +
+                    "ORDER BY frequency_count DESC LIMIT ?";
+        } else {
+            query = "SELECT b.book_id, b.title, b.publish_year, b.publishers, b.category, 0 AS frequency_count " +
+                    "FROM books b WHERE b.category ILIKE ? ORDER BY RANDOM() DESC LIMIT ?";
+        }
+
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            if (category.equals("none"))
+            if (category.equals("none")) {
                 stmt.setInt(1, limit);
-            else {
+            } else {
                 String searchPattern = "%" + category + "%";
                 stmt.setString(1, searchPattern);
                 stmt.setInt(2, limit);
             }
 
-            ResultSet rs = stmt.executeQuery();
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Book> books = new ArrayList<>();
+                while (rs.next()) {
+                    List<String> authors = getBookAuthors(rs.getInt("book_id"));
 
-            /*if (!rs.next()) {
-                return null;
-            }*/
-            List<Book> books = new ArrayList<>();
-            while (rs.next()) {
-                List<String> authors = getBookAuthors(rs.getInt("book_id"));
+                    String rawQueryData = "intitle:\"" + rs.getString("title") + "\"";
+                    String encodedQueryData = URLEncoder.encode(rawQueryData, StandardCharsets.UTF_8);
+                    String imageUrl = getBookImageUrl(encodedQueryData);
 
-                String rawQueryData = "intitle:\"" + rs.getString("title") + "\"";
-                String encodedQueryData = URLEncoder.encode(rawQueryData, StandardCharsets.UTF_8);
-                String imageUrl = getBookImageUrl(encodedQueryData);
-                //logger.log(imageUrl);
-                books.add(new Book(rs.getInt("book_id"), rs.getString("title"), authors, rs.getInt("publish_year"), rs.getString("publishers"), rs.getString("category"), imageUrl));
+                    books.add(new Book(
+                            rs.getInt("book_id"),
+                            rs.getString("title"),
+                            authors,
+                            rs.getInt("publish_year"),
+                            rs.getString("publishers"),
+                            rs.getString("category"),
+                            imageUrl
+                    ));
+                }
+
+                return books;
             }
-
-            return books;
         } catch (SQLException e) {
             logger.log("Error during book retrieval: " + e.getMessage());
             return null;
@@ -180,43 +158,26 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
         String req = "https://www.googleapis.com/books/v1/volumes?q=" + title;
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(req))
-                .GET() // Metodo GET
+                .GET()
                 .build();
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-            // Decommentare se servono i log
-            // System.out.println("Status Code: " + response.statusCode());
-            // System.out.println("Response Body:\n" + response.body());
-
             try {
-                // 1. Creare l'ObjectMapper
                 ObjectMapper mapper = new ObjectMapper();
-
                 String jsonResponse = response.body();
-                // 2. Parsare la stringa JSON in un nodo (albero) di oggetti
                 JsonNode rootNode = mapper.readTree(jsonResponse);
-
-                // 3. Navigare fino all'array "items"
-                // Se l'array "items" non esiste, itemsNode sarà 'null'.
                 JsonNode itemsNode = rootNode.get("items");
 
                 String selfLinkValue = null;
 
                 if (itemsNode != null && itemsNode.isArray() && !itemsNode.isEmpty()) {
-                    // 4. Accedere al primo elemento dell'array (indice 0)
                     JsonNode firstItem = itemsNode.get(0);
-
-                    // 5. Estrarre il valore del campo "selfLink"
-                    // Se il campo non esiste, selfLinkNode sarà 'null'.
                     JsonNode selfLinkNode = firstItem.get("selfLink");
 
                     if (selfLinkNode != null) {
-                        // 6. Ottenere il valore come stringa
                         selfLinkValue = selfLinkNode.asText();
-                        //System.out.println("Valore di selfLink recuperato: " + selfLinkValue);
 
-                        // Seconda request per recuperare l'url dell'immagine
                         HttpRequest secondRequest = HttpRequest.newBuilder()
                                 .uri(URI.create(selfLinkValue))
                                 .GET()
@@ -252,16 +213,9 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
                             imageNode = imageLinksNode.path("smallThumbnail");
                         }
 
-                        /*
-                        JsonNode imageNode = detailedRootNode
-                                .path("volumeInfo")
-                                .path("imageLinks")
-                                .get("extraLarge");*/
-
                         if (imageNode != null) {
                             System.out.println(imageNode.asText());
                             return imageNode.asText();
-
                         } else {
                             System.out.println("URL immagine non trovato nel dettaglio del volume. Uso placeholder");
                             return "https://i.ibb.co/QLTNDQc/bookplaceholder.png";
@@ -292,20 +246,18 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, author);
 
-            ResultSet rs = stmt.executeQuery();
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Book> books = new ArrayList<>();
 
-            /*if (!rs.next()) {
-                return null;
-            }*/
+                while (rs.next()) {
+                    Book book = getBook(rs.getInt("book_id"));
+                    if (book != null) {
+                        books.add(book);
+                    }
+                }
 
-            List<Book> books = new ArrayList<>();
-
-            while (rs.next()) {
-                Book book = getBook(rs.getInt("book_id"));
-                books.add(book);
+                return books;
             }
-
-            return books;
         } catch (SQLException e) {
             logger.log("Error during book retrieval: " + e.getMessage());
             return new ArrayList<>();
@@ -321,38 +273,25 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, author);
+            stmt.setInt(2, year);
 
-            ResultSet rs = stmt.executeQuery();
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Book> books = new ArrayList<>();
 
-            /*if (!rs.next()) {
-                return null;
-            }*/
+                while (rs.next()) {
+                    Book book = getBook(rs.getInt("book_id"));
+                    if (book != null) {
+                        books.add(book);
+                    }
+                }
 
-            List<Book> books = new ArrayList<>();
-
-            while (rs.next()) {
-                Book book = getBook(rs.getInt("book_id"));
-                books.add(book);
+                return books;
             }
-
-            return books;
         } catch (SQLException e) {
             logger.log("Error during book retrieval: " + e.getMessage());
             return new ArrayList<>();
         }
     }
-
-    /*public Book getBook(List<String> authors) {
-        String query = "";
-
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            //
-        } catch (SQLException e) {
-            logger.log("Error during book retrieval: " + e.getMessage());
-        }
-
-        return new Book(1, "test", null, 1, "test", "test");
-    }*/
 
     public List<String> getBookAuthors(int id) {
         String authorsQuery = "SELECT a.author_name " +
@@ -365,17 +304,16 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
         try (PreparedStatement authorsStmt = connection.prepareStatement(authorsQuery)) {
             authorsStmt.setInt(1, id);
 
-            ResultSet authorsRs = authorsStmt.executeQuery();
+            try (ResultSet authorsRs = authorsStmt.executeQuery()) {
+                while (authorsRs.next()) {
+                    authors.add(authorsRs.getString("author_name"));
+                }
 
-            while (authorsRs.next()) {
-                authors.add(authorsRs.getString("author_name"));
+                return authors;
             }
-
-            return authors;
         } catch (SQLException e) {
             logger.log("Error during book's authors retrieval: " + e.getMessage());
-            //return null;
-            return new ArrayList<>(); // TODO: applicare questo metodo di gestione su tutti i metodi DAO e migliorare i controlli per prevenire errori inaspettati
+            return new ArrayList<>();
         }
     }
 
@@ -384,18 +322,3 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
         super.close();
     }
 }
-
-
-/*
-https://www.googleapis.com/books/v1/volumes?q=intitle:!Trato%hecho!:%Spanish%for%Real%Life,%Combined%Edition
-https://www.googleapis.com/books/v1/volumes?q=intitle:harry+intitle:potter+intitle:e+intitle:il+intitle:calice+intitle:di+intitle:fuoco
-https://www.googleapis.com/books/v1/volumes?q=intitle:harry%potter+intitle:e+intitle:il+intitle:calice+intitle:di+intitle:fuoco
-
-https://www.googleapis.com/books/v1/volumes/4dvptppOG8MC
-
-
-https://developers.google.com/books/docs/v1/using?utm_source=chatgpt.com&hl=it
-
-
-https://www.digitalocean.com/community/tutorials/java-socket-programming-server-client
- */

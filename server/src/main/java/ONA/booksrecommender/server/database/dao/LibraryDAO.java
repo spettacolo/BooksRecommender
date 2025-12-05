@@ -2,7 +2,6 @@ package ONA.booksrecommender.server.database.dao;
 
 import ONA.booksrecommender.objects.Book;
 import ONA.booksrecommender.objects.Library;
-//import ONA.booksrecommender.objects.User;
 import ONA.booksrecommender.utils.Logger;
 
 import java.sql.Connection;
@@ -16,43 +15,9 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
     private BookDAO bookDAO;
 
     public LibraryDAO(Logger logger, Connection connection, BookDAO bookDAO) {
-        super(logger, connection); // crea la connessione nel costruttore di BaseDAO
-        this.bookDAO = bookDAO; // TODO: capire se è stato posizionato bene oppure no, al momento lo sfrutto per costruire il resto della classe
+        super(logger, connection);
+        this.bookDAO = bookDAO;
     }
-
-    /* mio metodo
-    public Library getLibrary(int id) {
-        String query = "SELECT * FROM library_books WHERE library_id = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setInt(1, id);
-
-            ResultSet rs = stmt.executeQuery();
-
-            List<Book> books = new ArrayList<>();
-
-            while (rs.next()) {
-                Book book = bookDAO.getBook(Integer.parseInt(rs.getString("book_id")));
-                books.add(book);
-            }
-
-            String libraryQuery = "SELECT * FROM libraries WHERE library_id = ?";
-
-            Library library;
-
-            try (PreparedStatement libStmt = connection.prepareStatement(query)) {
-                ResultSet libRs = libStmt.executeQuery();
-
-                library = new Library(libRs.getInt("library_id"), libRs.getString("library_name"), libRs.getString("username"), books);
-            }
-
-            return library;
-        } catch (SQLException e) {
-            logger.log("Error during book retrieval: " + e.getMessage());
-            return null;
-        }
-    } // chiama una query sql per ottenere i campi in library_books e chiama il getBook(book_id) per restituire un oggetto completo
-    */
 
     public Library getLibrary(int id) {
         List<Book> books = new ArrayList<>();
@@ -60,12 +25,15 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
         // 1. Recupero dei libri: usa book_id dalla tabella library_books
         String booksQuery = "SELECT book_id FROM library_books WHERE library_id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(booksQuery)) {
-            stmt.setInt(1, id); // <-- CORREZIONE 1: Imposta il parametro ID
+            stmt.setInt(1, id);
 
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                Book book = bookDAO.getBook(rs.getInt("book_id"));
-                if (book != null) books.add(book);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Book book = bookDAO.getBook(rs.getInt("book_id"));
+                    if (book != null) {
+                        books.add(book);
+                    }
+                }
             }
         } catch (SQLException e) {
             logger.log("Error retrieving books for library ID " + id + ": " + e.getMessage());
@@ -75,19 +43,20 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
         // 2. Recupero dei dettagli della libreria dalla tabella libraries
         String libraryQuery = "SELECT * FROM libraries WHERE library_id = ?";
         try (PreparedStatement libStmt = connection.prepareStatement(libraryQuery)) {
-            libStmt.setInt(1, id); // <-- CORREZIONE 2: Imposta il parametro ID (CAUSA del tuo errore)
+            libStmt.setInt(1, id);
 
-            ResultSet libRs = libStmt.executeQuery();
-
-            if (libRs.next()) {
-                // La libreria è stata trovata, la restituisco
-                return new Library(libRs.getInt("library_id"),
-                        libRs.getString("library_name"),
-                        libRs.getString("username"), books);
+            try (ResultSet libRs = libStmt.executeQuery()) {
+                if (libRs.next()) {
+                    System.out.println(libRs.getString("library_name"));
+                    return new Library(
+                            libRs.getInt("library_id"),
+                            libRs.getString("library_name"),
+                            libRs.getString("username"),
+                            books
+                    );
+                }
+                return null;
             }
-            // Se non trova il risultato, restituisce null
-            return null;
-
         } catch (SQLException e) {
             logger.log("Error retrieving library details for ID " + id + ": " + e.getMessage());
             return null;
@@ -101,71 +70,46 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
             stmt.setString(1, name);
             stmt.setString(2, username);
 
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                // Se esiste un risultato, restituisci la libreria usando l'ID
-                return getLibrary(rs.getInt("library_id"));
-            } else {
-                // Se non c'è nessuna riga, la libreria non esiste
-                return null;
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return getLibrary(rs.getInt("library_id"));
+                } else {
+                    return null;
+                }
             }
         } catch (SQLException e) {
-            logger.log("Error during book retrieval: " + e.getMessage());
+            logger.log("Error during library retrieval: " + e.getMessage());
             return null;
         }
     }
 
-    // Nota: potrebbe restituire una lista di librerie, motivo per cui non sarà getLibrary bensì getLibraries
     public List<Library> getLibraries(Book book) {
         return null;
     }
 
-    // Probabilmente ridondante ma utile nel caso si ha solo l'username, si risparmia una richiesta inutile, decidere se tenerle entrambe o meno
-    // DECISIONE: mantenere solo il metodo con parametro username, è inutile prendere come parametro tutto l'User
     public List<Library> getLibraries(String username) {
         String query = "SELECT * FROM libraries WHERE username = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, username);
 
-            ResultSet rs = stmt.executeQuery();
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Library> libraries = new ArrayList<>();
 
-            List<Library> libraries = new ArrayList<>();
+                while (rs.next()) {
+                    Library library = getLibrary(rs.getInt("library_id"));
+                    if (library != null) {
+                        libraries.add(library);
+                    }
+                }
 
-            while (rs.next()) {
-                Library library = getLibrary(rs.getInt("library_id")); //, rs.getString("library_name"), rs.getString("username"));
-                libraries.add(library);
+                return libraries;
             }
-
-            return libraries;
         } catch (SQLException e) {
-            logger.log("Error during book retrieval: " + e.getMessage());
-            return null; // TODO: decidere se cambiare i null con liste vuote
+            logger.log("Error during libraries retrieval: " + e.getMessage());
+            return new ArrayList<>(); // Restituisce lista vuota invece di null
         }
     }
-
-    /*public List<Library> getLibraries(User user) {
-        String query = "SELECT * FROM libraries WHERE username = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, user.getUserId());
-
-            ResultSet rs = stmt.executeQuery();
-
-            List<Library> libraries = new ArrayList<>();
-
-            while (rs.next()) {
-                Library library = getLibrary(rs.getInt("library_id")); // rs.getString("library_name"), rs.getString("username"));
-                libraries.add(library);
-            }
-
-            return libraries;
-        } catch (SQLException e) {
-            logger.log("Error during book retrieval: " + e.getMessage());
-            return null;
-        }
-    }*/
 
     public boolean addLibrary(String library, String username) {
         String query = "INSERT INTO libraries (library_name, username) VALUES (?, ?)";
@@ -175,10 +119,9 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
             stmt.setString(2, username);
 
             int rows = stmt.executeUpdate();
-
             return rows >= 1;
         } catch (SQLException e) {
-            logger.log("Error during book retrieval: " + e.getMessage());
+            logger.log("Error adding library: " + e.getMessage());
             return false;
         }
     }
@@ -192,10 +135,9 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
             stmt.setInt(3, library.getId());
 
             int rows = stmt.executeUpdate();
-
             return rows >= 1;
         } catch (SQLException e) {
-            logger.log("Error during book retrieval: " + e.getMessage());
+            logger.log("Error updating library: " + e.getMessage());
             return false;
         }
     }
@@ -207,10 +149,9 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
             stmt.setInt(1, library.getId());
 
             int rows = stmt.executeUpdate();
-
             return rows >= 1;
         } catch (SQLException e) {
-            logger.log("Error during book retrieval: " + e.getMessage());
+            logger.log("Error removing library: " + e.getMessage());
             return false;
         }
     }
@@ -223,10 +164,9 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
             stmt.setInt(2, library.getId());
 
             int rows = stmt.executeUpdate();
-
             return rows >= 1;
         } catch (SQLException e) {
-            logger.log("Error during book retrieval: " + e.getMessage());
+            logger.log("Error adding book to library: " + e.getMessage());
             return false;
         }
     }
