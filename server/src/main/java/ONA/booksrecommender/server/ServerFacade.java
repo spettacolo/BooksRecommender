@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 public class ServerFacade {
     private static final String SEPARATOR = ";";
-    private static final String ERROR_MESSAGE = "ERROR" + SEPARATOR + "missing_username";
+    private static final String ERROR_MESSAGE = "ERROR" + SEPARATOR + "missing_params";
     private final Logger logger;
     private final Database database;
 
@@ -197,6 +197,13 @@ public class ServerFacade {
                     boolean ok = libraryDAO.addLibrary(library, username);
                     return ok ? "ADD_LIBRARY" + SEPARATOR + "OK" : "ADD_LIBRARY" + SEPARATOR + "FAIL";
                 }
+                case "remove_library": {
+                    if (parts.length < 2) return ERROR_MESSAGE;
+                    int lib_id = Integer.parseInt(parts[1]);
+                    Library library = libraryDAO.getLibrary(lib_id);
+                    boolean ok = libraryDAO.removeLibrary(library);
+                    return ok ? "REMOVE_LIBRARY" + SEPARATOR + "OK" : "REMOVE_LIBRARY" + SEPARATOR + "FAIL";
+                }
                 case "add_book_to_library": {
                     // opzione 1: method, lib_name, username, book_id
                     Book book;
@@ -213,6 +220,23 @@ public class ServerFacade {
                     }
                     boolean ok = libraryDAO.addBook(book, library);
                     return ok ? "ADD_BOOK_TO_LIBRARY" + SEPARATOR + "OK" : "ADD_BOOK_TO_LIBRARY" + SEPARATOR + "FAIL";
+                }
+                case "remove_book_from_library": {
+                    // opzione 1: method, lib_name, username, book_id
+                    Book book;
+                    Library library;
+                    if (parts.length < 4) {
+                        // opzione 2: method, lib_id, book_id
+                        if (parts.length == 3) {
+                            book = bookDAO.getBook(Integer.parseInt(parts[2]));
+                            library = libraryDAO.getLibrary(Integer.parseInt(parts[1]));
+                        } else return ERROR_MESSAGE;
+                    } else {
+                        book = bookDAO.getBook(Integer.parseInt(parts[3]));
+                        library = libraryDAO.getLibrary(parts[1], parts[2]);
+                    }
+                    boolean ok = libraryDAO.removeBook(book, library);
+                    return ok ? "REMOVE_BOOK_FROM_LIBRARY" + SEPARATOR + "OK" : "REMOVE_BOOK_FROM_LIBRARY" + SEPARATOR + "FAIL";
                 }
                 case "get_book_reviews":
                     return "UNKNOWN_COMMAND";
