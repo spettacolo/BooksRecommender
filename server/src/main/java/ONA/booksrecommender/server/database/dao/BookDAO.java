@@ -63,6 +63,20 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
         }
     }
 
+    public List<Book> getBooks(List<Integer> ids) {
+        try {
+            List<Book> books = new ArrayList<>();
+            for (int id : ids) {
+                Book book = getBook(id);
+                books.add(book);
+            }
+            return books;
+        } catch (Exception e) {
+            logger.log("Error during book retrieval: " + e.getMessage());
+            return null;
+        }
+    }
+
     public List<Book> getBooks(String title) {
         String query = "SELECT * FROM books WHERE title ILIKE ? ORDER BY publish_year ASC LIMIT 20";
 

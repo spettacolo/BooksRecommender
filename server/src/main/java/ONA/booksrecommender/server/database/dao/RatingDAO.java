@@ -27,13 +27,14 @@ public class RatingDAO extends BaseDAO implements AutoCloseable {
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, bookId);
             stmt.setString(2, username);
-            ResultSet rs = stmt.executeQuery();
+            try (ResultSet rs = stmt.executeQuery()) {
 
-            if (!rs.next()) {
-                return null;
+                if (!rs.next()) {
+                    return null;
+                }
+
+                return new Rating(rs.getString("username"), rs.getString("book_id"), rs.getInt("style"), rs.getInt("content"), rs.getInt("liking"), rs.getInt("originality"), rs.getInt("edition"), rs.getString("notes"));
             }
-
-            return new Rating(rs.getString("username"), rs.getString("book_id"), rs.getInt("style"), rs.getInt("content"), rs.getInt("liking"), rs.getInt("originality"), rs.getInt("edition"), rs.getString("notes"));
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -45,15 +46,16 @@ public class RatingDAO extends BaseDAO implements AutoCloseable {
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, bookId);
-            ResultSet rs = stmt.executeQuery();
+            try (ResultSet rs = stmt.executeQuery()) {
 
-            List<Rating> ratings = new ArrayList<>();
+                List<Rating> ratings = new ArrayList<>();
 
-            while (rs.next()) {
-                ratings.add(new Rating(rs.getString("username"), rs.getString("book_id"), rs.getInt("style"), rs.getInt("content"), rs.getInt("liking"), rs.getInt("originality"), rs.getInt("edition"), rs.getString("notes")));
+                while (rs.next()) {
+                    ratings.add(new Rating(rs.getString("username"), rs.getString("book_id"), rs.getInt("style"), rs.getInt("content"), rs.getInt("liking"), rs.getInt("originality"), rs.getInt("edition"), rs.getString("notes")));
+                }
+
+                return ratings;
             }
-
-            return ratings;
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -66,15 +68,16 @@ public class RatingDAO extends BaseDAO implements AutoCloseable {
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, username);
-            ResultSet rs = stmt.executeQuery();
+            try (ResultSet rs = stmt.executeQuery()) {
 
-            List<Rating> ratings = new ArrayList<>();
+                List<Rating> ratings = new ArrayList<>();
 
-            while (rs.next()) {
-                ratings.add(new Rating(rs.getString("username"), rs.getString("book_id"), rs.getInt("style"), rs.getInt("content"), rs.getInt("liking"), rs.getInt("originality"), rs.getInt("edition"), rs.getString("notes")));
+                while (rs.next()) {
+                    ratings.add(new Rating(rs.getString("username"), rs.getString("book_id"), rs.getInt("style"), rs.getInt("content"), rs.getInt("liking"), rs.getInt("originality"), rs.getInt("edition"), rs.getString("notes")));
+                }
+
+                return ratings;
             }
-
-            return ratings;
 
         } catch (SQLException e) {
             throw new RuntimeException(e);

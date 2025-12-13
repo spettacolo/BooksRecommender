@@ -10,6 +10,7 @@ import ONA.booksrecommender.objects.User;
 import ONA.booksrecommender.objects.Book;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import javax.xml.crypto.Data;
 import java.sql.SQLException;
@@ -78,6 +79,15 @@ public class ServerFacade {
                             String authorsString = String.join(", ", authors);
                             // TODO: valutare l'utilizzo di book.toString() in base a cosa è più comodo
                             return String.join(SEPARATOR, Integer.toString(book.getId()), book.getTitle(), authorsString, Integer.toString(book.getPublicationYear()), book.getPublisher(), book.getCategory(), book.getCoverImageUrl());
+                        }
+                        case "list": {
+                            String[] booksIdList = parts[2].split(",");
+
+                            List<Integer> bookIds = Arrays.stream(booksIdList)
+                                    .map(String::trim) // Rimuove spazi bianchi (utile in caso ci siano " 101, 205")
+                                    .map(Integer::parseInt) // Converte ogni Stringa in Integer
+                                    .toList(); // Raccoglie gli Integer in una List
+                            List<Book> books = bookDAO.getBooks(bookIds);
                         }
                         case "title": {
                             //Book book = bookDAO.getBook(parts[2]);
