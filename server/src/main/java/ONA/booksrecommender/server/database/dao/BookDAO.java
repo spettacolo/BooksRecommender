@@ -43,9 +43,7 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
 
                 List<String> authors = getBookAuthors(rs.getInt("book_id"));
 
-                String rawQueryData = "intitle:\"" + rs.getString("title") + "\"";
-                String encodedQueryData = URLEncoder.encode(rawQueryData, StandardCharsets.UTF_8);
-                String imageUrl = getBookImageUrl(encodedQueryData);
+                String imageUrl = getBookImageUrl(rs.getInt("book_id"));
 
                 return new Book(
                         rs.getInt("book_id"),
@@ -89,14 +87,7 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
                 while (rs.next()) {
                     List<String> authors = getBookAuthors(rs.getInt("book_id"));
 
-                    String rawQueryData = "intitle:\"" + rs.getString("title") + "\"";
-                    String encodedQueryData = URLEncoder.encode(rawQueryData, StandardCharsets.UTF_8);
-                    String imageUrl;
-                    try {
-                        imageUrl = getBookImageUrl(encodedQueryData);
-                    } catch (Exception e) {
-                        imageUrl = "null";
-                    }
+                    String imageUrl = getBookImageUrl(rs.getInt("book_id"));
 
                     books.add(new Book(
                             rs.getInt("book_id"),
@@ -145,9 +136,7 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
                 while (rs.next()) {
                     List<String> authors = getBookAuthors(rs.getInt("book_id"));
 
-                    String rawQueryData = "intitle:\"" + rs.getString("title") + "\"";
-                    String encodedQueryData = URLEncoder.encode(rawQueryData, StandardCharsets.UTF_8);
-                    String imageUrl = getBookImageUrl(encodedQueryData);
+                    String imageUrl = getBookImageUrl(rs.getInt("book_id"));
 
                     books.add(new Book(
                             rs.getInt("book_id"),
@@ -168,7 +157,7 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
         }
     }
 
-    public String getBookImageUrl(String title) {
+    /*public String getBookImageUrl(String title) {
         String req = "https://www.googleapis.com/books/v1/volumes?q=" + title;
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(req))
@@ -249,6 +238,27 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
             e.printStackTrace();
         }
         return null;
+    }*/
+
+    public String getBookImageUrl(int book_id) {
+        String query = "SELECT image_url " +
+                "FROM book_images " +
+                "WHERE book_id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, book_id);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    return null;
+                }
+                logger.log("RISULTATO: " + rs.getString("image_url"));
+                return rs.getString("image_url");
+            }
+        } catch (SQLException e) {
+            logger.log("Error during book image url retrieval: " + e.getMessage());
+            return null;
+        }
     }
 
     public List<Book> getAuthorBooks(String author) {
