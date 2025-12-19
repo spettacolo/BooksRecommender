@@ -78,7 +78,7 @@ public class ServerFacade {
                             List<String> authors = book.getAuthors();
                             String authorsString = String.join(", ", authors);
                             // TODO: valutare l'utilizzo di book.toString() in base a cosa è più comodo
-                            return String.join(SEPARATOR, Integer.toString(book.getId()), book.getTitle(), authorsString, Integer.toString(book.getPublicationYear()), book.getPublisher(), book.getCategory(), book.getCoverImageUrl());
+                            return String.join(SEPARATOR, Integer.toString(book.getId()), book.getTitle(), authorsString, Integer.toString(book.getPublicationYear()), book.getPublisher(), book.getCategory(), book.getCoverImageUrl(), book.getDescription());
                         }
                         case "list": {
                             String[] booksIdList = parts[2].split(",");
@@ -101,7 +101,7 @@ public class ServerFacade {
                             for (Book book : booksObj) {
                                 List<String> authors = book.getAuthors();
                                 String authorsString = String.join(", ", authors);
-                                books.append(String.join(SEPARATOR, Integer.toString(book.getId()), book.getTitle(), authorsString, Integer.toString(book.getPublicationYear()), book.getPublisher(), book.getCategory(), book.getCoverImageUrl()));
+                                books.append(String.join(SEPARATOR, Integer.toString(book.getId()), book.getTitle(), authorsString, Integer.toString(book.getPublicationYear()), book.getPublisher(), book.getCategory(), book.getCoverImageUrl(), book.getDescription()));
                                 books.append("|");
                             }
 
