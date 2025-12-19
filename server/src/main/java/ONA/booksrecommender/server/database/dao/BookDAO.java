@@ -52,7 +52,8 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
                         rs.getInt("publish_year"),
                         rs.getString("publishers"),
                         rs.getString("category"),
-                        imageUrl
+                        imageUrl,
+                        rs.getString("description")
                 );
             }
         } catch (SQLException e) {
@@ -96,7 +97,8 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
                             rs.getInt("publish_year"),
                             rs.getString("publishers"),
                             rs.getString("category"),
-                            imageUrl
+                            imageUrl,
+                            rs.getString("description")
                     ));
                 }
 
@@ -145,7 +147,8 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
                             rs.getInt("publish_year"),
                             rs.getString("publishers"),
                             rs.getString("category"),
-                            imageUrl
+                            imageUrl,
+                            rs.getString("description")
                     ));
                 }
 
