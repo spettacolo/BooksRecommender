@@ -15,6 +15,8 @@ import java.util.List;
 import javax.xml.crypto.Data;
 import java.sql.SQLException;
 import java.util.stream.Collectors;
+import java.util.Base64;
+import java.nio.charset.StandardCharsets;
 
 public class ServerFacade {
     private static final String SEPARATOR = ";";
@@ -70,6 +72,14 @@ public class ServerFacade {
                 }
                 case "get_book": {
                     // get_book;search_type;[id]/[title]/[author[;year]]
+                    /* TODO: Come decodificare il campo descrizione lato client:
+                    import java.util.Base64;
+                    import java.nio.charset.StandardCharsets;
+                    String descrizioneDecodificata = new String(
+                        Base64.getDecoder().decode(parts[7]),
+                        StandardCharsets.UTF_8
+                    );
+                    */
                     if (parts.length < 3) return ERROR_MESSAGE;
                     switch (parts[1]) {
                         case "id": {
@@ -77,8 +87,11 @@ public class ServerFacade {
                             logger.log(book.toString());
                             List<String> authors = book.getAuthors();
                             String authorsString = String.join(", ", authors);
+                            String encodedDesc = Base64.getEncoder().encodeToString(
+                                    book.getDescription().getBytes(StandardCharsets.UTF_8)
+                            );
                             // TODO: valutare l'utilizzo di book.toString() in base a cosa è più comodo
-                            return String.join(SEPARATOR, Integer.toString(book.getId()), book.getTitle(), authorsString, Integer.toString(book.getPublicationYear()), book.getPublisher(), book.getCategory(), book.getCoverImageUrl(), book.getDescription());
+                            return String.join(SEPARATOR, Integer.toString(book.getId()), book.getTitle(), authorsString, Integer.toString(book.getPublicationYear()), book.getPublisher(), book.getCategory(), book.getCoverImageUrl(), encodedDesc);
                         }
                         case "list": {
                             String[] booksIdList = parts[2].split(",");
@@ -101,7 +114,10 @@ public class ServerFacade {
                             for (Book book : booksObj) {
                                 List<String> authors = book.getAuthors();
                                 String authorsString = String.join(", ", authors);
-                                books.append(String.join(SEPARATOR, Integer.toString(book.getId()), book.getTitle(), authorsString, Integer.toString(book.getPublicationYear()), book.getPublisher(), book.getCategory(), book.getCoverImageUrl(), book.getDescription()));
+                                String encodedDesc = Base64.getEncoder().encodeToString(
+                                        book.getDescription().getBytes(StandardCharsets.UTF_8)
+                                );
+                                books.append(String.join(SEPARATOR, Integer.toString(book.getId()), book.getTitle(), authorsString, Integer.toString(book.getPublicationYear()), book.getPublisher(), book.getCategory(), book.getCoverImageUrl(), encodedDesc));
                                 books.append("|");
                             }
 
