@@ -1,13 +1,13 @@
 package ONA.booksrecommender.server;
 
-import ONA.booksrecommender.objects.Library;
 import ONA.booksrecommender.server.database.Database;
-import ONA.booksrecommender.server.database.dao.BookDAO;
-import ONA.booksrecommender.server.database.dao.LibraryDAO;
-import ONA.booksrecommender.server.database.dao.UserDAO;
+import ONA.booksrecommender.server.database.dao.*;
 import ONA.booksrecommender.utils.Logger;
 import ONA.booksrecommender.objects.User;
 import ONA.booksrecommender.objects.Book;
+import ONA.booksrecommender.objects.Library;
+import ONA.booksrecommender.objects.Rating;
+import ONA.booksrecommender.objects.Recommendation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,6 +27,8 @@ public class ServerFacade {
     private final UserDAO userDAO;
     private final BookDAO bookDAO;
     private final LibraryDAO libraryDAO;
+    private final RatingDAO ratingDAO;
+    // private final RecommendationDAO recommendationDAO;
 
     public ServerFacade(Logger logger, Database database) {
         this.logger = logger;
@@ -35,7 +37,8 @@ public class ServerFacade {
         this.userDAO = database.getDAO(UserDAO.class);
         this.bookDAO = database.getDAO(BookDAO.class);
         this.libraryDAO = database.getDAO(LibraryDAO.class);
-        // TODO: Aggiungere gli altri DAO (e.g.: recensioni, consigli)
+        this.ratingDAO = database.getDAO(RatingDAO.class);
+        // this.recommendationDAO = database.getDAO(RecommendationDAO.class);
     }
 
     public String handleRequest(String req) {
@@ -264,12 +267,27 @@ public class ServerFacade {
                     boolean ok = libraryDAO.removeBook(book, library);
                     return ok ? "REMOVE_BOOK_FROM_LIBRARY" + SEPARATOR + "OK" : "REMOVE_BOOK_FROM_LIBRARY" + SEPARATOR + "FAIL";
                 }
-                case "get_book_reviews":
-                    return "UNKNOWN_COMMAND";
+                case "get_book_ratings": // metodo dedicato ai libri per recuperare tutte le recensioni (TODO: metodo per recuperare recensioni singole)
+                    // get_book_reviews;12345
+                    if (parts.length < 2) return ERROR_MESSAGE;
+                    List<Rating> book_ratings = ratingDAO.getRatings(Integer.parseInt(parts[1]));
+                    StringBuilder ratings = new StringBuilder();
+                    for (Rating rating : book_ratings) {
+                        String encodedNote = Base64.getEncoder().encodeToString(
+                                rating.getNotes().getBytes(StandardCharsets.UTF_8)
+                        );
+                        ratings.append(String.join(SEPARATOR, rating.getUserId(), rating.getBookId(), Integer.toString(rating.getStyle()), Integer.toString(rating.getContent()), Integer.toString(rating.getEnjoyment()), Integer.toString(rating.getOriginality()), Integer.toString(rating.getEdition()), Integer.toString(rating.getFinalScore()), encodedNote));
+                        ratings.append("|");
+                    }
+
+                    return ratings.toString();
                 case "get_book_advices":
                     return "UNKNOWN_COMMAND";
-                case "add_book_review":
-                    return "UNKNOWN_COMMAND";
+                // remove_book_review può servire? lmk
+                case "add_book_review": // book_id, username, style, content, liking, originality, edition, notes
+                    if (parts.length < 8) return ERROR_MESSAGE;
+                    boolean ok = ratingDAO.addRating(Integer.parseInt(parts[1]), parts[2], Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), Integer.parseInt(parts[5]), Integer.parseInt(parts[6]), Integer.parseInt(parts[7]), parts.length == 9 ? parts[8] : null);
+                    return ok ? "ADD_BOOK_REVIEW" + SEPARATOR + "OK" : "ADD_BOOK_REVIEW" + SEPARATOR + "FAIL";
                 case "add_book_advice":
                     return "UNKNOWN_COMMAND";
                 default:

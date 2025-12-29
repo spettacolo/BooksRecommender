@@ -84,13 +84,13 @@ public class RatingDAO extends BaseDAO implements AutoCloseable {
         }
     }
 
-    // se l'utente non scrive alcun commento inviare al metodo una stringa vuota (forse)
     public boolean addRating(int bookId, String username, int style, int content, int liking, int originality, int edition, String notes) {
         /* 3 opzioni:
             1- controllo se c'è già la valutazione
             2- aggiorno la valutazione già esistente
             3- controllo, chiedo all'utente e se accetta allora viene aggiornata (conviene? no)
          */
+        if (notes == null) notes = "EMPTY";
         // TODO: da fare controllo duplicati
         String query = "INSERT INTO ratings (username, book_id, style, content, liking, originality, edition, notes) VALUES (?, ?, ? ,? ,? ,? ,? ,?)";
 
@@ -114,11 +114,40 @@ public class RatingDAO extends BaseDAO implements AutoCloseable {
     }
 
     public boolean updateRating(int bookId, String username, int style, int content, int liking, int originality, int edition, String notes) {
-        return true;
+        String query = "UPDATE ratings SET style = ?, content = ?, liking = ?, originality = ?, edition = ?, notes = ? WHERE username = ? AND book_id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, style);
+            stmt.setInt(2, content);
+            stmt.setInt(3, liking);
+            stmt.setInt(4, originality);
+            stmt.setInt(5, edition);
+            stmt.setString(6, notes);
+            stmt.setString(7, username);
+            stmt.setInt(8, bookId);
+
+            int rows = stmt.executeUpdate();
+
+            return rows >= 1;
+        } catch (SQLException e) {
+            logger.log("Error during book retrieval: " + e.getMessage());
+            return false;
+        }
     }
 
     public boolean removeRating(int bookId, String username) {
-        return true;
+        String query = "DELETE FROM ratings WHERE username = ? AND book_id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, username);
+            stmt.setInt(2, bookId);
+
+            int rows = stmt.executeUpdate();
+            return rows >= 1;
+        } catch (SQLException e) {
+            logger.log("Error removing library: " + e.getMessage());
+            return false;
+        }
     }
 
     // TODO: toString() ?
