@@ -27,13 +27,14 @@ public class RatingDAO extends BaseDAO implements AutoCloseable {
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, bookId);
             stmt.setString(2, username);
-            ResultSet rs = stmt.executeQuery();
+            try (ResultSet rs = stmt.executeQuery()) {
 
-            if (!rs.next()) {
-                return null;
+                if (!rs.next()) {
+                    return null;
+                }
+
+                return new Rating(rs.getString("username"), rs.getString("book_id"), rs.getInt("style"), rs.getInt("content"), rs.getInt("liking"), rs.getInt("originality"), rs.getInt("edition"), rs.getString("notes"));
             }
-
-            return new Rating(rs.getString("username"), rs.getString("book_id"), rs.getInt("style"), rs.getInt("content"), rs.getInt("liking"), rs.getInt("originality"), rs.getInt("edition"), rs.getString("notes"));
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -45,15 +46,16 @@ public class RatingDAO extends BaseDAO implements AutoCloseable {
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, bookId);
-            ResultSet rs = stmt.executeQuery();
+            try (ResultSet rs = stmt.executeQuery()) {
 
-            List<Rating> ratings = new ArrayList<>();
+                List<Rating> ratings = new ArrayList<>();
 
-            while (rs.next()) {
-                ratings.add(new Rating(rs.getString("username"), rs.getString("book_id"), rs.getInt("style"), rs.getInt("content"), rs.getInt("liking"), rs.getInt("originality"), rs.getInt("edition"), rs.getString("notes")));
+                while (rs.next()) {
+                    ratings.add(new Rating(rs.getString("username"), rs.getString("book_id"), rs.getInt("style"), rs.getInt("content"), rs.getInt("liking"), rs.getInt("originality"), rs.getInt("edition"), rs.getString("notes")));
+                }
+
+                return ratings;
             }
-
-            return ratings;
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -66,28 +68,29 @@ public class RatingDAO extends BaseDAO implements AutoCloseable {
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, username);
-            ResultSet rs = stmt.executeQuery();
+            try (ResultSet rs = stmt.executeQuery()) {
 
-            List<Rating> ratings = new ArrayList<>();
+                List<Rating> ratings = new ArrayList<>();
 
-            while (rs.next()) {
-                ratings.add(new Rating(rs.getString("username"), rs.getString("book_id"), rs.getInt("style"), rs.getInt("content"), rs.getInt("liking"), rs.getInt("originality"), rs.getInt("edition"), rs.getString("notes")));
+                while (rs.next()) {
+                    ratings.add(new Rating(rs.getString("username"), rs.getString("book_id"), rs.getInt("style"), rs.getInt("content"), rs.getInt("liking"), rs.getInt("originality"), rs.getInt("edition"), rs.getString("notes")));
+                }
+
+                return ratings;
             }
-
-            return ratings;
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
-    // se l'utente non scrive alcun commento inviare al metodo una stringa vuota (forse)
     public boolean addRating(int bookId, String username, int style, int content, int liking, int originality, int edition, String notes) {
         /* 3 opzioni:
             1- controllo se c'è già la valutazione
             2- aggiorno la valutazione già esistente
             3- controllo, chiedo all'utente e se accetta allora viene aggiornata (conviene? no)
          */
+        if (notes == null) notes = "EMPTY";
         // TODO: da fare controllo duplicati
         String query = "INSERT INTO ratings (username, book_id, style, content, liking, originality, edition, notes) VALUES (?, ?, ? ,? ,? ,? ,? ,?)";
 
@@ -111,14 +114,42 @@ public class RatingDAO extends BaseDAO implements AutoCloseable {
     }
 
     public boolean updateRating(int bookId, String username, int style, int content, int liking, int originality, int edition, String notes) {
-        return true;
+        String query = "UPDATE ratings SET style = ?, content = ?, liking = ?, originality = ?, edition = ?, notes = ? WHERE username = ? AND book_id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, style);
+            stmt.setInt(2, content);
+            stmt.setInt(3, liking);
+            stmt.setInt(4, originality);
+            stmt.setInt(5, edition);
+            stmt.setString(6, notes);
+            stmt.setString(7, username);
+            stmt.setInt(8, bookId);
+
+            int rows = stmt.executeUpdate();
+
+            return rows >= 1;
+        } catch (SQLException e) {
+            logger.log("Error during book retrieval: " + e.getMessage());
+            return false;
+        }
     }
 
     public boolean removeRating(int bookId, String username) {
-        return true;
+        String query = "DELETE FROM ratings WHERE username = ? AND book_id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, username);
+            stmt.setInt(2, bookId);
+
+            int rows = stmt.executeUpdate();
+            return rows >= 1;
+        } catch (SQLException e) {
+            logger.log("Error removing library: " + e.getMessage());
+            return false;
+        }
     }
 
     // TODO: toString() ?
 
 }
-

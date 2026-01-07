@@ -1,33 +1,51 @@
 package ONA.booksrecommender.client.controller;
 
+
 import ONA.booksrecommender.client.Client;
-import ONA.booksrecommender.client.view.HomeView;
-import ONA.booksrecommender.client.view.LoggedView;
-import javafx.geometry.Insets;
+import ONA.booksrecommender.client.view.RootView;
 import javafx.geometry.Pos;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.control.PasswordField;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class RegLog {
 
     private Pane activeOverlay = null;
+    private Stage popupStage = null;
+    private VBox popupContent = null;
+    private RootView root;
+    private Client client;
 
-    public void showLoginForm(Pane root, Client client) {
+    public void showLoginForm(Pane rootPane, Client client) {
         if (activeOverlay != null) return;
 
-        Stage popupStage = new Stage();
-        popupStage.initModality(Modality.WINDOW_MODAL);
-        popupStage.initOwner(root.getScene().getWindow());
-        popupStage.setTitle("Login");
+        this.root = (RootView) rootPane;
+        this.client = client;
 
-        VBox popupContent = new VBox(15);
-        popupContent.setPadding(new Insets(20));
-        popupContent.setAlignment(Pos.CENTER);
+        if (popupStage == null) {
+            popupStage = new Stage();
+            popupStage.initModality(Modality.WINDOW_MODAL);
+            popupStage.initOwner(root.getScene().getWindow());
+            popupStage.setTitle("Login");
 
-        Label title = new Label("Accedi al tuo account");
+            popupContent = new VBox(15);
+            popupContent.setPadding(new Insets(20));
+            popupContent.setAlignment(Pos.CENTER);
+
+            Scene scene = new Scene(popupContent);
+            popupStage.setScene(scene);
+        }
+
+        popupContent.getChildren().clear();
 
         TextField usernameField = new TextField();
         usernameField.setPromptText("Username");
@@ -40,7 +58,6 @@ public class RegLog {
         Button loginButton = new Button("Accedi");
         loginButton.setDefaultButton(true);
         loginButton.setOnAction(e -> {
-
             String username = usernameField.getText().trim();
             String password = passwordField.getText().trim();
 
@@ -49,23 +66,13 @@ public class RegLog {
                 return;
             }
 
-            boolean accessoConsentito = checkLogin(client, username, password);
-
-            if (accessoConsentito) {
-                feedbackLabel.setText("Accesso riuscito!");
+            if (checkLogin(client, username, password)) {
+                root.setUsername(username);
                 popupStage.close();
-
-                HomeView hv = (HomeView) root;
-                LoggedView lv = new LoggedView(username, hv.getLoginLabel());
-                hv.setLoggedView(lv);
-
-                lv.applyLoggedUI(hv);
-
+                root.showLoggedSidebar(username);
+                root.showHome();
                 activeOverlay = null;
-
-            } else {
-                feedbackLabel.setText("Credenziali non valide.");
-            }
+            } else feedbackLabel.setText("Credenziali non valide.");
         });
 
         Button cancelButton = new Button("Annulla");
@@ -77,54 +84,50 @@ public class RegLog {
         HBox buttons = new HBox(10, loginButton, cancelButton);
         buttons.setAlignment(Pos.CENTER);
 
-        Hyperlink goToSignUp = new Hyperlink("Non hai un account? Registrati qui");
-        goToSignUp.setOnAction(e -> {
-            popupStage.close();
-            activeOverlay = null;
-            javafx.application.Platform.runLater(() -> showSignUpForm(root, client));
-        });
+        Hyperlink registerLink = new Hyperlink("Non hai un account? Registrati qui");
+        registerLink.setOnAction(e -> switchToSignUpForm());
 
-        popupContent.getChildren().addAll(title, usernameField, passwordField, feedbackLabel, buttons, goToSignUp);
+        popupContent.getChildren().addAll(
+                new Label("Accedi al tuo account"),
+                usernameField, passwordField,
+                feedbackLabel, buttons,
+                registerLink
+        );
 
-        Scene scene = new Scene(popupContent, 350, 300);
-        popupStage.setScene(scene);
+        activeOverlay = popupContent;
+        popupStage.sizeToScene();
         popupStage.showAndWait();
-
         activeOverlay = null;
     }
 
-
-    public void showSignUpForm(Pane root, Client client) {
+    public void showSignUpForm(Pane rootPane, Client client) {
         if (activeOverlay != null) return;
 
-        Stage popupStage = new Stage();
-        popupStage.initModality(Modality.WINDOW_MODAL);
-        popupStage.initOwner(root.getScene().getWindow());
-        popupStage.setTitle("Registrazione");
+        this.root = (RootView) rootPane;
+        this.client = client;
 
-        VBox popupContent = new VBox(15);
-        popupContent.setPadding(new Insets(20));
-        popupContent.setAlignment(Pos.CENTER);
+        if (popupStage == null) {
+            popupStage = new Stage();
+            popupStage.initModality(Modality.WINDOW_MODAL);
+            popupStage.initOwner(root.getScene().getWindow());
+            popupStage.setTitle("Registrazione");
 
-        Label title = new Label("Crea un nuovo account");
+            popupContent = new VBox(10);
+            popupContent.setPadding(new Insets(20));
+            popupContent.setAlignment(Pos.TOP_LEFT);
 
-        TextField nomeField = new TextField();
-        nomeField.setPromptText("Nome");
+            Scene scene = new Scene(popupContent);
+            popupStage.setScene(scene);
+        }
 
-        TextField cognomeField = new TextField();
-        cognomeField.setPromptText("Cognome");
+        popupContent.getChildren().clear();
 
-        TextField usernameField = new TextField();
-        usernameField.setPromptText("Username");
-
-        TextField cfField = new TextField();
-        cfField.setPromptText("Codice Fiscale");
-
-        TextField emailField = new TextField();
-        emailField.setPromptText("Email");
-
-        PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Password");
+        TextField nomeField = new TextField(); nomeField.setPromptText("Nome"); nomeField.setMinWidth(200);
+        TextField cognomeField = new TextField(); cognomeField.setPromptText("Cognome"); cognomeField.setMinWidth(200);
+        TextField usernameField = new TextField(); usernameField.setPromptText("Username"); usernameField.setMinWidth(200);
+        TextField cfField = new TextField(); cfField.setPromptText("Codice Fiscale"); cfField.setMinWidth(200);
+        TextField emailField = new TextField(); emailField.setPromptText("Email"); emailField.setMinWidth(200);
+        PasswordField passwordField = new PasswordField(); passwordField.setPromptText("Password"); passwordField.setMinWidth(200);
 
         Label feedbackLabel = new Label();
 
@@ -144,27 +147,21 @@ public class RegLog {
                 return;
             }
 
-            boolean registrato = signUp(client, username, nome, cognome, cf, email, password);
-
-            if (!registrato) {
+            if (!signUp(client, username, nome, cognome, cf, email, password)) {
                 feedbackLabel.setText("Username già esistente!");
                 return;
             }
 
-            feedbackLabel.setText("Registrazione completata!");
+
             popupStage.close();
-
-            HomeView hv = (HomeView) root;
-            LoggedView lv = new LoggedView(username, hv.getLoginLabel());
-            hv.setLoggedView(lv);
-
-            lv.applyLoggedUI(hv);
-
+            root.setUsername(username);
+            root.showLoggedSidebar(username);
+            root.showHome();
             activeOverlay = null;
         });
 
         Button cancelButton = new Button("Annulla");
-        cancelButton.setOnAction(e -> {
+        cancelButton.setOnAction(ev -> {
             popupStage.close();
             activeOverlay = null;
         });
@@ -172,36 +169,163 @@ public class RegLog {
         HBox buttons = new HBox(10, registerButton, cancelButton);
         buttons.setAlignment(Pos.CENTER);
 
+        Hyperlink loginLink = new Hyperlink("Hai già un account? Accedi qui");
+        loginLink.setOnAction(e -> switchToLoginForm());
+
         popupContent.getChildren().addAll(
-                title, nomeField, cognomeField, usernameField,
-                cfField, emailField, passwordField,
-                feedbackLabel, buttons
+                new Label("Crea un nuovo account"),
+                new Label("Nome:"), nomeField,
+                new Label("Cognome:"), cognomeField,
+                new Label("Username:"), usernameField,
+                new Label("Codice Fiscale:"), cfField,
+                new Label("Email:"), emailField,
+                new Label("Password:"), passwordField,
+                feedbackLabel, buttons,
+                loginLink
         );
 
-        Scene scene = new Scene(popupContent, 400, 400);
-        popupStage.setScene(scene);
+        activeOverlay = popupContent;
+        popupStage.sizeToScene();
         popupStage.showAndWait();
-
         activeOverlay = null;
     }
 
+    private void switchToSignUpForm() {
+        if (popupStage != null && root != null && client != null) {
+            popupStage.setTitle("Registrazione");
+            // Clear and build signup content
+            popupContent.getChildren().clear();
+
+            TextField nomeField = new TextField(); nomeField.setPromptText("Nome"); nomeField.setMinWidth(200);
+            TextField cognomeField = new TextField(); cognomeField.setPromptText("Cognome"); cognomeField.setMinWidth(200);
+            TextField usernameField = new TextField(); usernameField.setPromptText("Username"); usernameField.setMinWidth(200);
+            TextField cfField = new TextField(); cfField.setPromptText("Codice Fiscale"); cfField.setMinWidth(200);
+            TextField emailField = new TextField(); emailField.setPromptText("Email"); emailField.setMinWidth(200);
+            PasswordField passwordField = new PasswordField(); passwordField.setPromptText("Password"); passwordField.setMinWidth(200);
+
+            Label feedbackLabel = new Label();
+
+            Button registerButton = new Button("Registrati");
+            registerButton.setDefaultButton(true);
+            registerButton.setOnAction(e -> {
+                String nome = nomeField.getText().trim();
+                String cognome = cognomeField.getText().trim();
+                String username = usernameField.getText().trim();
+                String cf = cfField.getText().trim();
+                String email = emailField.getText().trim();
+                String password = passwordField.getText().trim();
+
+                if (nome.isEmpty() || cognome.isEmpty() || username.isEmpty() ||
+                        cf.isEmpty() || email.isEmpty() || password.isEmpty()) {
+                    feedbackLabel.setText("Compila tutti i campi!");
+                    return;
+                }
+
+                if (!signUp(client, username, nome, cognome, cf, email, password)) {
+                    feedbackLabel.setText("Username già esistente!");
+                    return;
+                }
+
+                popupStage.close();
+                root.setUsername(username);
+                root.showLoggedSidebar(username);
+                root.showHome();
+                activeOverlay = null;
+            });
+
+            Button cancelButton = new Button("Annulla");
+            cancelButton.setOnAction(ev -> {
+                popupStage.close();
+                activeOverlay = null;
+            });
+
+            HBox buttons = new HBox(10, registerButton, cancelButton);
+            buttons.setAlignment(Pos.CENTER);
+
+            Hyperlink loginLink = new Hyperlink("Hai già un account? Accedi qui");
+            loginLink.setOnAction(e -> switchToLoginForm());
+
+            popupContent.getChildren().addAll(
+                    new Label("Crea un nuovo account"),
+                    new Label("Nome:"), nomeField,
+                    new Label("Cognome:"), cognomeField,
+                    new Label("Username:"), usernameField,
+                    new Label("Codice Fiscale:"), cfField,
+                    new Label("Email:"), emailField,
+                    new Label("Password:"), passwordField,
+                    feedbackLabel, buttons,
+                    loginLink
+            );
+            popupStage.sizeToScene();
+        }
+    }
+
+    private void switchToLoginForm() {
+        if (popupStage != null && root != null && client != null) {
+            popupStage.setTitle("Login");
+            popupContent.getChildren().clear();
+
+            TextField usernameField = new TextField();
+            usernameField.setPromptText("Username");
+
+            PasswordField passwordField = new PasswordField();
+            passwordField.setPromptText("Password");
+
+            Label feedbackLabel = new Label();
+
+            Button loginButton = new Button("Accedi");
+            loginButton.setDefaultButton(true);
+            loginButton.setOnAction(e -> {
+                String username = usernameField.getText().trim();
+                String password = passwordField.getText().trim();
+
+                if (username.isEmpty() || password.isEmpty()) {
+                    feedbackLabel.setText("Compila tutti i campi!");
+                    return;
+                }
+
+                if (checkLogin(client, username, password)) {
+                    root.setUsername(username);
+                    root.showLoggedSidebar(username);
+                    popupStage.close();
+                    root.showHome();
+                    activeOverlay = null;
+                } else feedbackLabel.setText("Credenziali non valide.");
+            });
+
+            Button cancelButton = new Button("Annulla");
+            cancelButton.setOnAction(e -> {
+                popupStage.close();
+                activeOverlay = null;
+            });
+
+            HBox buttons = new HBox(10, loginButton, cancelButton);
+            buttons.setAlignment(Pos.CENTER);
+
+            Hyperlink registerLink = new Hyperlink("Non hai un account? Registrati qui");
+            registerLink.setOnAction(e -> switchToSignUpForm());
+
+            popupContent.getChildren().addAll(
+                    new Label("Accedi al tuo account"),
+                    usernameField, passwordField,
+                    feedbackLabel, buttons,
+                    registerLink
+            );
+            popupStage.sizeToScene();
+        }
+    }
 
     private boolean checkLogin(Client client, String username, String password) {
         String risposta = client.send("login;" + username + ";" + password);
-
         if (risposta == null || !risposta.contains(";")) return false;
-
         String[] parts = risposta.split(";");
         return parts.length >= 2 && parts[1].trim().equals("0");
     }
 
     private boolean signUp(Client client, String username, String name, String surname, String taxId, String email, String password) {
-
         String comando = "sign_up;" + username + ";" + name + ";" + surname + ";" + taxId + ";" + email + ";" + password;
         String risposta = client.send(comando);
-
         if (risposta == null || !risposta.contains(";")) return false;
-
         String[] parts = risposta.split(";");
         return parts.length >= 2 && parts[1].trim().equals("OK");
     }
