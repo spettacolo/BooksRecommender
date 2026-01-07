@@ -64,7 +64,7 @@ public class LoggedView extends VBox {
 
                     confirm.showAndWait().ifPresent(button -> {
                         if (button == javafx.scene.control.ButtonType.OK) {
-                            client.send("remove_library;" + username + ";" + lib);
+                            client.send("remove_library;" + lib);
                             root.showLoggedSidebar(username);
                         }
                     });
