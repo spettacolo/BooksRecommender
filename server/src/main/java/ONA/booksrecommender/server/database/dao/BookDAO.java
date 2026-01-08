@@ -332,16 +332,18 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
         }
     }
 
-    public List<Book> getAuthorBooks(String author, int year) {
+    public List<Book> getAuthorBooks(String author, int year, String sort_method) {
         String query = "SELECT ba.book_id " +
                 "FROM authors a " +
                 "JOIN book_authors ba ON a.author_id = ba.author_id " +
                 "JOIN books b ON ba.book_id = b.book_id " +
-                "WHERE a.author_name = ? AND b.publish_year = ?";
+                "WHERE a.author_name = ? AND b.publish_year = ?" +
+                "ORDER BY b.publish_year ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, author);
             stmt.setInt(2, year);
+            stmt.setString(3, sort_method.toUpperCase());
 
             try (ResultSet rs = stmt.executeQuery()) {
                 List<Book> books = new ArrayList<>();
