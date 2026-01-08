@@ -127,9 +127,9 @@ public class ServerFacade {
                             return books.toString();
                         }
                         case "author": { // filtro autore-anno TODO: ordinamento asc/desc, poi farò
-                            boolean b = !((parts[4]).equalsIgnoreCase("ASC") || (parts[4]).equalsIgnoreCase("DESC"));
+                            boolean b = !((parts[3]).equalsIgnoreCase("ASC") || (parts[3]).equalsIgnoreCase("DESC"));
                             if (b) return ERROR_MESSAGE;
-                            List<Book> booksObj = bookDAO.getAuthorBooks(parts[2], Integer.parseInt(parts[3]), parts[4]);
+                            List<Book> booksObj = bookDAO.getAuthorBooks(parts[2], parts[3]);
                             StringBuilder books = new StringBuilder();
                             for (Book book : booksObj) {
                                 List<String> authors = book.getAuthors();
