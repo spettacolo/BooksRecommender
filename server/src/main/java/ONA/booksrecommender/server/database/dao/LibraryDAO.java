@@ -171,11 +171,23 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
         }
     }
 
-    public boolean updateBookLinkedLibrary(Book book, Library library) {
+    /*public boolean updateBookLinkedLibrary(Book book, Library library) {
         return true;
-    }
+    }*/
 
     public boolean removeBook(Book book, Library library) {
-        return true;
+        String query = "DELETE FROM library_books WHERE book_id = ? AND library_id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, book.getId());
+            stmt.setInt(2, library.getId());
+
+            int rows = stmt.executeUpdate();
+            // Ritorna true se almeno una riga è stata eliminata
+            return rows >= 1;
+        } catch (SQLException e) {
+            logger.log("Error removing book from library: " + e.getMessage());
+            return false;
+        }
     }
 }
