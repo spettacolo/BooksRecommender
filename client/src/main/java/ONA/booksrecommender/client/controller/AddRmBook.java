@@ -1,0 +1,107 @@
+package ONA.booksrecommender.client.controller;
+
+import ONA.booksrecommender.client.Client;
+import java.util.ArrayList;
+import java.util.List;
+
+public class AddRmBook {
+
+    /**
+     * Restituisce l'elenco delle librerie dell'utente che NON contengono il libro.
+     */
+    public static List<LibraryInfo> getLibrariesWithoutBook(Client client, String username, int bookId) {
+        String libsResponse = client.send("get_user_libraries;" + username);
+        List<LibraryInfo> result = new ArrayList<>();
+        if (libsResponse == null || libsResponse.isEmpty()) return result;
+
+        String[] libIds = libsResponse.split(",");
+
+        for (String libId : libIds) {
+            String libBooksResponse = client.send("get_user_library;id;" + libId);
+            if (libBooksResponse == null || libBooksResponse.isEmpty()) continue;
+
+            String[] parts = libBooksResponse.split(";");
+            boolean containsBook = false;
+
+            for (int i = 2; i < parts.length && !containsBook; i++) {
+                if (!parts[i].isBlank()) {
+                    String[] bookIds = parts[i].split(",");
+                    for (String bId : bookIds) {
+                        if (!bId.isBlank() && Integer.parseInt(bId.trim()) == bookId) {
+                            containsBook = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!containsBook) {
+                String libName = parts.length > 1 ? parts[1] : "";
+                result.add(new LibraryInfo(libId, libName));
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Restituisce l'elenco delle librerie dell'utente che CONTENGONO il libro.
+     */
+    public static List<LibraryInfo> getLibrariesWithBook(Client client, String username, int bookId) {
+        String libsResponse = client.send("get_user_libraries;" + username);
+        List<LibraryInfo> result = new ArrayList<>();
+        if (libsResponse == null || libsResponse.isEmpty()) return result;
+
+        String[] libIds = libsResponse.split(",");
+
+        for (String libId : libIds) {
+            String libBooksResponse = client.send("get_user_library;id;" + libId);
+            if (libBooksResponse == null || libBooksResponse.isEmpty()) continue;
+
+            String[] parts = libBooksResponse.split(";");
+            boolean containsBook = false;
+
+            for (int i = 2; i < parts.length && !containsBook; i++) {
+                if (!parts[i].isBlank()) {
+                    String[] bookIds = parts[i].split(",");
+                    for (String bId : bookIds) {
+                        if (!bId.isBlank() && Integer.parseInt(bId.trim()) == bookId) {
+                            containsBook = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (containsBook) {
+                String libName = parts.length > 1 ? parts[1] : "";
+                result.add(new LibraryInfo(libId, libName));
+            }
+        }
+
+        return result;
+    }
+
+    public static class LibraryInfo {
+        private final String id;
+        private final String name;
+
+        public LibraryInfo(String id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public String toString() {
+            return name + " (" + id + ")";
+        }
+    }
+}

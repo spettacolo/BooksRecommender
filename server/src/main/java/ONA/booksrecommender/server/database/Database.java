@@ -24,6 +24,7 @@ public class Database implements AutoCloseable {
         addDAO(new UserDAO(logger, conn));
         addDAO(new BookDAO(logger, conn));
         addDAO(new LibraryDAO(logger, conn, getDAO(BookDAO.class)));
+        addDAO(new RatingDAO(logger, conn, getDAO(BookDAO.class)));
     }
 
     private void addDAO(DAO dao) {

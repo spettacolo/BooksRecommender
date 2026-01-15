@@ -126,7 +126,24 @@ public class ServerFacade {
 
                             return books.toString();
                         }
-                        case "author": {
+                        case "author": { // filtro autore-anno TODO: ordinamento asc/desc, poi farò
+                            boolean b = !((parts[3]).equalsIgnoreCase("ASC") || (parts[3]).equalsIgnoreCase("DESC"));
+                            if (b) return ERROR_MESSAGE;
+                            List<Book> booksObj = bookDAO.getAuthorBooks(parts[2], parts[3]);
+                            StringBuilder books = new StringBuilder();
+                            for (Book book : booksObj) {
+                                List<String> authors = book.getAuthors();
+                                String authorsString = String.join(", ", authors);
+                                String encodedDesc = Base64.getEncoder().encodeToString(
+                                        book.getDescription().getBytes(StandardCharsets.UTF_8)
+                                );
+                                books.append(String.join(SEPARATOR, Integer.toString(book.getId()), book.getTitle(), authorsString, Integer.toString(book.getPublicationYear()), book.getPublisher(), book.getCategory(), book.getCoverImageUrl(), encodedDesc));
+                                books.append("|");
+                            }
+
+                            return books.toString();
+                        }
+                        case "authors": { // ricerca autori di un libro
                             List<String> authors = bookDAO.getBookAuthors(Integer.parseInt(parts[2]));
                             // , anziché ; perché è una lista di elementi e non più elementi differenti
                             return String.join(",", authors);

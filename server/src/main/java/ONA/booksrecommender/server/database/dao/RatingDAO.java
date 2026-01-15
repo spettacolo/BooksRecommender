@@ -153,4 +153,3 @@ public class RatingDAO extends BaseDAO implements AutoCloseable {
     // TODO: toString() ?
 
 }
-

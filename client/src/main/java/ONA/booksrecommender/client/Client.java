@@ -57,7 +57,7 @@ public class Client {
 
     // Metodo per filtrare immagini in base a larghezza e altezza
     // Restituisce true se l'immagine è verticale o quadrata (height >= width)
-    public boolean isPortraitOrSquare(String imageUrl) {
+    /*public boolean isPortraitOrSquare(String imageUrl) {
         if (imageUrl.equals("https://i.ibb.co/QLTNDQc/bookplaceholder.png")) return false;
         try {
             // Carica l'immagine in background
@@ -85,6 +85,68 @@ public class Client {
             System.err.println("Errore nel caricamento immagine: " + e.getMessage());
             return false;
         }
+    }*/
+
+    /**
+     * Genera un nodo immagine scalato correttamente per una copertina.
+     * - Se la copertina è più larga che alta → restituisce il placeholder.
+     * - Altrimenti scala proporzionalmente mantenendo max larghezza/altezza.
+     *
+     * @param imageUrl URL dell'immagine originale
+     * @param maxWidth larghezza massima
+     * @param maxHeight altezza massima
+     * @return StackPane contenente la copertina o il placeholder
+     */
+    public javafx.scene.layout.StackPane createScaledCover(String imageUrl, double maxWidth, double maxHeight) {
+
+        javafx.scene.layout.StackPane container = new javafx.scene.layout.StackPane();
+
+        // Placeholder
+        if (imageUrl == null || imageUrl.equalsIgnoreCase("null")) {
+            javafx.scene.image.Image placeholderImg = new javafx.scene.image.Image("https://i.ibb.co/QLTNDQc/bookplaceholder.png", true);
+            javafx.scene.image.ImageView placeholderView = new javafx.scene.image.ImageView(placeholderImg);
+            placeholderView.setFitWidth(maxWidth);
+            placeholderView.setFitHeight(maxHeight);
+            placeholderView.setPreserveRatio(true);
+            container.getChildren().add(placeholderView);
+            return container;
+        }
+
+        javafx.scene.image.Image img = new javafx.scene.image.Image(imageUrl, true);
+        javafx.scene.image.ImageView view = new javafx.scene.image.ImageView();
+
+        img.progressProperty().addListener((obs, oldP, newP) -> {
+            if (newP.doubleValue() >= 1.0) {
+                double w = img.getWidth();
+                double h = img.getHeight();
+
+                // Scarta immagini orizzontali
+                if (w > h) {
+                    System.out.println(w + " x " + h);      // =^.^=
+                    javafx.scene.image.Image placeholderImg = new javafx.scene.image.Image("https://i.ibb.co/QLTNDQc/bookplaceholder.png", true);
+                    javafx.scene.image.ImageView placeholderView = new javafx.scene.image.ImageView(placeholderImg);
+                    placeholderView.setFitWidth(maxWidth);
+                    placeholderView.setFitHeight(maxHeight);
+                    placeholderView.setPreserveRatio(true);
+                    container.getChildren().setAll(placeholderView);
+                    return;
+                }
+
+                // Scala proporzionalmente
+                double scale = Math.min(maxWidth / w, maxHeight / h);
+                double finalW = w * scale;
+                double finalH = h * scale;
+
+                view.setImage(img);
+                view.setFitWidth(finalW);
+                view.setFitHeight(finalH);
+                view.setPreserveRatio(true);
+
+                container.getChildren().setAll(view);
+            }
+        });
+
+        return container;
     }
 
     // Metodo per aggiungere una libreria inviando la richiesta al server

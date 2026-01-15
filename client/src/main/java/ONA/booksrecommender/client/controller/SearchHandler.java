@@ -107,8 +107,7 @@ public class SearchHandler {
                         Integer.parseInt(parts[3]),  // anno
                         parts[4],                    // editore
                         parts[5],                    // mese pubblicazione
-                        parts[6],                    // genere o altro
-                        parts[7]                     // descrizione
+                        parts[6]                     // genere o altro
                 ));
             }
         } catch(NumberFormatException e) {

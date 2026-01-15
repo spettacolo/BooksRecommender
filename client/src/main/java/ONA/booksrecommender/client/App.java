@@ -1,6 +1,6 @@
 package ONA.booksrecommender.client;
 
-import ONA.booksrecommender.client.view.HomeView;
+import ONA.booksrecommender.client.view.RootView;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -9,12 +9,12 @@ public class App extends Application {
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("\ud83d\udcda Books Recommender \ud83d\udcda");
-        HomeView homeView = new HomeView();
-        Scene scene = new Scene(homeView, (double) 1000.0F, (double) 500.0F);
-        // scene.getStylesheets().add(this.getClass().getResource("/style.css").toExternalForm());
+        RootView root = new RootView();
+        Scene scene = new Scene(root, 1000, 500);
         primaryStage.setScene(scene);
-        primaryStage.setMinHeight((double) 500.0F);
-        primaryStage.setMinWidth((double) 900.0F);
+
+        primaryStage.setMinHeight((double) 580.0F);
+        primaryStage.setMinWidth((double) 1000.0F);
         primaryStage.show();
     }
 
