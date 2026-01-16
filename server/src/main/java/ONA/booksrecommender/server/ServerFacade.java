@@ -28,7 +28,7 @@ public class ServerFacade {
     private final BookDAO bookDAO;
     private final LibraryDAO libraryDAO;
     private final RatingDAO ratingDAO;
-    // private final RecommendationDAO recommendationDAO;
+    private final RecommendationDAO recommendationDAO;
 
     public ServerFacade(Logger logger, Database database) {
         this.logger = logger;
@@ -38,7 +38,7 @@ public class ServerFacade {
         this.bookDAO = database.getDAO(BookDAO.class);
         this.libraryDAO = database.getDAO(LibraryDAO.class);
         this.ratingDAO = database.getDAO(RatingDAO.class);
-        // this.recommendationDAO = database.getDAO(RecommendationDAO.class);
+        this.recommendationDAO = database.getDAO(RecommendationDAO.class);
     }
 
     public String handleRequest(String req) {
@@ -298,15 +298,57 @@ public class ServerFacade {
                     }
 
                     return ratings.toString();
-                case "get_book_advices":
-                    return "UNKNOWN_COMMAND";
                 // remove_book_review può servire? lmk
-                case "add_book_review": // book_id, username, style, content, liking, originality, edition, notes
+                case "add_book_review": { // book_id, username, style, content, liking, originality, edition, notes
                     if (parts.length < 8) return ERROR_MESSAGE;
                     boolean ok = ratingDAO.addRating(Integer.parseInt(parts[1]), parts[2], Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), Integer.parseInt(parts[5]), Integer.parseInt(parts[6]), Integer.parseInt(parts[7]), parts.length == 9 ? parts[8] : null);
                     return ok ? "ADD_BOOK_REVIEW" + SEPARATOR + "OK" : "ADD_BOOK_REVIEW" + SEPARATOR + "FAIL";
-                case "add_book_advice":
-                    return "UNKNOWN_COMMAND";
+                }
+                case "get_book_advices": {
+                    // Formato richiesta: get_book_advices;username
+                    if (parts.length < 2) return ERROR_MESSAGE;
+                    String username = parts[1];
+
+                    List<Recommendation> recommendations = recommendationDAO.getRecommendations(username);
+                    if (recommendations.isEmpty()) return "NO_RECOMMENDATIONS";
+
+                    StringBuilder sb = new StringBuilder();
+                    for (Recommendation rec : recommendations) {
+                        // Formato per riga: libro_letto;id_rec1,id_rec2,id_rec3
+                        String recs = String.join(",", rec.getRecommendedBookIds());
+                        sb.append(rec.getBookId()).append(SEPARATOR).append(recs);
+                        sb.append("|"); // Separatore tra diversi set di raccomandazioni
+                    }
+                    return sb.toString();
+                }
+
+                case "add_book_advice": {
+                    // Formato richiesta: add_book_advice;username;book_id;rec_id1,rec_id2,rec_id3
+                    if (parts.length < 4) return ERROR_MESSAGE;
+
+                    String username = parts[1];
+                    String bookId = parts[2];
+                    // Split della lista di libri consigliati (separati da virgola)
+                    List<String> recommendedIds = Arrays.asList(parts[3].split(","));
+
+                    try {
+                        Recommendation rec = new Recommendation(username, bookId, recommendedIds);
+                        boolean ok = recommendationDAO.addRecommendation(rec);
+                        return ok ? "ADD_BOOK_ADVICE" + SEPARATOR + "OK" : "ADD_BOOK_ADVICE" + SEPARATOR + "FAIL";
+                    } catch (IllegalArgumentException e) {
+                        return "ERROR" + SEPARATOR + "too_many_recommendations";
+                    }
+                }
+
+                case "remove_book_advice": {
+                    // Formato richiesta: remove_book_advice;username;book_id
+                    if (parts.length < 3) return ERROR_MESSAGE;
+                    String username = parts[1];
+                    String bookId = parts[2];
+
+                    boolean ok = recommendationDAO.removeRecommendations(username, bookId);
+                    return ok ? "REMOVE_BOOK_ADVICE" + SEPARATOR + "OK" : "REMOVE_BOOK_ADVICE" + SEPARATOR + "FAIL";
+                }
                 default:
                     return "UNKNOWN_COMMAND";
             }
