@@ -1,18 +1,18 @@
 package ONA.booksrecommender.client.controller;
 
 import ONA.booksrecommender.client.Client;
-import ONA.booksrecommender.client.view.RootView;
 import ONA.booksrecommender.objects.Book;
-import javafx.animation.*;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
-import javafx.util.Duration;
+import javafx.scene.layout.VBox;
 
+import java.io.*;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,123 +30,144 @@ public class SearchHandler {
     /**
      * Restituisce la barra di ricerca completa, pronta per essere aggiunta in HomeView.
      *
-     * @param root RootView principale dove mostrare i risultati.
+     * @param mainContent VBox principale dove inserire i risultati.
      */
-    public HBox createSearchBar(RootView root) {
+    public HBox createSearchBar(VBox mainContent) {
         HBox searchBar = new HBox(10);
-        searchBar.setPadding(new Insets(10, 20, 10, 20));
-        searchBar.setAlignment(Pos.CENTER_RIGHT);
-
-        Button filtersButton = new Button("️⚙");
+        searchBar.setPadding(new Insets(10, 40, 10, 40));
+        searchBar.setVisible(false);
+        searchBar.setManaged(false);
 
         TextField searchField = new TextField();
         searchField.setPromptText("Cerca un libro...");
-        double initialWidth = 100;
-        double expandedWidth = 300;
-        searchField.setPrefWidth(initialWidth);
-        searchField.setMaxWidth(initialWidth);
 
-        HBox.setHgrow(filtersButton, Priority.NEVER);
-        HBox.setHgrow(searchField, Priority.NEVER);
+        Button searchButton = new Button("Invia");
 
-        StackPane wrapper = new StackPane(searchBar);
-        wrapper.setAlignment(Pos.CENTER_RIGHT);
+        // Azione del pulsante
+        searchButton.setOnAction(event -> performSearch(mainContent, searchField.getText().trim()));
 
-        Duration duration = Duration.millis(300);
+        // Permette la ricerca anche con Invio
+        searchField.setOnAction(event -> searchButton.fire());
 
-        searchField.focusedProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal) {
-                // Focus gained: expand searchField width and center wrapper
-                Timeline expand = new Timeline(
-                    new KeyFrame(Duration.ZERO,
-                        new KeyValue(searchField.prefWidthProperty(), searchField.getPrefWidth()),
-                        new KeyValue(searchField.maxWidthProperty(), searchField.getMaxWidth())
-                    ),
-                    new KeyFrame(duration,
-                        new KeyValue(searchField.prefWidthProperty(), expandedWidth),
-                        new KeyValue(searchField.maxWidthProperty(), expandedWidth)
-                    )
-                );
-                expand.play();
-                wrapper.setAlignment(Pos.CENTER);
-            } else {
-                // Focus lost: shrink searchField and move wrapper back to right
-                Timeline shrink = new Timeline(
-                    new KeyFrame(Duration.ZERO,
-                        new KeyValue(searchField.prefWidthProperty(), searchField.getPrefWidth()),
-                        new KeyValue(searchField.maxWidthProperty(), searchField.getMaxWidth())
-                    ),
-                    new KeyFrame(duration,
-                        new KeyValue(searchField.prefWidthProperty(), initialWidth),
-                        new KeyValue(searchField.maxWidthProperty(), initialWidth)
-                    )
-                );
-                shrink.play();
-                wrapper.setAlignment(Pos.CENTER_RIGHT);
-            }
-        });
-
-        Runnable doSearch = () -> {
-            String query = searchField.getText().trim();
-            searchField.clear();
-            List<Book> results = searchBooks(query);
-            root.showSearchResults(query, results);
-        };
-
-        searchField.setOnAction(e -> doSearch.run());
-
-        searchBar.getChildren().addAll(searchField, filtersButton);
+        searchBar.getChildren().addAll(searchField, searchButton);
         return searchBar;
     }
 
     /**
-     * Esegue la ricerca dei libri in base al titolo e restituisce la lista dei risultati.
+     * Esegue la ricerca e aggiorna il mainContent con i risultati.
      */
-    private List<Book> searchBooks(String query) {
-        List<Book> results = new ArrayList<>();
+    private void performSearch(VBox mainContent, String query) {
+        mainContent.getChildren().removeIf(node -> node.getId() != null && node.getId().equals("resultsBox"));
+
+        VBox resultsBox = searchBooks(query);
+        resultsBox.setId("resultsBox");
+
+        // Inserisce subito dopo la barra di ricerca (se presente)
+        int indexAfterSearchBar = 1;
+        mainContent.getChildren().add(indexAfterSearchBar, resultsBox);
+    }
+
+    /**
+     * Esegue la ricerca dei libri in base al titolo e restituisce una VBox con i risultati.
+     */
+    private VBox searchBooks(String query) {
+        VBox resultsBox = new VBox(10);
+        resultsBox.setPadding(new Insets(20, 40, 20, 40));
 
         if (query == null || query.trim().isEmpty()) {
-            return results;
+            Label empty = new Label("Inserisci un termine di ricerca.");
+            resultsBox.getChildren().add(empty);
+            return resultsBox;
         }
+
+        List<Book> results = new ArrayList<>();
 
         try {
             String risposta = this.client.send("get_book;title;" + query);
 
+            // Gestione errori o risposta vuota
             if (risposta == null || risposta.isBlank() || risposta.equalsIgnoreCase("ERROR")) {
-                return results;
+                Label errorLabel = new Label("Errore nella comunicazione con il server o nessun risultato trovato.");
+                resultsBox.getChildren().add(errorLabel);
+                return resultsBox;
             }
 
-            // Pulizia finale (il server termina sempre con "|")
-            String clean = risposta;
-            if (clean.endsWith("|")) {
-                clean = clean.substring(0, clean.length() - 1);
-            }
+            // Ogni libro è separato da "|"
+            for (String line : risposta.split("\\|")) {
+                String[] parts = line.split(";");
 
-            // Split solo sui separatori reali tra record (| seguito da un id numerico)
-            String[] records = clean.split("\\|(?=\\d+;)");
+                // Controllo minimo di validità
+                if (parts.length < 7) continue;
 
-            for (String record : records) {
-                // Limite fondamentale: l'ultimo campo (descrizione) può contenere ';'
-                String[] parts = record.split(";", 8);
-
-                if (parts.length < 8) continue;
-
-                List<String> authors = Arrays.asList(parts[2].split(","));
+                List<String> authors = Arrays.asList(parts[2].split(",")); // esempio: autori separati da virgola
                 results.add(new Book(
                         Integer.parseInt(parts[0]),  // id
                         parts[1],                    // titolo
                         authors,                     // autori
                         Integer.parseInt(parts[3]),  // anno
                         parts[4],                    // editore
-                        parts[5],                    // categoria
-                        parts[6],                    // coverUrl
-                        parts[7]                     // descrizione
+                        parts[5],                    // mese pubblicazione
+                        parts[6]                     // genere o altro
                 ));
             }
+        } catch(NumberFormatException e) {
+            Label parseError = new Label("Formato dati non valido ricevuto dal server.");
+            resultsBox.getChildren().add(parseError);
+            return resultsBox;
         } catch (Exception e) {
-            // In caso di errore ritorna lista vuota
+            Label errorLabel = new Label("Errore di connessione al server.");
+            resultsBox.getChildren().add(errorLabel);
+            return resultsBox;
         }
 
-        return results;
+        /*try {
+            String risposta = getString(socket, "get_book;title;"+query);
+            for (String line : risposta.split("\\|")) {
+                String[] parts = risposta.split(";");
+                List<String> authors = Arrays.asList(parts);
+                results.add(new Book(Integer.parseInt(parts[0]),parts[1],authors,Integer.parseInt(parts[3]),parts[4],parts[5],parts[6]));
+            }
+        }
+        catch (IOException e) {
+            results = null;
+        }*/
+
+        // List<Book> results = bookManager.searchByTitle(query.trim());
+        System.out.println("🔍 Ricerca: \"" + query + "\" → risultati trovati: " + results.size());
+
+        if (!results.isEmpty()) {
+            for (Book b : results) {
+                HBox bookBox = new HBox(15);
+                bookBox.setPadding(new Insets(5, 0, 5, 0));
+
+                ImageView cover = new ImageView();
+                try {
+                    if (b.getCoverImageUrl() != null && !b.getCoverImageUrl().equalsIgnoreCase("null")) {
+                        Image img = new Image(b.getCoverImageUrl(), 100, 150, true, true);
+                        cover.setImage(img);
+                    }
+                } catch (Exception ignored) {}
+
+                Label info = new Label(b.getTitle() + "\n" + String.join(", ", b.getAuthors()));
+                info.setWrapText(true);
+
+                bookBox.getChildren().addAll(cover, info);
+                resultsBox.getChildren().add(bookBox);
+            }
+        } else {
+            Label noResult = new Label("Nessun libro trovato per \"" + query + "\"");
+            resultsBox.getChildren().add(noResult);
+        }
+
+        return resultsBox;
+
+
+    }
+
+    private static String getString(Socket socket, String richiesta) throws IOException {
+        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+        out.println(richiesta);
+        return in.readLine();
     }
 }
