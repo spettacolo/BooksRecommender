@@ -59,6 +59,32 @@ public class RecommendationDAO extends BaseDAO implements AutoCloseable {
         return result;
     }
 
+    public List<Recommendation> getRecommendationsMadeBy(String senderUsername) {
+        // Nota: Questa query assume che tu abbia aggiunto la colonna 'sender_username' nella tabella recommendations
+        String query = "SELECT username, book_id, book_recommended_id FROM recommendations WHERE sender_username = ?";
+        Map<String, List<String>> groupedRecs = new HashMap<>();
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, senderUsername);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    // Qui l'utente 'username' è il destinatario, 'senderUsername' è chi ha creato il consiglio
+                    String bookId = String.valueOf(rs.getInt("book_id"));
+                    String recId = String.valueOf(rs.getInt("book_recommended_id"));
+                    groupedRecs.computeIfAbsent(bookId, k -> new ArrayList<>()).add(recId);
+                }
+            }
+        } catch (SQLException e) {
+            logger.log("Error: " + e.getMessage());
+        }
+
+        List<Recommendation> result = new ArrayList<>();
+        for (Map.Entry<String, List<String>> entry : groupedRecs.entrySet()) {
+            result.add(new Recommendation(senderUsername, entry.getKey(), entry.getValue()));
+        }
+        return result;
+    }
+
     /**
      * Aggiunge una raccomandazione. Dato che l'oggetto Recommendation può contenere più ID,
      * eseguiamo un inserimento per ogni libro consigliato.

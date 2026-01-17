@@ -7,6 +7,7 @@ module booksrecommender.server {
     requires spring.security.crypto;
     requires javafx.graphics;
     requires javafx.base;
+    requires com.google.gson;
 
     exports ONA.booksrecommender.server;
 }
