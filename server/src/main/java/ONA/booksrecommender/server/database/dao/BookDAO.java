@@ -138,7 +138,7 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
         }
     }
 
-    public List<Book> getBooks(String category, int limit) {
+    /*public List<Book> getBooks(String category, int limit) {
         List<Book> books = new ArrayList<>();
         if (category == null) {
             return books;
@@ -199,6 +199,73 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
             logger.log("Error during book retrieval: " + e.getMessage());
             return books;
         }
+    }*/
+    public List<Book> getBooks(String category, int limit) { // Implementazione migliore rispetto a quello che abbiamo usato prima, utile anche in vista dell'implementazione di gson
+        List<Book> books = new ArrayList<>();
+        if (limit <= 0) limit = 20;
+
+        String query;
+        boolean isTopRequest = "top".equalsIgnoreCase(category) || "none".equalsIgnoreCase(category);
+
+        if (isTopRequest) {
+            query = """
+            SELECT
+                b.book_id, b.title, b.publish_year, b.publishers, b.category,
+                COUNT(lb.book_id) AS frequency_count
+            FROM books b
+            INNER JOIN library_books lb ON b.book_id = lb.book_id
+            GROUP BY b.book_id, b.title, b.publish_year, b.publishers, b.category
+            ORDER BY frequency_count DESC
+            LIMIT ?
+            """;
+        } else {
+            query = """
+            SELECT b.book_id, b.title, b.publish_year, b.publishers, b.category
+            FROM books b
+            WHERE b.category ILIKE ?
+            ORDER BY RANDOM()
+            LIMIT ?
+            """;
+        }
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            if (isTopRequest) {
+                stmt.setInt(1, limit);
+            } else {
+                String pattern = "%" + category + "%";
+                stmt.setString(1, pattern);
+                stmt.setInt(2, limit);
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    int bookId = rs.getInt("book_id");
+                    List<String> authors = getBookAuthors(bookId);
+                    String imageUrl = getBookImageUrl(bookId);
+
+                    String desc = "";
+                    try {
+                        desc = rs.getString("description");
+                        if (desc == null) desc = "";
+                    } catch (SQLException ignored) {}
+
+                    books.add(new Book(
+                            bookId,
+                            rs.getString("title"),
+                            authors,
+                            rs.getInt("publish_year"),
+                            rs.getString("publishers"),
+                            rs.getString("category"),
+                            imageUrl,
+                            desc
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            logger.log("Errore in getBooks(category,limit): " + e.getMessage());
+        }
+
+        return books;
     }
 
     /*public String getBookImageUrl(String title) {
