@@ -270,8 +270,9 @@ public class ServerFacadeTestJson {
     // ── Consigli ─────────────────────────────────────────────────────────────
 
     private String handleGetReceivedRecommendations(JsonObject data) {
-        String username = getRequired(data, "username", String.class);
-        return gson.toJson(recommendationDAO.getRecommendations(username));
+        String bookIdStr = getRequired(data, "book_id", String.class);
+        int bookId = Integer.parseInt(bookIdStr);
+        return gson.toJson(recommendationDAO.getRecommendations(bookId));
     }
 
     private String handleGetMadeRecommendations(JsonObject data) {

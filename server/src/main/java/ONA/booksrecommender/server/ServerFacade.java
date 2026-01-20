@@ -313,14 +313,14 @@ public class ServerFacade {
                     boolean ok = ratingDAO.addRating(Integer.parseInt(parts[1]), parts[2], Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), Integer.parseInt(parts[5]), Integer.parseInt(parts[6]), Integer.parseInt(parts[7]), parts.length == 9 ? parts[8] : null);
                     return ok ? "ADD_BOOK_REVIEW" + SEPARATOR + "OK" : "ADD_BOOK_REVIEW" + SEPARATOR + "FAIL";
                 }
-                case "get_user_advices": { // Consigli ricevuti
+                case "get_book_advices": { // Consigli ricevuti
                     if (parts.length < 2) return ERROR_MESSAGE;
-                    List<Recommendation> recommendations = recommendationDAO.getRecommendations(parts[1]);
+                    List<Recommendation> recommendations = recommendationDAO.getRecommendations(Integer.parseInt(parts[1]));
                     if (recommendations.isEmpty()) return "NO_RECOMMENDATIONS";
                     return formatRecommendationList(recommendations);
                 }
 
-                case "get_advices_made": { // Consigli creati dall'utente
+                case "get_advices_made_by_user": { // Consigli creati dall'utente
                     if (parts.length < 2) return ERROR_MESSAGE;
                     List<Recommendation> made = recommendationDAO.getRecommendationsMadeBy(parts[1]);
                     if (made.isEmpty()) return "NO_RECOMMENDATIONS_MADE";
