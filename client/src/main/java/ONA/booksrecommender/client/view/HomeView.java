@@ -50,13 +50,15 @@ public class HomeView extends VBox {
     }
 
     private ScrollPane createMainContent() {
-        mainContent = new VBox(0);
+        mainContent = new VBox();
         mainContent.setFillWidth(true);
 
         HBox header = new HBox();
+        header.getStyleClass().add("home-header");
         header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        header.setPadding(new Insets(20, 40, 20, 40));
-        header.getChildren().add(new Label("Home"));
+        Label homeLabel = new Label("Home");
+        homeLabel.getStyleClass().add("header-title");
+        header.getChildren().add(homeLabel);
 
         mainContent.getChildren().addAll(header);
 
@@ -69,6 +71,8 @@ public class HomeView extends VBox {
         ScrollPane scrollPane = new ScrollPane(mainContent);
         scrollPane.setFitToWidth(true);
         scrollPane.setContent(mainContent);
+        scrollPane.getStyleClass().add("home-scroll-pane");
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 
         scrollPane.viewportBoundsProperty().addListener((obs, oldVal, newVal) -> {
             mainContent.setPrefWidth(newVal.getWidth());
@@ -79,18 +83,20 @@ public class HomeView extends VBox {
 
     private VBox createGenreSection(String genreName) {
         VBox section = new VBox();
-        section.setPadding(new Insets(20, 0, 20, 40));
-        section.setSpacing(20);
+        section.getStyleClass().add("genre-section");
+        section.setSpacing(30);
         section.setFillWidth(true);
 
         Label subtitle;
         if ("none".equals(genreName)) {
-            subtitle = new Label("I più popolari");
+            subtitle = new Label("I più popolari >");
+            subtitle.getStyleClass().add("genre-subtitle");
+
         } else {
             subtitle = new Label(genreName + " >");
+            subtitle.getStyleClass().add("genre-subtitle");
         }
-        subtitle.setStyle("-fx-font-weight: bold;");
-
+        subtitle.setPadding(new Insets(0, 0, 0, 10));
         ScrollPane booksScroll = createGenreBooksScroll(genreName);
 
         section.getChildren().addAll(subtitle, booksScroll);
@@ -99,23 +105,21 @@ public class HomeView extends VBox {
 
     private ScrollPane createGenreBooksScroll(String genreName) {
         HBox row = new HBox(30);
-        row.setPadding(new Insets(0, 0, 0, 0));
         row.setAlignment(Pos.BOTTOM_CENTER);
+        row.getStyleClass().add("books-row");
+        row.setPadding(new Insets(0, 15, 0, 15));
 
         VBox wrapper = new VBox(row);
         wrapper.setFillWidth(true);
 
         ScrollPane scroll = new ScrollPane();
         scroll.setFitToHeight(false);
-        scroll.setStyle("-fx-background-color: transparent; -fx-background-insets: 0; -fx-padding: 0;");
-        row.setStyle("-fx-background-color: transparent;");
+        scroll.getStyleClass().add("books-scroll");
 
         scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scroll.setPannable(true);
         scroll.setContent(wrapper);
-
-        scroll.lookupAll(".scroll-bar").forEach(bar -> bar.setOpacity(0));
 
         Task<Void> task = new Task<>() {
             @Override

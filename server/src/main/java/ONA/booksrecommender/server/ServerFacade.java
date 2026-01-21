@@ -28,7 +28,7 @@ public class ServerFacade {
     private final BookDAO bookDAO;
     private final LibraryDAO libraryDAO;
     private final RatingDAO ratingDAO;
-    // private final RecommendationDAO recommendationDAO;
+    private final RecommendationDAO recommendationDAO;
 
     public ServerFacade(Logger logger, Database database) {
         this.logger = logger;
@@ -38,7 +38,16 @@ public class ServerFacade {
         this.bookDAO = database.getDAO(BookDAO.class);
         this.libraryDAO = database.getDAO(LibraryDAO.class);
         this.ratingDAO = database.getDAO(RatingDAO.class);
-        // this.recommendationDAO = database.getDAO(RecommendationDAO.class);
+        this.recommendationDAO = database.getDAO(RecommendationDAO.class);
+    }
+
+    private String formatRecommendationList(List<Recommendation> list) {
+        StringBuilder sb = new StringBuilder();
+        for (Recommendation rec : list) {
+            String recs = String.join(",", rec.getRecommendedBookIds());
+            sb.append(rec.getBookId()).append(SEPARATOR).append(recs).append("|");
+        }
+        return sb.toString();
     }
 
     public String handleRequest(String req) {
@@ -126,7 +135,77 @@ public class ServerFacade {
 
                             return books.toString();
                         }
+                        /* case "author": { // filtro autore-anno TODO: ordinamento asc/desc, poi farò
+                            boolean b = !((parts[3]).equalsIgnoreCase("ASC") || (parts[3]).equalsIgnoreCase("DESC"));
+                            if (b) return ERROR_MESSAGE;
+                            List<Book> booksObj = bookDAO.getAuthorBooks(parts[2], parts[3]);
+                            StringBuilder books = new StringBuilder();
+                            for (Book book : booksObj) {
+                                List<String> authors = book.getAuthors();
+                                String authorsString = String.join(", ", authors);
+                                String encodedDesc = Base64.getEncoder().encodeToString(
+                                        book.getDescription().getBytes(StandardCharsets.UTF_8)
+                                );
+                                books.append(String.join(SEPARATOR, Integer.toString(book.getId()), book.getTitle(), authorsString, Integer.toString(book.getPublicationYear()), book.getPublisher(), book.getCategory(), book.getCoverImageUrl(), encodedDesc));
+                                books.append("|");
+                            }
+
+                            return books.toString();
+                        }*/
+
+                        // -----------------------------    =^.^=   --------------------------
                         case "author": {
+                            if (parts.length < 3) return ERROR_MESSAGE;
+
+                            String authorName = parts[2];
+
+                            // Leggiamo l'offset dal client (parts[3]), se non c'è mettiamo 0
+                            int offset = 0;
+                            if (parts.length > 3) {
+                                try {
+                                    offset = Integer.parseInt(parts[3]);
+                                } catch (NumberFormatException e) {
+                                    offset = 0; // Fallback in caso di errore nel numero
+                                }
+                            }
+
+                            int limit = 20; // Numero di libri per ogni "caricamento"
+
+                            // CHIAMATA CORRETTA: Passiamo i 3 parametri richiesti dal nuovo BookDAO
+                            List<Book> booksObj = bookDAO.getAuthorBooks(authorName, limit, offset);
+
+                            if (booksObj == null || booksObj.isEmpty()) {
+                                return "NOT_FOUND";
+                            }
+
+                            StringBuilder books = new StringBuilder();
+                            for (Book book : booksObj) {
+                                List<String> authors = book.getAuthors();
+                                String authorsString = String.join(", ", authors);
+
+                                // Codifica descrizione per evitare conflitti con il separatore ";"
+                                String encodedDesc = "";
+                                if (book.getDescription() != null) {
+                                    encodedDesc = Base64.getEncoder().encodeToString(
+                                            book.getDescription().getBytes(StandardCharsets.UTF_8)
+                                    );
+                                }
+
+                                books.append(String.join(SEPARATOR,
+                                        Integer.toString(book.getId()),
+                                        book.getTitle(),
+                                        authorsString,
+                                        Integer.toString(book.getPublicationYear()),
+                                        book.getPublisher(),
+                                        book.getCategory(),
+                                        book.getCoverImageUrl(),
+                                        encodedDesc));
+                                books.append("|");
+                            }
+                            return books.toString();
+                        }
+
+                        case "authors": { // ricerca autori di un libro
                             List<String> authors = bookDAO.getBookAuthors(Integer.parseInt(parts[2]));
                             // , anziché ; perché è una lista di elementi e non più elementi differenti
                             return String.join(",", authors);
@@ -267,29 +346,119 @@ public class ServerFacade {
                     boolean ok = libraryDAO.removeBook(book, library);
                     return ok ? "REMOVE_BOOK_FROM_LIBRARY" + SEPARATOR + "OK" : "REMOVE_BOOK_FROM_LIBRARY" + SEPARATOR + "FAIL";
                 }
-                case "get_book_ratings": // metodo dedicato ai libri per recuperare tutte le recensioni (TODO: metodo per recuperare recensioni singole)
-                    // get_book_reviews;12345
+                case "get_book_ratings":
                     if (parts.length < 2) return ERROR_MESSAGE;
                     List<Rating> book_ratings = ratingDAO.getRatings(Integer.parseInt(parts[1]));
                     StringBuilder ratings = new StringBuilder();
                     for (Rating rating : book_ratings) {
+                        // Gestione nota null o vuota per evitare crash
+                        String noteToEncode = (rating.getNotes() == null) ? "" : rating.getNotes();
+
+                        // Codifichiamo in Base64 per l'invio sul socket (evita che i ';' nella nota rompano il parsing)
                         String encodedNote = Base64.getEncoder().encodeToString(
-                                rating.getNotes().getBytes(StandardCharsets.UTF_8)
+                                noteToEncode.getBytes(StandardCharsets.UTF_8)
                         );
-                        ratings.append(String.join(SEPARATOR, rating.getUserId(), rating.getBookId(), Integer.toString(rating.getStyle()), Integer.toString(rating.getContent()), Integer.toString(rating.getEnjoyment()), Integer.toString(rating.getOriginality()), Integer.toString(rating.getEdition()), Integer.toString(rating.getFinalScore()), encodedNote));
+
+                        ratings.append(String.join(SEPARATOR,
+                                rating.getUserId(),
+                                rating.getBookId(),
+                                Integer.toString(rating.getStyle()),
+                                Integer.toString(rating.getContent()),
+                                Integer.toString(rating.getEnjoyment()),
+                                Integer.toString(rating.getOriginality()),
+                                Integer.toString(rating.getEdition()),
+                                Integer.toString(rating.getFinalScore()),
+                                encodedNote));
                         ratings.append("|");
                     }
-
                     return ratings.toString();
-                case "get_book_advices":
-                    return "UNKNOWN_COMMAND";
+
                 // remove_book_review può servire? lmk
-                case "add_book_review": // book_id, username, style, content, liking, originality, edition, notes
+                case "add_book_review": {
+                    // Formato atteso: add_book_review;book_id;username;style;content;liking;originality;edition;encoded_notes
                     if (parts.length < 8) return ERROR_MESSAGE;
-                    boolean ok = ratingDAO.addRating(Integer.parseInt(parts[1]), parts[2], Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), Integer.parseInt(parts[5]), Integer.parseInt(parts[6]), Integer.parseInt(parts[7]), parts.length == 9 ? parts[8] : null);
-                    return ok ? "ADD_BOOK_REVIEW" + SEPARATOR + "OK" : "ADD_BOOK_REVIEW" + SEPARATOR + "FAIL";
-                case "add_book_advice":
-                    return "UNKNOWN_COMMAND";
+
+                    try {
+                        int bookId = Integer.parseInt(parts[1]);
+                        String username = parts[2];
+                        int style = Integer.parseInt(parts[3]);
+                        int content = Integer.parseInt(parts[4]);
+                        int enjoy = Integer.parseInt(parts[5]);
+                        int orig = Integer.parseInt(parts[6]);
+                        int edit = Integer.parseInt(parts[7]);
+
+                        String notesToSave = "";
+
+                        // Controlliamo se esiste il nono elemento (indice 8) per le note
+                        if (parts.length >= 9 && parts[8] != null && !parts[8].isBlank() && !parts[8].equalsIgnoreCase("EMPTY")) {
+                            try {
+                                // PULIZIA E DECODIFICA FORZATA
+                                String rawBase64 = parts[8].trim();
+                                // Usiamo il MimeDecoder che ignora eventuali sporcizie inviate dal client
+                                byte[] decodedBytes = Base64.getMimeDecoder().decode(rawBase64);
+                                notesToSave = new String(decodedBytes, StandardCharsets.UTF_8);
+
+                                // LOG DI CONTROLLO (Controlla la console del server!)
+                                System.out.println("[SERVER] Nota decodificata correttamente: " + notesToSave);
+                            } catch (Exception e) {
+                                // Se la decodifica fallisce, forse il client ha mandato testo piano?
+                                System.err.println("[SERVER] Fallita decodifica Base64, salvo come testo piano: " + parts[8]);
+                                notesToSave = parts[8];
+                            }
+                        }
+
+                        // PASSAGGIO AL DAO: notesToSave ORA È TESTO IN CHIARO (es: "bibia")
+                        boolean ok = ratingDAO.addRating(bookId, username, style, content, enjoy, orig, edit, notesToSave);
+
+                        return ok ? "ADD_BOOK_REVIEW" + SEPARATOR + "OK" : "ADD_BOOK_REVIEW" + SEPARATOR + "FAIL";
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return "ERROR" + SEPARATOR + "processing_review";
+                    }
+                }
+
+
+                case "get_book_advices": { // Consigli ricevuti
+                    if (parts.length < 2) return ERROR_MESSAGE;
+                    List<Recommendation> recommendations = recommendationDAO.getRecommendations(Integer.parseInt(parts[1]));
+                    if (recommendations.isEmpty()) return "NO_RECOMMENDATIONS";
+                    return formatRecommendationList(recommendations);
+                }
+
+                case "get_advices_made_by_user": { // Consigli creati dall'utente
+                    if (parts.length < 2) return ERROR_MESSAGE;
+                    List<Recommendation> made = recommendationDAO.getRecommendationsMadeBy(parts[1]);
+                    if (made.isEmpty()) return "NO_RECOMMENDATIONS_MADE";
+                    return formatRecommendationList(made);
+                }
+
+                case "add_book_advice": {
+                    // Formato richiesta: add_book_advice;username;book_id;rec_id1,rec_id2,rec_id3
+                    if (parts.length < 4) return ERROR_MESSAGE;
+
+                    String username = parts[1];
+                    String bookId = parts[2];
+                    // Split della lista di libri consigliati (separati da virgola)
+                    List<String> recommendedIds = Arrays.asList(parts[3].split(","));
+
+                    try {
+                        Recommendation rec = new Recommendation(username, bookId, recommendedIds);
+                        boolean ok = recommendationDAO.addRecommendation(rec);
+                        return ok ? "ADD_BOOK_ADVICE" + SEPARATOR + "OK" : "ADD_BOOK_ADVICE" + SEPARATOR + "FAIL";
+                    } catch (IllegalArgumentException e) {
+                        return "ERROR" + SEPARATOR + "too_many_recommendations";
+                    }
+                }
+
+                case "remove_book_advice": {
+                    // Formato richiesta: remove_book_advice;username;book_id
+                    if (parts.length < 3) return ERROR_MESSAGE;
+                    String username = parts[1];
+                    String bookId = parts[2];
+
+                    boolean ok = recommendationDAO.removeRecommendations(username, bookId);
+                    return ok ? "REMOVE_BOOK_ADVICE" + SEPARATOR + "OK" : "REMOVE_BOOK_ADVICE" + SEPARATOR + "FAIL";
+                }
                 default:
                     return "UNKNOWN_COMMAND";
             }

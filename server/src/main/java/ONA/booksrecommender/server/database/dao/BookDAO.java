@@ -18,8 +18,8 @@ import java.net.http.HttpResponse;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+//import com.fasterxml.jackson.databind.JsonNode;
+//import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 
@@ -305,6 +305,7 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
         }
     }
 
+    /*  =^.^=
     public List<Book> getAuthorBooks(String author) {
         String query = "SELECT ba.book_id " +
                 "FROM authors a " +
@@ -331,32 +332,32 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
             return new ArrayList<>();
         }
     }
+    */
 
-    public List<Book> getAuthorBooks(String author, int year) {
+    public List<Book> getAuthorBooks(String author, int limit, int offset) {
         String query = "SELECT ba.book_id " +
                 "FROM authors a " +
                 "JOIN book_authors ba ON a.author_id = ba.author_id " +
                 "JOIN books b ON ba.book_id = b.book_id " +
-                "WHERE a.author_name = ? AND b.publish_year = ?";
+                "WHERE a.author_name ILIKE ? " +
+                "ORDER BY b.publish_year DESC " +
+                "LIMIT ? OFFSET ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, author);
-            stmt.setInt(2, year);
+            stmt.setString(1, "%" + author + "%");
+            stmt.setInt(2, limit);
+            stmt.setInt(3, offset);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 List<Book> books = new ArrayList<>();
-
                 while (rs.next()) {
                     Book book = getBook(rs.getInt("book_id"));
-                    if (book != null) {
-                        books.add(book);
-                    }
+                    if (book != null) books.add(book);
                 }
-
                 return books;
             }
         } catch (SQLException e) {
-            logger.log("Error during book retrieval: " + e.getMessage());
+            logger.log("Error during pagination: " + e.getMessage());
             return new ArrayList<>();
         }
     }

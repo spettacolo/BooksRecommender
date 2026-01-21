@@ -21,17 +21,20 @@ public class LoggedView extends VBox {
 
         Label home = new Label("Home");
         home.setOnMouseClicked(e -> root.showHome());
+        home.getStyleClass().add("default-label");
+
 
         Label user = new Label(username);
         user.setOnMouseClicked(e -> root.showUserArea(username));
+        user.getStyleClass().add("default-label");
 
         Label yourLibraries = new Label("Le tue librerie");
-        yourLibraries.setStyle("-fx-font-weight: bold;");
+        yourLibraries.getStyleClass().add("your-libraries-label");
 
         this.getChildren().addAll(
-            home,
-            user,
-            yourLibraries
+                home,
+                user,
+                yourLibraries
         );
 
         loadLibraries(root);
@@ -64,7 +67,7 @@ public class LoggedView extends VBox {
 
                     confirm.showAndWait().ifPresent(button -> {
                         if (button == javafx.scene.control.ButtonType.OK) {
-                            client.send("delete_library;" + username + ";" + lib);
+                            client.send("remove_library;" + lib);
                             root.showLoggedSidebar(username);
                         }
                     });
@@ -74,6 +77,7 @@ public class LoggedView extends VBox {
                 libLabel.setOnContextMenuRequested(e ->
                         menu.show(libLabel, e.getScreenX(), e.getScreenY())
                 );
+                libLabel.getStyleClass().add("default-label");
 
                 this.getChildren().add(libLabel);
             }
@@ -95,6 +99,7 @@ public class LoggedView extends VBox {
                 }
             });
         });
+        newLib.getStyleClass().add("default-label");
 
         this.getChildren().addAll(newLib);
     }

@@ -16,15 +16,18 @@ public class UnLoggedView extends VBox {
 
         Label home = new Label("Home");
         home.setOnMouseClicked(e -> root.showHome());
+        home.getStyleClass().add("default-label");
 
         Label yourLibraries = new Label("Le tue librerie");
-        yourLibraries.setStyle("-fx-font-weight: bold;");
+        yourLibraries.getStyleClass().add("your-libraries-label");
 
         Label aggiungiLibreria = new Label("+ Aggiungi libreria");
-        aggiungiLibreria.setOnMouseClicked(e -> new RegLog().showLoginForm(root, root.getClient()));
+        aggiungiLibreria.setOnMouseClicked(e -> new RegLog().createOverlay(root, root.getClient()));
+        aggiungiLibreria.getStyleClass().add("default-label");
 
         Label login = new Label("Accedi");
-        login.setOnMouseClicked(e -> new RegLog().showLoginForm(root, root.getClient()));
+        login.setOnMouseClicked(e -> new RegLog().createOverlay(root, root.getClient()));
+        login.getStyleClass().add("default-label");
 
         this.getChildren().addAll(home, yourLibraries, aggiungiLibreria, login);
     }
