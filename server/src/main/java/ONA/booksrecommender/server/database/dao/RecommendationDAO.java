@@ -22,39 +22,74 @@ public class RecommendationDAO extends BaseDAO implements AutoCloseable {
      * Recupera tutte le raccomandazioni per un utente.
      * Aggrega i book_recommended_id trovati nel DB per lo stesso book_id.
      */
-    public List<Recommendation> getRecommendations(String username) {
-        // Query che recupera tutte le righe per l'utente
-        String query = "SELECT book_id, book_recommended_id FROM recommendations WHERE username = ?";
+    /**
+     * Recupera le raccomandazioni per un determinato libro.
+     * Restituisce una lista di oggetti Recommendation, raggruppati per l'utente che le ha ricevute.
+     */
+    public List<Recommendation> getRecommendations(int bookId) {
+        // Aggiungiamo 'username' alla SELECT per sapere a chi appartiene la raccomandazione
+        String query = "SELECT username, book_id, book_recommended_id FROM recommendations WHERE book_id = ?";
 
-        // Mappa per raggruppare i consigli: Key = book_id, Value = Lista di ID consigliati
-        Map<String, List<String>> groupedRecs = new HashMap<>();
+        // Mappa: Key = Username, Value = Lista di ID dei libri consigliati
+        Map<String, List<String>> userRecsMap = new HashMap<>();
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, username);
+            stmt.setInt(1, bookId);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    String bookId = String.valueOf(rs.getInt("book_id"));
+                    String user = rs.getString("username");
                     String recId = String.valueOf(rs.getInt("book_recommended_id"));
 
+                    userRecsMap.computeIfAbsent(user, k -> new ArrayList<>()).add(recId);
+                }
+            }
+        } catch (SQLException e) {
+            logger.log("Error retrieving recommendations for book " + bookId + ": " + e.getMessage());
+        }
+
+        List<Recommendation> result = new ArrayList<>();
+        String bookIdStr = String.valueOf(bookId);
+
+        for (Map.Entry<String, List<String>> entry : userRecsMap.entrySet()) {
+            String targetUser = entry.getKey();
+            List<String> recIds = entry.getValue();
+
+            try {
+                // Ora passiamo correttamente l'utente recuperato dal DB
+                result.add(new Recommendation(targetUser, bookIdStr, recIds));
+            } catch (IllegalArgumentException e) {
+                logger.log("Warning: found " + recIds.size() + " recommendations for user " + targetUser + " on book " + bookIdStr);
+                // Fallback: limitiamo a 3 consigli come richiesto dalla logica del tuo oggetto Recommendation
+                List<String> subList = recIds.subList(0, Math.min(recIds.size(), 3));
+                result.add(new Recommendation(targetUser, bookIdStr, subList));
+            }
+        }
+        return result;
+    }
+
+    public List<Recommendation> getRecommendationsMadeBy(String senderUsername) {
+        // Nota: Questa query assume che tu abbia aggiunto la colonna 'sender_username' nella tabella recommendations
+        String query = "SELECT username, book_id, book_recommended_id FROM recommendations WHERE sender_username = ?";
+        Map<String, List<String>> groupedRecs = new HashMap<>();
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, senderUsername);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    // Qui l'utente 'username' è il destinatario, 'senderUsername' è chi ha creato il consiglio
+                    String bookId = String.valueOf(rs.getInt("book_id"));
+                    String recId = String.valueOf(rs.getInt("book_recommended_id"));
                     groupedRecs.computeIfAbsent(bookId, k -> new ArrayList<>()).add(recId);
                 }
             }
         } catch (SQLException e) {
-            logger.log("Error retrieving recommendations for " + username + ": " + e.getMessage());
+            logger.log("Error: " + e.getMessage());
         }
 
-        // Trasformiamo la mappa in una lista di oggetti Recommendation
         List<Recommendation> result = new ArrayList<>();
         for (Map.Entry<String, List<String>> entry : groupedRecs.entrySet()) {
-            try {
-                result.add(new Recommendation(username, entry.getKey(), entry.getValue()));
-            } catch (IllegalArgumentException e) {
-                logger.log("Warning: found more than 3 recommendations for book " + entry.getKey());
-                // Opzionale: aggiungi solo i primi 3 se il DB ne contiene di più per errore
-                List<String> subList = entry.getValue().subList(0, Math.min(entry.getValue().size(), 3));
-                result.add(new Recommendation(username, entry.getKey(), subList));
-            }
+            result.add(new Recommendation(senderUsername, entry.getKey(), entry.getValue()));
         }
         return result;
     }

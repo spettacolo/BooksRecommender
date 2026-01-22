@@ -2,25 +2,19 @@ package ONA.booksrecommender.client.view;
 
 import ONA.booksrecommender.client.Client;
 import ONA.booksrecommender.client.controller.AddRmBook;
+import ONA.booksrecommender.client.controller.RecommendationHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.ChoiceDialog;
-import javafx.scene.control.Label;
-import javafx.scene.control.Separator;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.control.ScrollPane;
-
-import javafx.scene.Scene;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.Button;
 import javafx.scene.shape.Rectangle;
-import java.util.Base64;
+
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 public class BookDetails {
@@ -98,10 +92,8 @@ public class BookDetails {
     public StackPane createOverlay() {
         final StackPane overlay = new StackPane();
         VBox content = new VBox(20);
-        // Margine interno tra bordo overlay e contenuti a 20
         content.setPadding(new Insets(20));
-
-        content.setStyle("-fx-background-color: transparent;");
+        content.setStyle("-fx-background-color: rgb(241, 237, 229);");
         content.setMaxWidth(Double.MAX_VALUE);
         content.setMaxHeight(Double.MAX_VALUE);
         content.setPrefWidth(Region.USE_COMPUTED_SIZE);
@@ -111,7 +103,7 @@ public class BookDetails {
         // HEADER
         Label closeButton = new Label("✕");
         closeButton.setStyle("-fx-font-size: 18px;");
-        // Chiude l'overlay cliccando la X
+        closeButton.getStyleClass().add("book-details-text");
         closeButton.setOnMouseClicked(e -> {
             Pane parent = (Pane) overlay.getParent();
             if (parent != null) parent.getChildren().remove(overlay);
@@ -126,62 +118,39 @@ public class BookDetails {
         // PULSANTI + e -
         if (username != null && !username.isEmpty()) {
             AddRmBook addRmBook = new AddRmBook();
-            List<AddRmBook.LibraryInfo> libsWithoutBook = addRmBook.getLibrariesWithoutBook(client, username, bookId);
-            List<AddRmBook.LibraryInfo> libsWithBook = addRmBook.getLibrariesWithBook(client, username, bookId);
-
-            HBox buttonsBox = new HBox(10);
+            HBox buttonsBox = new HBox(15);
             buttonsBox.setAlignment(Pos.TOP_RIGHT);
 
-            if (!libsWithoutBook.isEmpty()) {
-                Label addButton = new Label("+");
-                addButton.setStyle("-fx-font-size: 24px;");
-                addButton.setOnMouseClicked(e -> {
-                    List<String> libNames = new ArrayList<>();
-                    for (AddRmBook.LibraryInfo lib : libsWithoutBook) libNames.add(lib.getName());
-                    ChoiceDialog<String> dialog = new ChoiceDialog<>(libNames.get(0), libNames);
-                    dialog.setTitle("Aggiungi libro a libreria");
-                    dialog.setHeaderText("Seleziona una libreria dove aggiungere il libro");
-                    dialog.setContentText("Libreria:");
-                    dialog.showAndWait().ifPresent(selectedName -> {
-                        for (AddRmBook.LibraryInfo lib : libsWithoutBook) {
-                            if (lib.getName().equals(selectedName)) {
-                                client.send("add_book_to_library;" + lib.getId() + ";" + bookId);
-                                break;
-                            }
-                        }
-                    });
-                });
-                buttonsBox.getChildren().add(addButton);
-            }
+            // --- TASTO AGGIUNGI (+) ---
+            Label addButton = new Label("+");
+            addButton.setStyle("-fx-font-size: 26px; -fx-cursor: hand; -fx-font-weight: bold;");
+            addButton.getStyleClass().add("book-details-text");
 
-            if (!libsWithBook.isEmpty()) {
-                Label removeButton = new Label("-");
-                removeButton.setStyle("-fx-font-size: 24px;");
-                removeButton.setOnMouseClicked(e -> {
-                    List<String> libNames = new ArrayList<>();
-                    for (AddRmBook.LibraryInfo lib : libsWithBook) libNames.add(lib.getName());
-                    ChoiceDialog<String> dialog = new ChoiceDialog<>(libNames.get(0), libNames);
-                    dialog.setTitle("Rimuovi libro da libreria");
-                    dialog.setHeaderText("Seleziona una libreria da cui rimuovere il libro");
-                    dialog.setContentText("Libreria:");
-                    dialog.showAndWait().ifPresent(selectedName -> {
-                        for (AddRmBook.LibraryInfo lib : libsWithBook) {
-                            if (lib.getName().equals(selectedName)) {
-                                client.send("remove_book_from_library;" + lib.getId() + ";" + bookId);
-                                break;
-                            }
-                        }
-                    });
-                });
-                buttonsBox.getChildren().add(removeButton);
-            }
+            addButton.setOnMouseClicked(e -> {
+                List<AddRmBook.LibraryInfo> libs = addRmBook.getLibrariesWithoutBook(client, username, bookId);
+                if (!libs.isEmpty()) {
+                    showLibraryMenu(addButton, libs, true);
+                }
+            });
 
+            // --- TASTO RIMUOVI (-) ---
+            Label removeButton = new Label("-");
+            removeButton.setStyle("-fx-font-size: 26px; -fx-cursor: hand; -fx-font-weight: bold;");
+            removeButton.getStyleClass().add("book-details-text");
+
+            removeButton.setOnMouseClicked(e -> {
+                List<AddRmBook.LibraryInfo> libs = addRmBook.getLibrariesWithBook(client, username, bookId);
+                if (!libs.isEmpty()) {
+                    showLibraryMenu(removeButton, libs, false);
+                }
+            });
+
+            buttonsBox.getChildren().addAll(removeButton, addButton);
             header.getChildren().add(buttonsBox);
         }
 
-        // CONTENUTO PRINCIPALE (copertina a sinistra, dettagli a destra)
+        // CONTENUTO PRINCIPALE
         HBox mainContent = new HBox(20);
-
         VBox coverBox = new VBox();
         coverBox.setAlignment(Pos.TOP_LEFT);
         if (coverUrl != null && !coverUrl.isEmpty()) {
@@ -195,199 +164,501 @@ public class BookDetails {
         VBox detailsBox = new VBox(5);
         detailsBox.setAlignment(Pos.TOP_LEFT);
         Label titleLabel = new Label(title);
+        titleLabel.getStyleClass().add("book-details-text");
         titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
         Label authorLabel = new Label(authors);
+        authorLabel.getStyleClass().add("book-details-text");
         authorLabel.setStyle("-fx-font-size: 14px;");
-        Label publisherYearLabel = new Label((publisher.isEmpty() ? "" : publisher) + (year.isEmpty() ? "" : " - " + year));
-        publisherYearLabel.setStyle("-fx-font-size: 14px;");
-        Label categoryLabel = new Label(category);
-        categoryLabel.setStyle("-fx-font-size: 14px;");
-        Label ratingLabel = buildRatingLabel();
-        detailsBox.getChildren().addAll(titleLabel, authorLabel, publisherYearLabel, categoryLabel, ratingLabel);
-
+        Label pubYearLabel = new Label((publisher.isEmpty() ? "" : publisher) + (year.isEmpty() ? "" : " - " + year));
+        pubYearLabel.getStyleClass().add("book-details-text");
+        pubYearLabel.setStyle("-fx-font-size: 14px;");
+        Label catLabel = new Label(category);
+        catLabel.getStyleClass().add("book-details-text");
+        catLabel.setStyle("-fx-font-size: 14px;");
+        Label ratLabel = buildRatingLabel();
+        ratLabel.getStyleClass().add("book-details-text");
+        detailsBox.getChildren().addAll(titleLabel, authorLabel, pubYearLabel, catLabel, ratLabel);
         mainContent.getChildren().addAll(coverBox, detailsBox);
 
-        Label descriptionTitle = new Label("Sinossi");
-        descriptionTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
-        Label descriptionLabel = new Label(descrizione);
-        descriptionLabel.setWrapText(true);
+        Label descTitle = new Label("Sinossi");
+        descTitle.getStyleClass().add("book-details-text");
+        descTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        Label descLabel = new Label(descrizione);
+        descLabel.getStyleClass().add("book-details-text");
+        descLabel.setWrapText(true);
 
         Separator divider = new Separator();
         divider.setPadding(new Insets(20, 0, 10, 0));
+        divider.getStyleClass().add("divider");
 
-        // --- BEGIN reviews header block with optional add review icon ---
-        HBox reviewsHeader = new HBox(8);
+        // RECENSIONI SECTION
+        HBox reviewsHeader = new HBox();
         reviewsHeader.setAlignment(Pos.CENTER_LEFT);
-
         Label reviewsTitle = new Label("Valutazioni e recensioni");
+        reviewsTitle.getStyleClass().add("book-details-text");
         reviewsTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        reviewsHeader.getChildren().addAll(reviewsTitle);
 
-        reviewsHeader.getChildren().add(reviewsTitle);
-
-        // Mostra icona recensione solo se loggato e il libro è in almeno una libreria
         if (username != null && !username.isEmpty()) {
             List<AddRmBook.LibraryInfo> libsWithBook = AddRmBook.getLibrariesWithBook(client, username, bookId);
-
             if (libsWithBook != null && !libsWithBook.isEmpty()) {
-                Label addReviewIcon = new Label("✍️");
-                addReviewIcon.setStyle("-fx-font-size: 18px;");
-                addReviewIcon.setOnMouseClicked(e -> {
-                    ReviewDialog dialog = new ReviewDialog(bookId, username, client);
-                    dialog.show();
-                });
-                reviewsHeader.getChildren().add(addReviewIcon);
+                // Spacer per spingere il tasto + tutto a destra
+                Region reviewSpacer = new Region();
+                HBox.setHgrow(reviewSpacer, Priority.ALWAYS);
+
+                Label addReviewButton = new Label("+");
+                addReviewButton.getStyleClass().add("book-details-text");
+                addReviewButton.setStyle("-fx-font-size: 22px; -fx-cursor: hand; -fx-font-weight: bold;");
+                addReviewButton.setOnMouseClicked(e -> showReviewOverlay(overlay));
+
+                reviewsHeader.getChildren().addAll(reviewSpacer, addReviewButton);
             }
         }
-        // --- END reviews header block ---
 
-        VBox reviewsBox = new VBox(10);
-        reviewsBox.setAlignment(Pos.TOP_LEFT);
-
+        VBox reviewsSection = new VBox(20);
+        reviewsSection.setAlignment(Pos.TOP_LEFT);
         String ratingsResponse = client.send("get_book_ratings;" + bookId);
-        if (ratingsResponse == null || ratingsResponse.isEmpty()) {
-            Label noReviewsLabel = new Label("Nessuna valutazione o recensione disponibile per questo libro");
-            noReviewsLabel.setStyle("-fx-font-style: italic;");
-            reviewsBox.getChildren().add(noReviewsLabel);
+
+        if (ratingsResponse == null || ratingsResponse.isBlank()) {
+            Label noReviews = new Label("Nessuna valutazione o recensione disponibile per questo libro");
+            noReviews.getStyleClass().add("book-details-text");
+            noReviews.setStyle("-fx-font-style: italic;");
+            reviewsSection.getChildren().addAll(reviewsHeader, noReviews);
         } else {
-            Label noReviewsLabel = new Label("Nessuna valutazione o recensione disponibile per questo libro");
-            noReviewsLabel.setStyle("-fx-font-style: italic;");
-            reviewsBox.getChildren().add(noReviewsLabel);
+            String[] ratings = ratingsResponse.split("\\|");
+            int count = 0;
+            double sumFinal = 0;
+            int[] distribution = new int[6];
+            for (String r : ratings) {
+                if (r.isBlank()) continue;
+                String[] p = r.split(";");
+                if (p.length < 8) continue;
+                try {
+                    int finalVote = Integer.parseInt(p[7]);
+                    distribution[finalVote]++;
+                    sumFinal += finalVote;
+                    count++;
+                } catch (NumberFormatException ignored) {
+                }
+            }
+
+            if (count == 0) {
+                Label noReviews = new Label("Nessuna valutazione o recensione disponibile per questo libro");
+                noReviews.getStyleClass().add("book-details-text");
+                noReviews.setStyle("-fx-font-style: italic;");
+                reviewsSection.getChildren().addAll(reviewsHeader, noReviews);
+            } else {
+                double avgFinal = sumFinal / count;
+                VBox left = new VBox(5);
+                left.setAlignment(Pos.CENTER);
+                Label avg = new Label(String.format("%.1f", avgFinal));
+                avg.setStyle("-fx-font-size: 48px; -fx-font-weight: bold;");
+                avg.getStyleClass().add("book-details-text");
+                Label overFive = new Label(" su 5");
+                overFive.setStyle("-fx-font-size: 14px;");
+                overFive.getStyleClass().add("book-details-text");
+                HBox avgRow = new HBox(6, avg, overFive);
+                avgRow.setAlignment(Pos.BASELINE_LEFT);
+                Label countLabel = new Label(count + " valutazioni");
+                countLabel.setStyle("-fx-font-size: 12px;");
+                countLabel.getStyleClass().add("book-details-text");
+                left.getChildren().addAll(avgRow, countLabel);
+
+                VBox bars = new VBox(3);
+                bars.setAlignment(Pos.CENTER_RIGHT);
+                for (int stars = 5; stars >= 1; stars--) {
+                    HBox row = new HBox(10);
+                    row.setAlignment(Pos.CENTER_RIGHT);
+                    Label starLabel = new Label("★".repeat(stars));
+                    starLabel.setMinWidth(60);
+                    starLabel.setAlignment(Pos.CENTER_RIGHT);
+                    starLabel.getStyleClass().add("book-details-text");
+                    ProgressBar bar = new ProgressBar((double) distribution[stars] / count);
+                    bar.setPrefWidth(400);
+                    bar.setPrefHeight(6);
+                    bar.getStyleClass().add("custom-progress-bar");
+                    row.getChildren().addAll(starLabel, bar);
+                    bars.getChildren().add(row);
+                }
+
+                HBox summary = new HBox(60, left, bars);
+                summary.setAlignment(Pos.CENTER_LEFT);
+                HBox.setHgrow(bars, Priority.ALWAYS);
+
+                /// Sostituiamo la FlowPane con un contenitore orizzontale
+                HBox horizontalCardsBox = new HBox(20);
+                horizontalCardsBox.setAlignment(Pos.CENTER_LEFT);
+                horizontalCardsBox.setPadding(new Insets(10, 5, 20, 5));
+
+                // ScrollPane per lo scorrimento laterale
+                ScrollPane horizontalScroll = new ScrollPane(horizontalCardsBox);
+
+                // 1. Nascondiamo entrambe le scrollbar
+                horizontalScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+                horizontalScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+
+                horizontalScroll.setFitToHeight(true);
+                horizontalScroll.setMinHeight(230);
+                horizontalScroll.setPrefHeight(Region.USE_COMPUTED_SIZE);
+
+                // Rende lo sfondo dello scroll trasparente
+                horizontalScroll.setStyle("-fx-background-color: transparent; -fx-background: transparent; -fx-padding: 0;");
+
+                final double[] dragX = new double[1];
+                final double[] hValue = new double[1];
+
+// 3. Quando premi il mouse, salva la posizione iniziale
+                horizontalScroll.setOnMousePressed(e -> {
+                    dragX[0] = e.getSceneX();
+                    hValue[0] = horizontalScroll.getHvalue();
+                    horizontalScroll.setCursor(javafx.scene.Cursor.CLOSED_HAND);
+                });
+
+// 4. Quando trascini, sposta lo scroll in proporzione
+                horizontalScroll.setOnMouseDragged(e -> {
+                    double delta = (dragX[0] - e.getSceneX()) / horizontalCardsBox.getWidth();
+                    horizontalScroll.setHvalue(hValue[0] + delta);
+                });
+
+// 5. Quando rilasci, ripristina il cursore
+                horizontalScroll.setOnMouseReleased(e -> {
+                    horizontalScroll.setCursor(javafx.scene.Cursor.HAND);
+                });
+
+                for (String r : ratings) {
+                    if (r == null || r.isBlank()) continue;
+
+                    String[] p = r.trim().split(";", -1);
+                    if (p.length < 9) continue;
+
+                    try {
+                        String user = p[0];
+                        int vote = Integer.parseInt(p[7]);
+                        String rawNote = p[8].trim();
+                        String noteDecoded = "";
+
+                        if (!rawNote.isEmpty() && !rawNote.equalsIgnoreCase("EMPTY")) {
+                            try {
+                                byte[] decodedBytes = Base64.getMimeDecoder().decode(rawNote.replaceAll("\\s", ""));
+                                noteDecoded = new String(decodedBytes, StandardCharsets.UTF_8).trim();
+                            } catch (Exception e) {
+                                noteDecoded = rawNote;
+                            }
+                        }
+
+                        if (noteDecoded.isEmpty() || noteDecoded.equalsIgnoreCase("EMPTY")) continue;
+
+                        // --- CARD STILE APPLE STORE ---
+                        VBox card = new VBox(8);
+                        card.setMinWidth(300);
+                        card.setMaxWidth(300);
+                        card.setPadding(new Insets(15));
+                        card.setStyle("-fx-background-color: #2c2c2e; -fx-background-radius: 15;");
+
+                        // Riga Superiore: User e Data
+                        HBox topRow = new HBox();
+                        topRow.setAlignment(Pos.CENTER_LEFT);
+                        Label userLbl = new Label(user);
+                        userLbl.setStyle("-fx-font-weight: bold; -fx-text-fill: white; -fx-font-size: 13px;");
+
+                        Region cardSpacer = new Region();
+                        HBox.setHgrow(cardSpacer, Priority.ALWAYS);
+
+                        topRow.getChildren().addAll(userLbl, cardSpacer);
+
+                        // Riga Stelle
+                        int starsCount = Math.max(0, Math.min(5, vote));
+                        Label starsLbl = new Label("★".repeat(starsCount) + "☆".repeat(5 - starsCount));
+                        starsLbl.setStyle("-fx-text-fill: #ff9500; -fx-font-size: 14px;");
+
+                        // Testo Recensione
+                        Label noteLbl = new Label(noteDecoded);
+                        noteLbl.setWrapText(true);
+                        noteLbl.setStyle("-fx-text-fill: #ebebeb; -fx-font-size: 14px; -fx-line-spacing: 1.1;");
+                        // Impedisce al testo di sparire se troppo lungo
+                        noteLbl.setMaxHeight(120);
+
+                        card.getChildren().addAll(topRow, starsLbl, noteLbl);
+                        horizontalCardsBox.getChildren().add(card);
+
+                    } catch (Exception e) {
+                        System.err.println("Errore rendering card: " + e.getMessage());
+                    }
+                }
+                reviewsSection.getChildren().addAll(reviewsHeader, summary, horizontalScroll);
+            }
         }
 
-        content.getChildren().addAll(header, mainContent, descriptionTitle, descriptionLabel, divider, reviewsHeader, reviewsBox);
 
-        overlay.setPickOnBounds(true);
-        overlay.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        // CONSIGLI
+        Separator adviceDivider = new Separator();
+        adviceDivider.setPadding(new Insets(20, 0, 10, 0));
+        adviceDivider.getStyleClass().add("divider");
 
-        // DARK BACKGROUND (not clickable, click handled on outerContainer)
+        HBox adviceHeader = new HBox();
+        adviceHeader.setAlignment(Pos.CENTER_LEFT);
+        Label adviceTitle = new Label("Consigli dagli altri utenti");
+        adviceTitle.getStyleClass().add("book-details-text");
+        adviceTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        adviceHeader.getChildren().add(adviceTitle);
+
+        if (username != null && !username.isEmpty()) {
+            List<AddRmBook.LibraryInfo> libsWithBook = AddRmBook.getLibrariesWithBook(client, username, bookId);
+            if (libsWithBook != null && !libsWithBook.isEmpty()) {
+                Region adviceSpacer = new Region(); HBox.setHgrow(adviceSpacer, Priority.ALWAYS);
+                Label addAdviceButton = new Label("+");
+                addAdviceButton.getStyleClass().add("book-details-text");
+                addAdviceButton.setStyle("-fx-font-size: 22px; -fx-cursor: hand; -fx-font-weight: bold;");
+                addAdviceButton.setOnMouseClicked(e -> RecommendationHandler.addRecommendation(bookId, username, client, overlay));
+                adviceHeader.getChildren().addAll(adviceSpacer, addAdviceButton);
+            }
+        }
+
+        // CONSIGLI SECTION
+        VBox adviceSection = new VBox(15);
+        adviceSection.getChildren().add(adviceHeader);
+
+        String adviceResponse = client.send("get_book_advices;" + bookId);
+
+// Logica per gestire la risposta: 80633;15451,94877,4413|80633;49032,41754|
+        if (adviceResponse != null && !adviceResponse.isBlank() && !adviceResponse.equals("NO_RECOMMENDATIONS")) {
+            FlowPane adviceGrid = new FlowPane(20, 20);
+            adviceGrid.setAlignment(Pos.TOP_LEFT);
+
+            // Usiamo un Set per evitare di mostrare lo stesso libro più volte se consigliato da più utenti
+            java.util.Set<Integer> displayedIds = new java.util.HashSet<>();
+
+            String[] recommendationBlocks = adviceResponse.split("\\|");
+            for (String block : recommendationBlocks) {
+                if (block.isBlank()) continue;
+
+                String[] parts = block.split(";");
+                if (parts.length < 2) continue; // Manca la lista dei consigliati
+
+                // parts[1] contiene gli ID consigliati (es: "15451,94877,4413")
+                String[] recommendedIds = parts[1].split(",");
+
+                for (String idStr : recommendedIds) {
+                    int targetId = Integer.parseInt(idStr.trim());
+
+                    // Filtro: Non mostrare il libro corrente e non duplicare se già aggiunto
+                    if (targetId == this.bookId || displayedIds.contains(targetId)) continue;
+
+                    // Recuperiamo i dettagli dal server per questo ID specifico
+                    String bookData = client.send("get_book;id;" + targetId);
+                    if (bookData == null || bookData.startsWith("ERROR")) continue;
+
+                    String[] details = bookData.split(";");
+                    if (details.length > 6) {
+                        String coverUrl = details[6];
+
+                        // Creazione visiva
+                        StackPane coverContainer = client.createScaledCover(coverUrl, 110, 160);
+                        coverContainer.setCursor(javafx.scene.Cursor.HAND);
+
+                        coverContainer.setOnMouseClicked(e -> {
+                            BookDetails nextBook = new BookDetails(targetId, username);
+                            StackPane nextOverlay = nextBook.createOverlay();
+                            Pane root = (Pane) overlay.getParent();
+                            if (root != null) root.getChildren().add(nextOverlay);
+                        });
+
+                        adviceGrid.getChildren().add(coverContainer);
+                        displayedIds.add(targetId); // Segna come visualizzato
+                    }
+                }
+            }
+
+            if (!adviceGrid.getChildren().isEmpty()) {
+                adviceSection.getChildren().add(adviceGrid);
+            } else {
+                adviceSection.getChildren().add(new Label("Nessun altro libro consigliato."));
+            }
+        } else {
+            Label noAdvice = new Label("Ancora nessun consiglio per questo libro.");
+            noAdvice.setStyle("-fx-font-style: italic; -fx-text-fill: gray;");
+            adviceSection.getChildren().add(noAdvice);
+        }
+
+        content.getChildren().addAll(header, mainContent, descTitle, descLabel, divider, reviewsSection, adviceDivider, adviceSection);
+
+        // FINAL OVERLAY SETUP
         Region darkBackground = new Region();
         darkBackground.setStyle("-fx-background-color: rgba(0,0,0,0.4);");
         darkBackground.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-        darkBackground.setPickOnBounds(true);
 
-        // OUTER CONTAINER WITH REQUIRED MARGINS (50,50,0,50)
         StackPane outerContainer = new StackPane();
         outerContainer.setPadding(new Insets(50));
         outerContainer.setStyle("-fx-background-color: transparent;");
-        outerContainer.setPickOnBounds(false);
-        // Cliccando fuori dal pannello, chiudi overlay
         outerContainer.setOnMouseClicked(e -> {
-            // Solo se si clicca sull'outerContainer e non su overlayPanel
             if (e.getTarget() == outerContainer) {
                 Pane parent = (Pane) overlay.getParent();
                 if (parent != null) parent.getChildren().remove(overlay);
             }
         });
 
-        // INNER OVERLAY PANEL
         BorderPane overlayPanel = new BorderPane();
-        // Only overlayPanel gets the corner radius
-        overlayPanel.setStyle(
-            "-fx-background-color: white;" +
-            "-fx-background-radius: 14 14 0 0;" +
-            "-fx-border-radius: 14 14 0 0;"
-        );
-        // CLIP con angoli superiori arrotondati e inferiori dritti
-        Rectangle clip = new Rectangle();
-        clip.setArcWidth(28);
-        clip.setArcHeight(28);
-
-        // Applica il clip
+        overlayPanel.setStyle("-fx-background-color: white; -fx-background-radius: 14 14 0 0; -fx-border-radius: 14 14 0 0;");
+        Rectangle clip = new Rectangle(); clip.setArcWidth(28); clip.setArcHeight(28);
         overlayPanel.setClip(clip);
+        overlayPanel.layoutBoundsProperty().addListener((obs, oldB, newB) -> { clip.setWidth(newB.getWidth()); clip.setHeight(newB.getHeight()); });
 
-        // Aggiorna dinamicamente il clip sulle dimensioni del pannello
-        overlayPanel.layoutBoundsProperty().addListener((obs, oldBounds, newBounds) -> {
-            clip.setWidth(newBounds.getWidth());
-            clip.setHeight(newBounds.getHeight());
-
-            // Trucco JavaFX: azzera l’arrotondamento in basso
-            clip.setArcWidth(28);
-            clip.setArcHeight(28);
-        });
-        // padding interno overlay: 20 (già messo in VBox content)
-        overlayPanel.setPadding(Insets.EMPTY);
-        overlayPanel.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-        overlayPanel.setOnMouseClicked(e -> e.consume());
-
-        // SCROLLABLE CONTENT
-        ScrollPane scrollPane = new ScrollPane();
+        ScrollPane scrollPane = new ScrollPane(content);
         scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
         scrollPane.setStyle("-fx-background-color: transparent;");
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.setContent(content);
-
         overlayPanel.setCenter(scrollPane);
 
-        // COMPOSE
         outerContainer.getChildren().add(overlayPanel);
         overlay.getChildren().addAll(darkBackground, outerContainer);
-        StackPane.setAlignment(outerContainer, Pos.CENTER);
-
         return overlay;
     }
-}
 
-class ReviewDialog extends javafx.stage.Stage {
+    private void showLibraryMenu(javafx.scene.Node anchor, List<AddRmBook.LibraryInfo> libraries, boolean isAdd) {
+        ContextMenu contextMenu = new ContextMenu();
+        // Stile moderno: sfondo chiaro, angoli arrotondati e ombra
+        contextMenu.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-border-radius: 10; -fx-border-color: #ddd;");
 
-    public ReviewDialog(int bookId, String username, Client client) {
-        setTitle("Inserisci recensione");
+        for (AddRmBook.LibraryInfo lib : libraries) {
+            MenuItem item = new MenuItem(lib.getName());
+            item.setStyle("-fx-font-size: 14px; -fx-padding: 5 15 5 15;");
 
-        VBox root = new VBox(10);
-        root.setPadding(new Insets(20));
+            item.setOnAction(ev -> {
+                String cmd = isAdd ? "add_book_to_library;" : "remove_book_from_library;";
+                client.send(cmd + lib.getId() + ";" + bookId);
+                // Opzionale: qui puoi aggiungere un feedback visivo o ricaricare i dati
+            });
 
-        TextField style = new TextField();
-        style.setPromptText("Stile (1-5)");
+            contextMenu.getItems().add(item);
+        }
 
-        TextField content = new TextField();
-        content.setPromptText("Contenuto (1-5)");
+        // Mostra il menu esattamente sotto il tasto cliccato
+        contextMenu.show(anchor, javafx.geometry.Side.BOTTOM, 0, 0);
+    }
 
-        TextField liking = new TextField();
-        liking.setPromptText("Gradimento (1-5)");
+    private void showReviewOverlay(StackPane parentOverlay) {
+        StackPane reviewOverlay = new StackPane();
+        reviewOverlay.setStyle("-fx-background-color: rgba(0,0,0,0.7);");
 
-        TextField originality = new TextField();
-        originality.setPromptText("Originalità (1-5)");
+        // Pannello centrale più largo per ospitare le due colonne
+        VBox container = new VBox(20);
+        container.setMaxSize(650, 450);
+        container.setPadding(new Insets(30));
+        container.setStyle("-fx-background-color: rgb(241, 237, 229); -fx-background-radius: 20;");
+        container.setAlignment(Pos.TOP_CENTER);
 
-        TextField edition = new TextField();
-        edition.setPromptText("Edizione (1-5)");
+        // Titolo
+        Label title = new Label("La tua valutazione");
+        title.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #2c2c2e;");
 
-        TextArea notes = new TextArea();
-        notes.setPromptText("Note (opzionali)");
+        // Layout a due colonne
+        HBox columnsBox = new HBox(30);
+        columnsBox.setAlignment(Pos.CENTER);
 
-        Label error = new Label();
-        error.setTextFill(Color.RED);
+        // --- COLONNA SINISTRA: VOTI ---
+        GridPane ratingsGrid = new GridPane();
+        ratingsGrid.setHgap(15);
+        ratingsGrid.setVgap(12);
+        ratingsGrid.setAlignment(Pos.TOP_LEFT);
 
-        Button submit = new Button("Invia recensione");
-        submit.setOnAction(e -> {
+        String[] categories = {"Stile", "Contenuto", "Gradimento", "Originalità", "Edizione"};
+        TextField[] inputs = new TextField[5];
+
+        for (int i = 0; i < categories.length; i++) {
+            Label lbl = new Label(categories[i]);
+            lbl.setStyle("-fx-font-size: 14px; -fx-text-fill: #444; -fx-font-weight: 500;");
+            TextField tf = new TextField();
+            tf.setPromptText("1-5");
+            tf.setPrefWidth(55);
+            tf.setAlignment(Pos.CENTER);
+            // Stile input simile a quello dell'app
+            tf.setStyle("-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #ccc; -fx-padding: 5;");
+
+            tf.textProperty().addListener((obs, oldV, newV) -> {
+                if (!newV.matches("[1-5]?")) tf.setText(oldV);
+            });
+            inputs[i] = tf;
+
+            ratingsGrid.add(lbl, 0, i);
+            ratingsGrid.add(tf, 1, i);
+        }
+
+        // --- COLONNA DESTRA: NOTE ---
+        VBox notesBox = new VBox(8);
+        HBox.setHgrow(notesBox, Priority.ALWAYS);
+
+        Label noteHeader = new Label("Raccontaci cosa ne pensi (opzionale):");
+        noteHeader.setStyle("-fx-font-size: 14px; -fx-text-fill: #444;");
+
+        TextArea notesArea = new TextArea();
+        notesArea.setPromptText("Scrivi qui il tuo commento...");
+        notesArea.setWrapText(true);
+        notesArea.setPrefHeight(220); // Più alta ora che è a lato
+        notesArea.setStyle("-fx-background-radius: 10; -fx-border-radius: 10; -fx-border-color: #ccc; -fx-padding: 8;");
+
+        Label charCount = new Label("0 / 175");
+        charCount.setStyle("-fx-font-size: 11px; -fx-text-fill: #888;");
+        notesArea.textProperty().addListener((obs, oldV, newV) -> {
+            if (newV.length() > 175) notesArea.setText(oldV);
+            charCount.setText(notesArea.getText().length() + " / 175");
+        });
+
+        notesBox.getChildren().addAll(noteHeader, notesArea, charCount);
+
+        // Aggiunta delle due colonne alla HBox principale
+        columnsBox.getChildren().addAll(ratingsGrid, notesBox);
+
+        // Messaggio di errore
+        Label errorLabel = new Label();
+        errorLabel.setTextFill(Color.web("#e74c3c"));
+        errorLabel.setStyle("-fx-font-size: 12px;");
+
+        // --- PULSANTIERA ---
+        HBox actions = new HBox(15);
+        actions.setAlignment(Pos.CENTER_RIGHT);
+
+        Button cancelBtn = new Button("Annulla");
+        cancelBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #666; -fx-cursor: hand; -fx-font-weight: bold;");
+        cancelBtn.setOnAction(ev -> parentOverlay.getChildren().remove(reviewOverlay));
+
+        Button submitBtn = new Button("Pubblica Recensione");
+        submitBtn.setPrefWidth(200);
+        submitBtn.setStyle("-fx-background-color: #2c2c2e; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 10 20; -fx-cursor: hand;");
+
+        submitBtn.setOnAction(ev -> {
             try {
-                String msg = "add_book_review;" +
-                        bookId + ";" +
-                        username + ";" +
-                        Integer.parseInt(style.getText()) + ";" +
-                        Integer.parseInt(content.getText()) + ";" +
-                        Integer.parseInt(liking.getText()) + ";" +
-                        Integer.parseInt(originality.getText()) + ";" +
-                        Integer.parseInt(edition.getText()) + ";" +
-                        (notes.getText().isBlank() ? "" : notes.getText());
+                for (TextField tf : inputs) if (tf.getText().isEmpty()) throw new Exception("Inserisci tutti i voti obbligatori");
 
-                String response = client.send(msg);
-                if (response != null && response.contains("OK")) {
-                    close();
+                String encodedNote = Base64.getEncoder().encodeToString(notesArea.getText().getBytes(StandardCharsets.UTF_8));
+                String msg = String.format("add_book_review;%d;%s;%s;%s;%s;%s;%s;%s",
+                        bookId, username, inputs[0].getText(), inputs[1].getText(),
+                        inputs[2].getText(), inputs[3].getText(), inputs[4].getText(), encodedNote);
+
+                if (client.send(msg).contains("OK")) {
+                    parentOverlay.getChildren().remove(reviewOverlay);
+                    // Suggerimento: qui potresti ricaricare i dettagli o mostrare un feedback
                 } else {
-                    error.setText("Errore nell'invio della recensione");
+                    errorLabel.setText("Errore di connessione al server.");
                 }
             } catch (Exception ex) {
-                error.setText("Valori non validi (usa numeri 1-5)");
+                errorLabel.setText(ex.getMessage());
             }
         });
 
-        root.getChildren().addAll(
-                new Label("Inserisci la tua recensione"),
-                style, content, liking, originality, edition, notes,
-                submit, error
-        );
+        actions.getChildren().addAll(cancelBtn, submitBtn);
 
-        Scene scene = new Scene(root, 350, 450);
-        setScene(scene);
+        // Composizione finale
+        container.getChildren().addAll(title, columnsBox, errorLabel, actions);
+        reviewOverlay.getChildren().add(container);
+
+        // Chiudi al click fuori dal pannello
+        reviewOverlay.setOnMouseClicked(e -> {
+            if (e.getTarget() == reviewOverlay) parentOverlay.getChildren().remove(reviewOverlay);
+        });
+        container.setOnMouseClicked(e -> e.consume());
+
+        parentOverlay.getChildren().add(reviewOverlay);
     }
 }

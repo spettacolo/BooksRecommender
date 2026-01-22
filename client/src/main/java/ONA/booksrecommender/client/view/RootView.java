@@ -11,39 +11,61 @@ import javafx.scene.control.ScrollPane;
 public class RootView extends HBox {
 
     private VBox sidebarContainer = new VBox();
-    private VBox mainContentContainer = new VBox();
+    private StackPane mainContentContainer = new StackPane();
     private Client client = new Client();
     private SearchHandler searchHandler = new SearchHandler(client);
     private HBox searchBar;
     private static String username = "";
+    private ScrollPane mainScrollPane;
 
     public RootView() {
 
         this.setSpacing(0);
+        this.setStyle("-fx-background-color: rgb(44,44,46); -fx-padding: 0; -fx-border-width: 0;");
 
         // Sidebar: fissa
         sidebarContainer.setPrefWidth(180);
         sidebarContainer.setMinWidth(180);
         sidebarContainer.setMaxWidth(180);
-        sidebarContainer.setStyle("-fx-padding: 30 20 10 20;");
+        sidebarContainer.setStyle("-fx-padding: 30 10 10 20;");
+        sidebarContainer.getStyleClass().add("sidebar");
 
         // MAIN CONTENT: deve espandersi
-        mainContentContainer.setFillWidth(true);
         mainContentContainer.setMinWidth(0);
         mainContentContainer.setPrefWidth(Double.MAX_VALUE);
         mainContentContainer.prefWidthProperty().bind(this.widthProperty().subtract(sidebarContainer.widthProperty()));
+        mainContentContainer.getStyleClass().add("main-content-container");
+        mainContentContainer.setFocusTraversable(false);
+        mainContentContainer.setStyle("-fx-padding: 0; -fx-border-width: 0; -fx-border-color: transparent; -fx-background-color: transparent;");
 
-        HBox.setHgrow(mainContentContainer, Priority.ALWAYS);
-        VBox.setVgrow(mainContentContainer, Priority.ALWAYS);
+        mainScrollPane = new ScrollPane(mainContentContainer);
+        mainScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        mainScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        mainScrollPane.skinProperty().addListener((obs, oldSkin, newSkin) -> {
+            javafx.scene.Node viewport = mainScrollPane.lookup(".viewport");
+            if (viewport != null) {
+                viewport.setStyle("-fx-background-color: transparent;");
+            }
+        });
+        mainScrollPane.getStyleClass().add("main-scroll-pane");
+        mainScrollPane.setFocusTraversable(false);
+        mainScrollPane.setPannable(false);
+        mainScrollPane.getStyleClass().add("main-scroll-pane");
+        mainScrollPane.setFitToWidth(true);
+        mainScrollPane.setFitToHeight(true);
+
+        HBox.setHgrow(mainScrollPane, Priority.ALWAYS);
+        VBox.setVgrow(mainScrollPane, Priority.ALWAYS);
 
         // Initialize searchBar once
         searchBar = searchHandler.createSearchBar(this);
 
         VBox rightContainer = new VBox();
+        rightContainer.setStyle("-fx-background-color: transparent; -fx-padding: 0; -fx-border-width: 0; -fx-border-color: transparent;");
         rightContainer.setFillWidth(true);
 
-        rightContainer.getChildren().setAll(mainContentContainer);
-        VBox.setVgrow(mainContentContainer, Priority.ALWAYS);
+        rightContainer.getChildren().setAll(mainScrollPane);
+        VBox.setVgrow(mainScrollPane, Priority.ALWAYS);
 
         HBox.setHgrow(rightContainer, Priority.ALWAYS);
 
@@ -104,7 +126,11 @@ public class RootView extends HBox {
     }
 
     public void setUsername(String username) {
-        this.username = username;
+        RootView.username = username;
         System.out.println("set username: " + username);
+    }
+
+    public StackPane getMainContentContainer() {
+        return mainContentContainer;
     }
 }

@@ -1,173 +1,123 @@
 package ONA.booksrecommender.client.controller;
 
 import ONA.booksrecommender.client.Client;
+import ONA.booksrecommender.client.view.RootView;
+import ONA.booksrecommender.client.view.SearchView;
 import ONA.booksrecommender.objects.Book;
-import javafx.geometry.Insets;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.StackPane;
 
-import java.io.*;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Gestisce la barra di ricerca e le operazioni di ricerca dei libri.
- */
 public class SearchHandler {
 
     private Client client;
+
     public SearchHandler(Client client) {
         this.client = client;
     }
 
-    /**
-     * Restituisce la barra di ricerca completa, pronta per essere aggiunta in HomeView.
-     *
-     * @param mainContent VBox principale dove inserire i risultati.
-     */
-    public HBox createSearchBar(VBox mainContent) {
+    public HBox createSearchBar(RootView root) {
         HBox searchBar = new HBox(10);
-        searchBar.setPadding(new Insets(10, 40, 10, 40));
-        searchBar.setVisible(false);
-        searchBar.setManaged(false);
+        searchBar.setAlignment(Pos.CENTER_RIGHT);
 
         TextField searchField = new TextField();
+        searchField.getStyleClass().add("search-field");
         searchField.setPromptText("Cerca un libro...");
+        searchField.setPrefWidth(250);
 
-        Button searchButton = new Button("Invia");
+        searchField.setOnAction(e -> {
+            String query = searchField.getText().trim();
+            if (!query.isEmpty()) {
+                syncQueryWithExistingView(root, query);
 
-        // Azione del pulsante
-        searchButton.setOnAction(event -> performSearch(mainContent, searchField.getText().trim()));
+                // La ricerca iniziale dalla barra ha sempre offset 0
+                List<Book> results = searchBooks(query, "title", 0);
+                root.showSearchResults(query, results);
+            }
+        });
 
-        // Permette la ricerca anche con Invio
-        searchField.setOnAction(event -> searchButton.fire());
-
-        searchBar.getChildren().addAll(searchField, searchButton);
+        searchBar.getChildren().add(searchField);
         return searchBar;
     }
 
-    /**
-     * Esegue la ricerca e aggiorna il mainContent con i risultati.
-     */
-    private void performSearch(VBox mainContent, String query) {
-        mainContent.getChildren().removeIf(node -> node.getId() != null && node.getId().equals("resultsBox"));
+    private void syncQueryWithExistingView(RootView root, String query) {
+        // Ho mantenuto il tuo metodo aggiornato con root.getMainContentContainer()
+        Object mainContent = root.getMainContentContainer();
 
-        VBox resultsBox = searchBooks(query);
-        resultsBox.setId("resultsBox");
-
-        // Inserisce subito dopo la barra di ricerca (se presente)
-        int indexAfterSearchBar = 1;
-        mainContent.getChildren().add(indexAfterSearchBar, resultsBox);
+        if (mainContent instanceof StackPane) {
+            StackPane stack = (StackPane) mainContent;
+            for (Node node : stack.getChildren()) {
+                if (node instanceof ScrollPane) {
+                    ScrollPane scroll = (ScrollPane) node;
+                    if (scroll.getContent() instanceof SearchView) {
+                        ((SearchView) scroll.getContent()).setCurrentQuery(query);
+                        // RESETTA l'offset della vista quando si fa una nuova ricerca dalla barra
+                        ((SearchView) scroll.getContent()).resetOffset();
+                    }
+                }
+            }
+        }
     }
 
     /**
-     * Esegue la ricerca dei libri in base al titolo e restituisce una VBox con i risultati.
+     * Esegue la ricerca dei libri comunicando con il server con supporto all'OFFSET.
      */
-    private VBox searchBooks(String query) {
-        VBox resultsBox = new VBox(10);
-        resultsBox.setPadding(new Insets(20, 40, 20, 40));
-
-        if (query == null || query.trim().isEmpty()) {
-            Label empty = new Label("Inserisci un termine di ricerca.");
-            resultsBox.getChildren().add(empty);
-            return resultsBox;
-        }
-
+    public List<Book> searchBooks(String query, String type, int offset) {
         List<Book> results = new ArrayList<>();
+        if (query == null || query.isBlank()) return results;
 
         try {
-            String risposta = this.client.send("get_book;title;" + query);
+            // Invio comando: get_book;tipo;query;offset
+            // Esempio: get_book;author;Manzoni;20
+            String command = "get_book;" + type + ";" + query + ";" + offset;
 
-            // Gestione errori o risposta vuota
-            if (risposta == null || risposta.isBlank() || risposta.equalsIgnoreCase("ERROR")) {
-                Label errorLabel = new Label("Errore nella comunicazione con il server o nessun risultato trovato.");
-                resultsBox.getChildren().add(errorLabel);
-                return resultsBox;
+            String risposta = this.client.send(command);
+
+            if (risposta == null || risposta.isBlank() || risposta.startsWith("ERROR") || risposta.equals("NOT_FOUND")) {
+                return results;
             }
 
-            // Ogni libro è separato da "|"
-            for (String line : risposta.split("\\|")) {
-                String[] parts = line.split(";");
+            String clean = risposta.endsWith("|") ? risposta.substring(0, risposta.length() - 1) : risposta;
+            String[] records = clean.split("\\|(?=\\d+;)");
 
-                // Controllo minimo di validità
-                if (parts.length < 7) continue;
+            for (String record : records) {
+                String[] parts = record.split(";");
+                if (parts.length < 8) continue;
 
-                List<String> authors = Arrays.asList(parts[2].split(",")); // esempio: autori separati da virgola
-                results.add(new Book(
-                        Integer.parseInt(parts[0]),  // id
-                        parts[1],                    // titolo
-                        authors,                     // autori
-                        Integer.parseInt(parts[3]),  // anno
-                        parts[4],                    // editore
-                        parts[5],                    // mese pubblicazione
-                        parts[6]                     // genere o altro
-                ));
-            }
-        } catch(NumberFormatException e) {
-            Label parseError = new Label("Formato dati non valido ricevuto dal server.");
-            resultsBox.getChildren().add(parseError);
-            return resultsBox;
-        } catch (Exception e) {
-            Label errorLabel = new Label("Errore di connessione al server.");
-            resultsBox.getChildren().add(errorLabel);
-            return resultsBox;
-        }
-
-        /*try {
-            String risposta = getString(socket, "get_book;title;"+query);
-            for (String line : risposta.split("\\|")) {
-                String[] parts = risposta.split(";");
-                List<String> authors = Arrays.asList(parts);
-                results.add(new Book(Integer.parseInt(parts[0]),parts[1],authors,Integer.parseInt(parts[3]),parts[4],parts[5],parts[6]));
-            }
-        }
-        catch (IOException e) {
-            results = null;
-        }*/
-
-        // List<Book> results = bookManager.searchByTitle(query.trim());
-        System.out.println("🔍 Ricerca: \"" + query + "\" → risultati trovati: " + results.size());
-
-        if (!results.isEmpty()) {
-            for (Book b : results) {
-                HBox bookBox = new HBox(15);
-                bookBox.setPadding(new Insets(5, 0, 5, 0));
-
-                ImageView cover = new ImageView();
                 try {
-                    if (b.getCoverImageUrl() != null && !b.getCoverImageUrl().equalsIgnoreCase("null")) {
-                        Image img = new Image(b.getCoverImageUrl(), 100, 150, true, true);
-                        cover.setImage(img);
+                    int id = Integer.parseInt(parts[0].trim());
+                    int last = parts.length - 1;
+                    String encodedDesc = parts[last];
+                    String coverUrl    = parts[last - 1];
+                    String category    = parts[last - 2];
+                    String publisher   = parts[last - 3];
+                    int year           = Integer.parseInt(parts[last - 4].trim());
+
+                    String authorStr   = parts[last - 5];
+                    List<String> authors = Arrays.asList(authorStr.split(",\\s*"));
+
+                    StringBuilder titleBuilder = new StringBuilder();
+                    for (int i = 1; i < (last - 5); i++) {
+                        titleBuilder.append(parts[i]);
+                        if (i < (last - 6)) titleBuilder.append(";");
                     }
-                } catch (Exception ignored) {}
+                    String title = titleBuilder.toString();
 
-                Label info = new Label(b.getTitle() + "\n" + String.join(", ", b.getAuthors()));
-                info.setWrapText(true);
-
-                bookBox.getChildren().addAll(cover, info);
-                resultsBox.getChildren().add(bookBox);
+                    results.add(new Book(id, title, authors, year, publisher, category, coverUrl, encodedDesc));
+                } catch (Exception e) {
+                    System.err.println("Errore di parsing per il record: " + record);
+                }
             }
-        } else {
-            Label noResult = new Label("Nessun libro trovato per \"" + query + "\"");
-            resultsBox.getChildren().add(noResult);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
-        return resultsBox;
-
-
-    }
-
-    private static String getString(Socket socket, String richiesta) throws IOException {
-        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-        out.println(richiesta);
-        return in.readLine();
+        return results;
     }
 }
