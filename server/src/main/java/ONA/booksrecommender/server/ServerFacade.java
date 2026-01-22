@@ -346,7 +346,7 @@ public class ServerFacade {
                     boolean ok = libraryDAO.removeBook(book, library);
                     return ok ? "REMOVE_BOOK_FROM_LIBRARY" + SEPARATOR + "OK" : "REMOVE_BOOK_FROM_LIBRARY" + SEPARATOR + "FAIL";
                 }
-                case "get_book_ratings":
+                case "get_book_reviews": {
                     if (parts.length < 2) return ERROR_MESSAGE;
                     List<Rating> book_ratings = ratingDAO.getRatings(Integer.parseInt(parts[1]));
                     StringBuilder ratings = new StringBuilder();
@@ -372,8 +372,37 @@ public class ServerFacade {
                         ratings.append("|");
                     }
                     return ratings.toString();
+                }
 
-                // remove_book_review può servire? lmk
+                case "get_user_reviews": {
+                    if (parts.length < 2) return ERROR_MESSAGE;
+                    String username = parts[1];
+                    List<Rating> user_ratings = ratingDAO.getRatings(username);
+
+                    if (user_ratings.isEmpty()) return "NO_REVIEWS";
+
+                    StringBuilder sb = new StringBuilder();
+                    for (Rating rating : user_ratings) {
+                        String noteToEncode = (rating.getNotes() == null) ? "" : rating.getNotes();
+                        String encodedNote = Base64.getEncoder().encodeToString(
+                                noteToEncode.getBytes(StandardCharsets.UTF_8)
+                        );
+
+                        sb.append(String.join(SEPARATOR,
+                                rating.getUserId(),
+                                rating.getBookId(),
+                                Integer.toString(rating.getStyle()),
+                                Integer.toString(rating.getContent()),
+                                Integer.toString(rating.getEnjoyment()),
+                                Integer.toString(rating.getOriginality()),
+                                Integer.toString(rating.getEdition()),
+                                Integer.toString(rating.getFinalScore()),
+                                encodedNote));
+                        sb.append("|");
+                    }
+                    return sb.toString();
+                }
+
                 case "add_book_review": {
                     // Formato atteso: add_book_review;book_id;username;style;content;liking;originality;edition;encoded_notes
                     if (parts.length < 8) return ERROR_MESSAGE;
@@ -417,6 +446,19 @@ public class ServerFacade {
                     }
                 }
 
+                case "remove_book_review": {
+                    // Formato atteso: remove_book_review;book_id;username
+                    if (parts.length < 3) return ERROR_MESSAGE;
+                    try {
+                        int bookId = Integer.parseInt(parts[1]);
+                        String username = parts[2];
+
+                        boolean ok = ratingDAO.removeRating(bookId, username);
+                        return ok ? "REMOVE_BOOK_REVIEW" + SEPARATOR + "OK" : "REMOVE_BOOK_REVIEW" + SEPARATOR + "FAIL";
+                    } catch (Exception e) {
+                        return "ERROR" + SEPARATOR + "invalid_id";
+                    }
+                }
 
                 case "get_book_advices": { // Consigli ricevuti
                     if (parts.length < 2) return ERROR_MESSAGE;
