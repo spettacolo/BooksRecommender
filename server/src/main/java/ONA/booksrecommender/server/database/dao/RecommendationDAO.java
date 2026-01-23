@@ -70,7 +70,7 @@ public class RecommendationDAO extends BaseDAO implements AutoCloseable {
 
     public List<Recommendation> getRecommendationsMadeBy(String senderUsername) {
         // Nota: Questa query assume che tu abbia aggiunto la colonna 'sender_username' nella tabella recommendations
-        String query = "SELECT username, book_id, book_recommended_id FROM recommendations WHERE sender_username = ?";
+        String query = "SELECT username, book_id, book_recommended_id FROM recommendations WHERE username = ?";
         Map<String, List<String>> groupedRecs = new HashMap<>();
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
