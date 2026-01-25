@@ -6,79 +6,78 @@ import java.util.List;
 
 public class AddRmBook {
 
-    /**
-     * Restituisce l'elenco delle librerie dell'utente che NON contengono il libro.
-     */
     public static List<LibraryInfo> getLibrariesWithoutBook(Client client, String username, int bookId) {
         String libsResponse = client.send("get_user_libraries;" + username);
         List<LibraryInfo> result = new ArrayList<>();
-        if (libsResponse == null || libsResponse.isEmpty()) return result;
+        if (libsResponse == null || libsResponse.isEmpty() || libsResponse.contains("ERROR")) return result;
 
         String[] libIds = libsResponse.split(",");
 
         for (String libId : libIds) {
-            String libBooksResponse = client.send("get_user_library;id;" + libId);
+            String libBooksResponse = client.send("get_user_library;id;" + libId.trim());
             if (libBooksResponse == null || libBooksResponse.isEmpty()) continue;
 
             String[] parts = libBooksResponse.split(";");
             boolean containsBook = false;
 
-            for (int i = 2; i < parts.length && !containsBook; i++) {
-                if (!parts[i].isBlank()) {
-                    String[] bookIds = parts[i].split(",");
-                    for (String bId : bookIds) {
+            // FIX: La lista dei libri inizia dall'indice 3.
+            // parts[0]=ID, parts[1]=Nome, parts[2]=Username, parts[3]=LibriID
+            if (parts.length > 3 && !parts[3].isBlank()) {
+                String[] bookIds = parts[3].split(",");
+                for (String bId : bookIds) {
+                    try {
                         if (!bId.isBlank() && Integer.parseInt(bId.trim()) == bookId) {
                             containsBook = true;
                             break;
                         }
+                    } catch (NumberFormatException e) {
+                        // Ignoriamo pezzi di stringa non numerici
                     }
                 }
             }
 
             if (!containsBook) {
-                String libName = parts.length > 1 ? parts[1] : "";
+                String libName = parts.length > 1 ? parts[1] : "Libreria " + libId;
                 result.add(new LibraryInfo(libId, libName));
             }
         }
-
         return result;
     }
 
-    /**
-     * Restituisce l'elenco delle librerie dell'utente che CONTENGONO il libro.
-     */
     public static List<LibraryInfo> getLibrariesWithBook(Client client, String username, int bookId) {
         String libsResponse = client.send("get_user_libraries;" + username);
         List<LibraryInfo> result = new ArrayList<>();
-        if (libsResponse == null || libsResponse.isEmpty()) return result;
+        if (libsResponse == null || libsResponse.isEmpty() || libsResponse.contains("ERROR")) return result;
 
         String[] libIds = libsResponse.split(",");
 
         for (String libId : libIds) {
-            String libBooksResponse = client.send("get_user_library;id;" + libId);
+            String libBooksResponse = client.send("get_user_library;id;" + libId.trim());
             if (libBooksResponse == null || libBooksResponse.isEmpty()) continue;
 
             String[] parts = libBooksResponse.split(";");
             boolean containsBook = false;
 
-            for (int i = 2; i < parts.length && !containsBook; i++) {
-                if (!parts[i].isBlank()) {
-                    String[] bookIds = parts[i].split(",");
-                    for (String bId : bookIds) {
+            // FIX: Iniziamo il controllo dall'indice 3
+            if (parts.length > 3 && !parts[3].isBlank()) {
+                String[] bookIds = parts[3].split(",");
+                for (String bId : bookIds) {
+                    try {
                         if (!bId.isBlank() && Integer.parseInt(bId.trim()) == bookId) {
                             containsBook = true;
                             break;
                         }
+                    } catch (NumberFormatException e) {
+                        // Ignoriamo ID non validi
                     }
                 }
             }
 
             if (containsBook) {
-                String libName = parts.length > 1 ? parts[1] : "";
+                String libName = parts.length > 1 ? parts[1] : "Libreria " + libId;
                 result.add(new LibraryInfo(libId, libName));
             }
         }
-
         return result;
     }
 
@@ -91,17 +90,10 @@ public class AddRmBook {
             this.name = name;
         }
 
-        public String getId() {
-            return id;
-        }
-
-        public String getName() {
-            return name;
-        }
+        public String getId() { return id; }
+        public String getName() { return name; }
 
         @Override
-        public String toString() {
-            return name + " (" + id + ")";
-        }
+        public String toString() { return name + " (" + id + ")"; }
     }
 }

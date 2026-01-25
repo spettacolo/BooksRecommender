@@ -4,20 +4,11 @@ import ONA.booksrecommender.client.Client;
 import ONA.booksrecommender.client.controller.SearchHandler;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.GridPane;
+import javafx.scene.layout.*;
 import javafx.application.Platform;
 import javafx.scene.control.ScrollPane;
 import javafx.geometry.Pos;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.Priority;
 
-/**
- * LibraryView estende StackPane per permettere all'overlay dei dettagli
- * di apparire SOPRA la lista dei libri.
- */
 public class LibraryView extends StackPane {
 
     private StackPane overlayContainer;
@@ -34,7 +25,7 @@ public class LibraryView extends StackPane {
         VBox.setVgrow(mainContent, javafx.scene.layout.Priority.ALWAYS);
         mainContent.setPadding(new Insets(0, 20, 0, 20)); // Margini laterali
 
-        // Richiesta dati libreria
+        // Richiesta al server del contenuto della libreria
         String risposta = client.send("get_user_library;id;" + lib);
         System.out.println(risposta);
 
@@ -44,26 +35,32 @@ public class LibraryView extends StackPane {
         header.setPadding(new Insets(20, 40, 20, 40));
 
         Label nomeLibreria = new Label((risposta.trim()).split(";")[1]);
-        nomeLibreria.setStyle("-fx-font-weight: bold; -fx-font-size: 18px;");
+        nomeLibreria.getStyleClass().add("header-title");
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         header.getChildren().addAll(nomeLibreria, spacer, searchBar);
 
-        // Griglia per le copertine
-        GridPane grid = new GridPane();
-        grid.setHgap(15);
-        grid.setVgap(20);
-        grid.setPadding(new Insets(10, 0, 20, 0));
-        grid.setAlignment(Pos.TOP_LEFT);
-        grid.setMaxWidth(Double.MAX_VALUE);
+        // Griglia delle copertine
+        // ... [Import e parte iniziale invariati fino all'header] ...
 
-        String[] libri = risposta.trim().split(";")[3].split(",");
+        // SOSTITUIAMO IL GRIDPANE CON UN FLOWPANE
+        FlowPane flowGrid = new FlowPane();
+        flowGrid.setHgap(25); // Spazio orizzontale tra le copertine
+        flowGrid.setVgap(30); // Spazio verticale tra le righe
+        flowGrid.setPadding(new Insets(20, 40, 40, 40));
+        flowGrid.setAlignment(Pos.TOP_LEFT);
 
-        int col = 0;
-        int row = 0;
+        // Questo permette al FlowPane di espandersi orizzontalmente
+        flowGrid.setMaxWidth(Double.MAX_VALUE);
+        flowGrid.setPrefWrapLength(Region.USE_COMPUTED_SIZE);
 
+        String[] partsResp = risposta != null ? risposta.trim().split(";") : new String[0];
+        String[] libri = partsResp.length > 3 && !partsResp[3].isBlank() ? partsResp[3].split(",") : new String[0];
+        boolean hasAnyBook = false;
+
+        // Creazione delle card cliccabili
         for (String s : libri) {
             if (s == null || s.isBlank()) continue;
 
@@ -75,48 +72,57 @@ public class LibraryView extends StackPane {
             int bookId = Integer.parseInt(parts[0]);
 
             // Creazione del nodo copertina
-            StackPane coverNode = client.createScaledCover(coverUrl, 120, 200);
-            coverNode.setStyle("-fx-cursor: hand;"); // Cambia cursore al passaggio
+            StackPane coverNode = client.createScaledCover(coverUrl, 130, 200);
+            coverNode.setStyle("-fx-cursor: hand;");
 
-            // Gestione click sulla copertina
             coverNode.setOnMouseClicked(e -> {
                 BookDetails details = new BookDetails(bookId, RootView.getUsername());
                 StackPane overlay = details.createOverlay();
 
-                // Chiude l'overlay se si clicca fuori o sul tasto chiudi (se implementato in BookDetails)
                 overlay.setOnMouseClicked(ev -> {
-                    if (ev.getTarget() == overlay) { // Chiude solo se clicchi sullo sfondo dell'overlay
+                    if (ev.getTarget() == overlay) {
                         overlayContainer.getChildren().remove(overlay);
                     }
                 });
 
                 Platform.runLater(() -> {
-                    overlayContainer.getChildren().clear(); // Pulisce eventuali overlay precedenti
+                    overlayContainer.getChildren().clear();
                     overlayContainer.getChildren().add(overlay);
                 });
             });
 
-            grid.add(coverNode, col, row);
-
-            col++;
-            if (col > 3) { // 4 colonne
-                col = 0;
-                row++;
-            }
+            // Aggiungiamo semplicemente al FlowPane, gestisce lui righe e colonne
+            flowGrid.getChildren().add(coverNode);
+            hasAnyBook = true;
         }
 
-        // ScrollPane per la griglia
-        ScrollPane scrollPane = new ScrollPane(grid);
-        scrollPane.setFitToWidth(true);
+        // Messaggio se vuota
+        if (!hasAnyBook) {
+            VBox emptyBox = new VBox();
+            emptyBox.setAlignment(Pos.CENTER);
+            emptyBox.setPadding(new Insets(100, 0, 0, 0));
+            emptyBox.setPrefWidth(1200); // Valore indicativo per centrare il testo
+
+            Label emptyLabel = new Label("Ancora nulla da leggere qui...");
+            emptyLabel.getStyleClass().add("library-empty-label");
+            emptyBox.getChildren().add(emptyLabel);
+            flowGrid.getChildren().add(emptyBox);
+        }
+
+        // ScrollPane per la griglia fluida
+        ScrollPane scrollPane = new ScrollPane(flowGrid);
+        scrollPane.setFitToWidth(true); // FONDAMENTALE: adatta il FlowPane alla larghezza dello scroll
         scrollPane.setFitToHeight(true);
         scrollPane.setPannable(true);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.setStyle("-fx-background-color:transparent; -fx-background: transparent;");
-        VBox.setVgrow(scrollPane, javafx.scene.layout.Priority.ALWAYS);
+        VBox.setVgrow(scrollPane, Priority.ALWAYS);
 
-        // Aggiungo gli elementi al contenuto principale
+        // Aggiunge gli elementi al contenuto principale
         mainContent.getChildren().addAll(header, scrollPane);
 
-        // 2. CONTENITORE OVERLAY (Sopra il contenuto)
+        // Livello superiore per gli overlay (dettagli libro, popup, ecc.)
         overlayContainer = new StackPane();
         overlayContainer.setPickOnBounds(false); // IMPORTANTE: permette di cliccare i libri quando l'overlay è vuoto
 

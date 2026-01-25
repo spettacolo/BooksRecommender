@@ -3,6 +3,7 @@ package ONA.booksrecommender.client.view;
 import ONA.booksrecommender.client.Client;
 import ONA.booksrecommender.client.controller.AddRmBook;
 import ONA.booksrecommender.client.controller.RecommendationHandler;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -17,6 +18,8 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
+import static javafx.geometry.Side.BOTTOM;
+
 public class BookDetails {
 
     private final int bookId;
@@ -28,6 +31,7 @@ public class BookDetails {
     private String category;
     private String coverUrl;
     private String descrizione;
+    private UserAreaView userArea;
 
     private final Client client = new Client();
 
@@ -37,6 +41,14 @@ public class BookDetails {
         loadBookDetails();
     }
 
+    public BookDetails(int bookId, String username, UserAreaView userArea) {
+        this.bookId = bookId;
+        this.username = username;
+        this.userArea = userArea;
+        loadBookDetails();
+    }
+
+    // Caricamento dal server dei dati del libro nei campi della classe
     private void loadBookDetails() {
         String response = client.send("get_book;id;" + bookId);
         if (response == null || response.startsWith("ERROR")) {
@@ -66,8 +78,9 @@ public class BookDetails {
         } else this.descrizione = "";
     }
 
+    // Calcolo della media delle valutazioni e conversione in stelle
     private Label buildRatingLabel() {
-        String response = client.send("get_book_ratings;" + bookId);
+        String response = client.send("get_book_reviews;" + bookId);
         if (response == null || response.isEmpty()) return new Label("Nessuna recensione");
 
         String[] ratings = response.split("\\|");
@@ -76,11 +89,15 @@ public class BookDetails {
             if (r.isBlank()) continue;
             String[] parts = r.split(";");
             if (parts.length < 8) continue;
-            try { sum += Integer.parseInt(parts[7]); count++; } catch (NumberFormatException ignored) {}
+            try {
+                sum += Integer.parseInt(parts[7]);
+                count++;
+            } catch (NumberFormatException ignored) {
+            }
         }
         if (count == 0) return new Label("Nessuna recensione");
 
-        int fullStars = (int)Math.round((double)sum / count);
+        int fullStars = (int) Math.round((double) sum / count);
         StringBuilder stars = new StringBuilder();
         for (int i = 0; i < 5; i++) stars.append(i < fullStars ? "★" : "☆");
 
@@ -89,6 +106,7 @@ public class BookDetails {
         return label;
     }
 
+    // Costruzione dell’overlay grafico dei dettagli del libro
     public StackPane createOverlay() {
         final StackPane overlay = new StackPane();
         VBox content = new VBox(20);
@@ -101,19 +119,11 @@ public class BookDetails {
         content.setOnMouseClicked(e -> e.consume());
 
         // HEADER
-        Label closeButton = new Label("✕");
-        closeButton.setStyle("-fx-font-size: 18px;");
-        closeButton.getStyleClass().add("book-details-text");
-        closeButton.setOnMouseClicked(e -> {
-            Pane parent = (Pane) overlay.getParent();
-            if (parent != null) parent.getChildren().remove(overlay);
-        });
-
         HBox header = new HBox();
         header.setAlignment(Pos.TOP_LEFT);
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        header.getChildren().addAll(closeButton, spacer);
+        header.getChildren().addAll(spacer);
 
         // PULSANTI + e -
         if (username != null && !username.isEmpty()) {
@@ -149,7 +159,7 @@ public class BookDetails {
             header.getChildren().add(buttonsBox);
         }
 
-        // CONTENUTO PRINCIPALE
+        // Sezione alta con copertina e dati principali
         HBox mainContent = new HBox(20);
         VBox coverBox = new VBox();
         coverBox.setAlignment(Pos.TOP_LEFT);
@@ -158,7 +168,8 @@ public class BookDetails {
                 Image coverImage = new Image(coverUrl, 150, 220, true, true);
                 ImageView coverView = new ImageView(coverImage);
                 coverBox.getChildren().add(coverView);
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
 
         VBox detailsBox = new VBox(5);
@@ -166,36 +177,44 @@ public class BookDetails {
         Label titleLabel = new Label(title);
         titleLabel.getStyleClass().add("book-details-text");
         titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+        titleLabel.getStyleClass().add("standard-font-fam");
         Label authorLabel = new Label(authors);
         authorLabel.getStyleClass().add("book-details-text");
         authorLabel.setStyle("-fx-font-size: 14px;");
+        authorLabel.getStyleClass().add("standard-font-fam");
         Label pubYearLabel = new Label((publisher.isEmpty() ? "" : publisher) + (year.isEmpty() ? "" : " - " + year));
         pubYearLabel.getStyleClass().add("book-details-text");
         pubYearLabel.setStyle("-fx-font-size: 14px;");
+        pubYearLabel.getStyleClass().add("standard-font-fam");
         Label catLabel = new Label(category);
         catLabel.getStyleClass().add("book-details-text");
         catLabel.setStyle("-fx-font-size: 14px;");
+        catLabel.getStyleClass().add("standard-font-fam");
         Label ratLabel = buildRatingLabel();
         ratLabel.getStyleClass().add("book-details-text");
+        ratLabel.setStyle("-fx-font-size: 14px;");
         detailsBox.getChildren().addAll(titleLabel, authorLabel, pubYearLabel, catLabel, ratLabel);
         mainContent.getChildren().addAll(coverBox, detailsBox);
 
         Label descTitle = new Label("Sinossi");
         descTitle.getStyleClass().add("book-details-text");
+        descTitle.getStyleClass().add("standard-font-fam");
         descTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
         Label descLabel = new Label(descrizione);
         descLabel.getStyleClass().add("book-details-text");
+        descLabel.getStyleClass().add("standard-font-fam");
         descLabel.setWrapText(true);
 
         Separator divider = new Separator();
         divider.setPadding(new Insets(20, 0, 10, 0));
         divider.getStyleClass().add("divider");
 
-        // RECENSIONI SECTION
+        // Sezione di recensioni e valutazioni
         HBox reviewsHeader = new HBox();
         reviewsHeader.setAlignment(Pos.CENTER_LEFT);
         Label reviewsTitle = new Label("Valutazioni e recensioni");
         reviewsTitle.getStyleClass().add("book-details-text");
+        reviewsTitle.getStyleClass().add("standard-font-fam");
         reviewsTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
         reviewsHeader.getChildren().addAll(reviewsTitle);
 
@@ -217,11 +236,12 @@ public class BookDetails {
 
         VBox reviewsSection = new VBox(20);
         reviewsSection.setAlignment(Pos.TOP_LEFT);
-        String ratingsResponse = client.send("get_book_ratings;" + bookId);
+        String ratingsResponse = client.send("get_book_reviews;" + bookId);
 
         if (ratingsResponse == null || ratingsResponse.isBlank()) {
             Label noReviews = new Label("Nessuna valutazione o recensione disponibile per questo libro");
             noReviews.getStyleClass().add("book-details-text");
+            noReviews.setStyle("-fx-font-size: 14px;");
             noReviews.setStyle("-fx-font-style: italic;");
             reviewsSection.getChildren().addAll(reviewsHeader, noReviews);
         } else {
@@ -285,7 +305,7 @@ public class BookDetails {
                 summary.setAlignment(Pos.CENTER_LEFT);
                 HBox.setHgrow(bars, Priority.ALWAYS);
 
-                /// Sostituiamo la FlowPane con un contenitore orizzontale
+                // Contenitore delle card delle recensioni in scorrimento orizzontale
                 HBox horizontalCardsBox = new HBox(20);
                 horizontalCardsBox.setAlignment(Pos.CENTER_LEFT);
                 horizontalCardsBox.setPadding(new Insets(10, 5, 20, 5));
@@ -307,20 +327,20 @@ public class BookDetails {
                 final double[] dragX = new double[1];
                 final double[] hValue = new double[1];
 
-// 3. Quando premi il mouse, salva la posizione iniziale
+                // 3. Quando premi il mouse, salva la posizione iniziale
                 horizontalScroll.setOnMousePressed(e -> {
                     dragX[0] = e.getSceneX();
                     hValue[0] = horizontalScroll.getHvalue();
                     horizontalScroll.setCursor(javafx.scene.Cursor.CLOSED_HAND);
                 });
 
-// 4. Quando trascini, sposta lo scroll in proporzione
+                // 4. Quando trascini, sposta lo scroll in proporzione
                 horizontalScroll.setOnMouseDragged(e -> {
                     double delta = (dragX[0] - e.getSceneX()) / horizontalCardsBox.getWidth();
                     horizontalScroll.setHvalue(hValue[0] + delta);
                 });
 
-// 5. Quando rilasci, ripristina il cursore
+                // 5. Quando rilasci, ripristina il cursore
                 horizontalScroll.setOnMouseReleased(e -> {
                     horizontalScroll.setCursor(javafx.scene.Cursor.HAND);
                 });
@@ -348,18 +368,18 @@ public class BookDetails {
 
                         if (noteDecoded.isEmpty() || noteDecoded.equalsIgnoreCase("EMPTY")) continue;
 
-                        // --- CARD STILE APPLE STORE ---
+                        // --- CARD STILE ---
                         VBox card = new VBox(8);
                         card.setMinWidth(300);
                         card.setMaxWidth(300);
                         card.setPadding(new Insets(15));
-                        card.setStyle("-fx-background-color: #2c2c2e; -fx-background-radius: 15;");
+                        card.getStyleClass().add("book-details-card");
 
                         // Riga Superiore: User e Data
                         HBox topRow = new HBox();
                         topRow.setAlignment(Pos.CENTER_LEFT);
                         Label userLbl = new Label(user);
-                        userLbl.setStyle("-fx-font-weight: bold; -fx-text-fill: white; -fx-font-size: 13px;");
+                        userLbl.getStyleClass().add("userLbl");
 
                         Region cardSpacer = new Region();
                         HBox.setHgrow(cardSpacer, Priority.ALWAYS);
@@ -369,7 +389,7 @@ public class BookDetails {
                         // Riga Stelle
                         int starsCount = Math.max(0, Math.min(5, vote));
                         Label starsLbl = new Label("★".repeat(starsCount) + "☆".repeat(5 - starsCount));
-                        starsLbl.setStyle("-fx-text-fill: #ff9500; -fx-font-size: 14px;");
+                        starsLbl.getStyleClass().add("starsLbl");
 
                         // Testo Recensione
                         Label noteLbl = new Label(noteDecoded);
@@ -390,7 +410,7 @@ public class BookDetails {
         }
 
 
-        // CONSIGLI
+        // Sezione dei libri consigliati dagli altri utenti
         Separator adviceDivider = new Separator();
         adviceDivider.setPadding(new Insets(20, 0, 10, 0));
         adviceDivider.getStyleClass().add("divider");
@@ -405,11 +425,12 @@ public class BookDetails {
         if (username != null && !username.isEmpty()) {
             List<AddRmBook.LibraryInfo> libsWithBook = AddRmBook.getLibrariesWithBook(client, username, bookId);
             if (libsWithBook != null && !libsWithBook.isEmpty()) {
-                Region adviceSpacer = new Region(); HBox.setHgrow(adviceSpacer, Priority.ALWAYS);
+                Region adviceSpacer = new Region();
+                HBox.setHgrow(adviceSpacer, Priority.ALWAYS);
                 Label addAdviceButton = new Label("+");
                 addAdviceButton.getStyleClass().add("book-details-text");
                 addAdviceButton.setStyle("-fx-font-size: 22px; -fx-cursor: hand; -fx-font-weight: bold;");
-                addAdviceButton.setOnMouseClicked(e -> RecommendationHandler.addRecommendation(bookId, username, client, overlay));
+                addAdviceButton.setOnMouseClicked(e -> RecommendationHandler.addRecommendation(bookId, username, client, overlay, this.userArea));
                 adviceHeader.getChildren().addAll(adviceSpacer, addAdviceButton);
             }
         }
@@ -420,7 +441,7 @@ public class BookDetails {
 
         String adviceResponse = client.send("get_book_advices;" + bookId);
 
-// Logica per gestire la risposta: 80633;15451,94877,4413|80633;49032,41754|
+        // Logica per gestire la risposta: 80633;15451,94877,4413|80633;49032,41754|
         if (adviceResponse != null && !adviceResponse.isBlank() && !adviceResponse.equals("NO_RECOMMENDATIONS")) {
             FlowPane adviceGrid = new FlowPane(20, 20);
             adviceGrid.setAlignment(Pos.TOP_LEFT);
@@ -430,16 +451,21 @@ public class BookDetails {
 
             String[] recommendationBlocks = adviceResponse.split("\\|");
             for (String block : recommendationBlocks) {
-                if (block.isBlank()) continue;
+                if (block == null || block.isBlank()) continue;
 
-                String[] parts = block.split(";");
-                if (parts.length < 2) continue; // Manca la lista dei consigliati
+                String[] parts = block.split(";", -1);
+                if (parts.length < 2 || parts[1] == null || parts[1].isBlank()) continue; // nessun consigliato valido
 
                 // parts[1] contiene gli ID consigliati (es: "15451,94877,4413")
                 String[] recommendedIds = parts[1].split(",");
 
                 for (String idStr : recommendedIds) {
-                    int targetId = Integer.parseInt(idStr.trim());
+                    if (idStr == null) continue;
+                    idStr = idStr.trim();
+                    if (idStr.isEmpty()) continue;
+                    if (!idStr.matches("\\d+")) continue;
+
+                    int targetId = Integer.parseInt(idStr);
 
                     // Filtro: Non mostrare il libro corrente e non duplicare se già aggiunto
                     if (targetId == this.bookId || displayedIds.contains(targetId)) continue;
@@ -459,8 +485,14 @@ public class BookDetails {
                         coverContainer.setOnMouseClicked(e -> {
                             BookDetails nextBook = new BookDetails(targetId, username);
                             StackPane nextOverlay = nextBook.createOverlay();
+
+                            // Invece di aggiungere sopra, potresti voler rimuovere quello vecchio
+                            // o assicurarti che il nuovo copra tutto perfettamente.
                             Pane root = (Pane) overlay.getParent();
-                            if (root != null) root.getChildren().add(nextOverlay);
+                            if (root != null) {
+                                // root.getChildren().remove(overlay); // Opzionale: chiude il precedente
+                                root.getChildren().add(nextOverlay);
+                            }
                         });
 
                         adviceGrid.getChildren().add(coverContainer);
@@ -499,9 +531,14 @@ public class BookDetails {
 
         BorderPane overlayPanel = new BorderPane();
         overlayPanel.setStyle("-fx-background-color: white; -fx-background-radius: 14 14 0 0; -fx-border-radius: 14 14 0 0;");
-        Rectangle clip = new Rectangle(); clip.setArcWidth(28); clip.setArcHeight(28);
+        Rectangle clip = new Rectangle();
+        clip.setArcWidth(28);
+        clip.setArcHeight(28);
         overlayPanel.setClip(clip);
-        overlayPanel.layoutBoundsProperty().addListener((obs, oldB, newB) -> { clip.setWidth(newB.getWidth()); clip.setHeight(newB.getHeight()); });
+        overlayPanel.layoutBoundsProperty().addListener((obs, oldB, newB) -> {
+            clip.setWidth(newB.getWidth());
+            clip.setHeight(newB.getHeight());
+        });
 
         ScrollPane scrollPane = new ScrollPane(content);
         scrollPane.setFitToWidth(true);
@@ -516,149 +553,190 @@ public class BookDetails {
         return overlay;
     }
 
+    // Visualizzazione del menu per aggiungere o rimuovere il libro da una libreria
     private void showLibraryMenu(javafx.scene.Node anchor, List<AddRmBook.LibraryInfo> libraries, boolean isAdd) {
         ContextMenu contextMenu = new ContextMenu();
-        // Stile moderno: sfondo chiaro, angoli arrotondati e ombra
-        contextMenu.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-border-radius: 10; -fx-border-color: #ddd;");
+        contextMenu.getStyleClass().add("library-context-menu");
 
         for (AddRmBook.LibraryInfo lib : libraries) {
             MenuItem item = new MenuItem(lib.getName());
-            item.setStyle("-fx-font-size: 14px; -fx-padding: 5 15 5 15;");
+            item.getStyleClass().add("library-context-item");
 
             item.setOnAction(ev -> {
                 String cmd = isAdd ? "add_book_to_library;" : "remove_book_from_library;";
                 client.send(cmd + lib.getId() + ";" + bookId);
-                // Opzionale: qui puoi aggiungere un feedback visivo o ricaricare i dati
             });
 
             contextMenu.getItems().add(item);
         }
 
-        // Mostra il menu esattamente sotto il tasto cliccato
-        contextMenu.show(anchor, javafx.geometry.Side.BOTTOM, 0, 0);
+        contextMenu.setOnShowing(e -> {
+            contextMenu.getScene().setFill(Color.TRANSPARENT);
+            contextMenu.getScene().getRoot().setStyle(
+                    "-fx-background-color: transparent;" +
+                            "-fx-padding: 1;" +
+                            "-fx-background-insets: 0;" +
+                            "-fx-border-insets: 0;"
+            );
+        });
+
+        // 1. Calcoliamo la larghezza del menu per poterlo allineare a sinistra del tasto
+        // Usiamo un trucco: forziamo il calcolo della dimensione della skin
+        double menuWidth = contextMenu.prefWidth(-1);
+        if (menuWidth <= 0) menuWidth = 150; // Fallback se non ancora calcolato
+
+        // 2. Calcoliamo l'offset:
+        // Vogliamo che il lato DESTRO del menu coincida con il lato DESTRO del tasto.
+        // Offset = (Larghezza Tasto) - (Larghezza Menu)
+        double anchorWidth = anchor.getBoundsInLocal().getWidth();
+        double xOffset = anchorWidth - menuWidth;
+
+        // 3. Mostriamo il menu con l'offset calcolato
+        contextMenu.show(anchor, BOTTOM, xOffset, 8);
     }
 
+    // Popup per l’inserimento di una nuova recensione
     private void showReviewOverlay(StackPane parentOverlay) {
         StackPane reviewOverlay = new StackPane();
-        reviewOverlay.setStyle("-fx-background-color: rgba(0,0,0,0.7);");
+        reviewOverlay.setStyle("-fx-background-color: rgba(0,0,0,0.4);");
 
-        // Pannello centrale più largo per ospitare le due colonne
-        VBox container = new VBox(20);
-        container.setMaxSize(650, 450);
-        container.setPadding(new Insets(30));
-        container.setStyle("-fx-background-color: rgb(241, 237, 229); -fx-background-radius: 20;");
+        VBox container = new VBox(15);
+        container.setMaxSize(640, 360); // Leggermente più largo per la colonna sinistra
+        container.setPadding(new Insets(20, 25, 20, 25));
+        container.setStyle("-fx-background-color: rgb(241, 237, 229); -fx-background-radius: 20; " +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 15, 0, 0, 5);");
         container.setAlignment(Pos.TOP_CENTER);
+        container.setOnMouseClicked(e -> e.consume());
 
-        // Titolo
-        Label title = new Label("La tua valutazione");
-        title.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #2c2c2e;");
+        Label title = new Label("Valuta questo libro");
+        title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1c1c1e;");
 
-        // Layout a due colonne
-        HBox columnsBox = new HBox(30);
+        HBox columnsBox = new HBox(5);
         columnsBox.setAlignment(Pos.CENTER);
 
-        // --- COLONNA SINISTRA: VOTI ---
+
         GridPane ratingsGrid = new GridPane();
         ratingsGrid.setHgap(15);
         ratingsGrid.setVgap(12);
         ratingsGrid.setAlignment(Pos.TOP_LEFT);
+
+        // FORZIAMO LA LARGHEZZA per non tagliare il "/5"
+        ratingsGrid.setMinWidth(175);
+        ratingsGrid.setPrefWidth(175);
 
         String[] categories = {"Stile", "Contenuto", "Gradimento", "Originalità", "Edizione"};
         TextField[] inputs = new TextField[5];
 
         for (int i = 0; i < categories.length; i++) {
             Label lbl = new Label(categories[i]);
-            lbl.setStyle("-fx-font-size: 14px; -fx-text-fill: #444; -fx-font-weight: 500;");
+            lbl.setMinWidth(90);
+            lbl.setAlignment(Pos.BOTTOM_LEFT);
+            lbl.setStyle("-fx-font-size: 13px; -fx-text-fill: #1c1c1e; -fx-font-weight: 500;");
+
             TextField tf = new TextField();
-            tf.setPromptText("1-5");
-            tf.setPrefWidth(55);
+            tf.setPromptText("-");
+            tf.setPrefSize(38, 38);
+            tf.setMinSize(38, 38);
             tf.setAlignment(Pos.CENTER);
-            // Stile input simile a quello dell'app
-            tf.setStyle("-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #ccc; -fx-padding: 5;");
+            tf.setStyle("-fx-background-color: white; -fx-text-fill: #1c1c1e; " +
+                    "-fx-background-radius: 8; -fx-border-color: #1c1c1e; " +
+                    "-fx-border-radius: 8; -fx-font-size: 14px; -fx-font-weight: bold;");
+
+            Label outOfFive = new Label("/5");
+            outOfFive.setStyle("-fx-font-size: 10px; -fx-text-fill: #8e8e93;");
+
+            HBox inputWrapper = new HBox(4, tf, outOfFive);
+            inputWrapper.setAlignment(Pos.BOTTOM_LEFT);
+
+            // Opzionale: un piccolo padding inferiore per non far toccare il testo al bordo
+            outOfFive.setPadding(new Insets(0, 0, 4, 0));
 
             tf.textProperty().addListener((obs, oldV, newV) -> {
                 if (!newV.matches("[1-5]?")) tf.setText(oldV);
+                if (newV.length() == 1) {
+                    int next = -1;
+                    for(int j=0; j<5; j++) if(inputs[j] == tf) next = j+1;
+                    if(next < 5) inputs[next].requestFocus();
+                }
             });
-            inputs[i] = tf;
 
+            inputs[i] = tf;
             ratingsGrid.add(lbl, 0, i);
-            ratingsGrid.add(tf, 1, i);
+            ratingsGrid.add(inputWrapper, 1, i);
         }
 
-        // --- COLONNA DESTRA: NOTE ---
-        VBox notesBox = new VBox(8);
+
+        VBox notesBox = new VBox(5);
         HBox.setHgrow(notesBox, Priority.ALWAYS);
 
-        Label noteHeader = new Label("Raccontaci cosa ne pensi (opzionale):");
-        noteHeader.setStyle("-fx-font-size: 14px; -fx-text-fill: #444;");
-
         TextArea notesArea = new TextArea();
-        notesArea.setPromptText("Scrivi qui il tuo commento...");
+        notesArea.setPromptText("Raccontaci la tua opinione (opzionale)...");
         notesArea.setWrapText(true);
-        notesArea.setPrefHeight(220); // Più alta ora che è a lato
-        notesArea.setStyle("-fx-background-radius: 10; -fx-border-radius: 10; -fx-border-color: #ccc; -fx-padding: 8;");
 
-        Label charCount = new Label("0 / 175");
-        charCount.setStyle("-fx-font-size: 11px; -fx-text-fill: #888;");
+        // (38px * 5) + (12px * 4 gap) + correzione padding = 238px circa
+        notesArea.setPrefHeight(238);
+        notesArea.setMinHeight(238);
+        notesArea.setMaxHeight(238);
+        notesArea.setStyle("-fx-control-inner-background: white; -fx-background-color: white; " +
+                "-fx-background-radius: 12; -fx-border-radius: 12; " +
+                "-fx-border-color: #1c1c1e; -fx-padding: 10; -fx-font-size: 13px;");
+
+        Label charCount = new Label("0 / 190");
+        charCount.setStyle("-fx-font-size: 10px; -fx-text-fill: #666;");
         notesArea.textProperty().addListener((obs, oldV, newV) -> {
-            if (newV.length() > 175) notesArea.setText(oldV);
-            charCount.setText(notesArea.getText().length() + " / 175");
+            if (newV.length() > 190) notesArea.setText(oldV);
+            charCount.setText(notesArea.getText().length() + " / 190");
         });
 
-        notesBox.getChildren().addAll(noteHeader, notesArea, charCount);
+        notesBox.getChildren().addAll(notesArea, charCount);
+        columnsBox.getChildren().setAll(ratingsGrid, notesBox);
 
-        // Aggiunta delle due colonne alla HBox principale
-        columnsBox.getChildren().addAll(ratingsGrid, notesBox);
 
-        // Messaggio di errore
-        Label errorLabel = new Label();
-        errorLabel.setTextFill(Color.web("#e74c3c"));
-        errorLabel.setStyle("-fx-font-size: 12px;");
-
-        // --- PULSANTIERA ---
         HBox actions = new HBox(15);
         actions.setAlignment(Pos.CENTER_RIGHT);
 
         Button cancelBtn = new Button("Annulla");
-        cancelBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #666; -fx-cursor: hand; -fx-font-weight: bold;");
+        cancelBtn.setCursor(javafx.scene.Cursor.HAND);
+        cancelBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #666; -fx-font-size: 14px;");
         cancelBtn.setOnAction(ev -> parentOverlay.getChildren().remove(reviewOverlay));
 
-        Button submitBtn = new Button("Pubblica Recensione");
-        submitBtn.setPrefWidth(200);
-        submitBtn.setStyle("-fx-background-color: #2c2c2e; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 10 20; -fx-cursor: hand;");
+        Button submitBtn = new Button("Invia");
+        submitBtn.setCursor(javafx.scene.Cursor.HAND);
+        submitBtn.setPrefWidth(130);
+        submitBtn.setStyle("-fx-background-color: #1c1c1e; -fx-text-fill: white; -fx-font-weight: bold; " +
+                "-fx-background-radius: 12; -fx-padding: 10 0; -fx-font-size: 14px;");
 
+        // ... (restante logica di invio invariata)
         submitBtn.setOnAction(ev -> {
             try {
-                for (TextField tf : inputs) if (tf.getText().isEmpty()) throw new Exception("Inserisci tutti i voti obbligatori");
-
-                String encodedNote = Base64.getEncoder().encodeToString(notesArea.getText().getBytes(StandardCharsets.UTF_8));
+                for (TextField tf : inputs) if (tf.getText().trim().isEmpty()) return;
+                String noteRaw = notesArea.getText().trim();
+                String noteEncoded = (noteRaw.isEmpty()) ? "EMPTY" :
+                        Base64.getEncoder().encodeToString(noteRaw.getBytes(java.nio.charset.StandardCharsets.UTF_8));
                 String msg = String.format("add_book_review;%d;%s;%s;%s;%s;%s;%s;%s",
                         bookId, username, inputs[0].getText(), inputs[1].getText(),
-                        inputs[2].getText(), inputs[3].getText(), inputs[4].getText(), encodedNote);
-
+                        inputs[2].getText(), inputs[3].getText(), inputs[4].getText(), noteEncoded);
                 if (client.send(msg).contains("OK")) {
                     parentOverlay.getChildren().remove(reviewOverlay);
-                    // Suggerimento: qui potresti ricaricare i dettagli o mostrare un feedback
-                } else {
-                    errorLabel.setText("Errore di connessione al server.");
+                    Platform.runLater(() -> {
+                        Pane p = (Pane) parentOverlay.getParent();
+                        p.getChildren().remove(parentOverlay);
+                        p.getChildren().add(new BookDetails(bookId, username).createOverlay());
+                    });
                 }
-            } catch (Exception ex) {
-                errorLabel.setText(ex.getMessage());
-            }
+            } catch (Exception ignored) {}
         });
 
         actions.getChildren().addAll(cancelBtn, submitBtn);
-
-        // Composizione finale
-        container.getChildren().addAll(title, columnsBox, errorLabel, actions);
+        container.getChildren().addAll(title, columnsBox, actions);
         reviewOverlay.getChildren().add(container);
 
-        // Chiudi al click fuori dal pannello
-        reviewOverlay.setOnMouseClicked(e -> {
+        reviewOverlay.setOnMousePressed(e -> {
             if (e.getTarget() == reviewOverlay) parentOverlay.getChildren().remove(reviewOverlay);
         });
-        container.setOnMouseClicked(e -> e.consume());
 
         parentOverlay.getChildren().add(reviewOverlay);
+        reviewOverlay.toFront();
+        Platform.runLater(() -> inputs[0].requestFocus());
     }
 }

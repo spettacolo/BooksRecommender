@@ -24,10 +24,10 @@ public class RootView extends HBox {
         this.setStyle("-fx-background-color: rgb(44,44,46); -fx-padding: 0; -fx-border-width: 0;");
 
         // Sidebar: fissa
-        sidebarContainer.setPrefWidth(180);
-        sidebarContainer.setMinWidth(180);
-        sidebarContainer.setMaxWidth(180);
-        sidebarContainer.setStyle("-fx-padding: 30 10 10 20;");
+        sidebarContainer.setPrefWidth(200);
+        sidebarContainer.setMinWidth(200);
+        sidebarContainer.setMaxWidth(200);
+        sidebarContainer.setStyle("-fx-padding: 30 10 10 10;");
         sidebarContainer.getStyleClass().add("sidebar");
 
         // MAIN CONTENT: deve espandersi

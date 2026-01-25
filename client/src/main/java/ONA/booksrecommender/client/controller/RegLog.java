@@ -91,6 +91,7 @@ public class RegLog {
         passwordField.getStyleClass().add("reglog-field");
         passwordField.setPromptText("Password");
         Label feedbackLabel = new Label();
+        feedbackLabel.setStyle("-fx-text-fill: #E21A1A;");
 
         Button loginButton = new Button("Accedi");
         loginButton.getStyleClass().add("reglog-primary-button");
@@ -164,6 +165,7 @@ public class RegLog {
         PasswordField passwordField = new PasswordField(); passwordField.setPromptText("Password");
         passwordField.getStyleClass().add("reglog-field");
         Label feedbackLabel = new Label();
+        feedbackLabel.setStyle("-fx-text-fill: #E21A1A;");
 
         Button registerButton = new Button("Registrati");
         registerButton.getStyleClass().add("reglog-primary-button");

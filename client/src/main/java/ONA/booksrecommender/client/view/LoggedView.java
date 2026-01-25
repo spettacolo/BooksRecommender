@@ -1,15 +1,12 @@
 package ONA.booksrecommender.client.view;
 
-import ONA.booksrecommender.client.controller.RegLog;
-import ONA.booksrecommender.client.controller.SearchHandler;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Label;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import ONA.booksrecommender.client.controller.AddRmBook;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
 import ONA.booksrecommender.client.Client;
-
+import javafx.scene.paint.Color;
 
 public class LoggedView extends VBox {
 
@@ -18,89 +15,224 @@ public class LoggedView extends VBox {
     public LoggedView(RootView root, String username) {
         this.username = username;
         this.setSpacing(10);
+        this.setPadding(new Insets(10)); // Padding generale sidebar
+
+        // Forza la VBox a occupare tutta l'altezza
+        VBox.setVgrow(this, Priority.ALWAYS);
+
+        // 1. CREIAMO IL CONTENITORE SUPERIORE
+        VBox topContent = new VBox(5);
 
         Label home = new Label("Home");
         home.setOnMouseClicked(e -> root.showHome());
         home.getStyleClass().add("default-label");
 
-
-        Label user = new Label(username);
-        user.setOnMouseClicked(e -> root.showUserArea(username));
-        user.getStyleClass().add("default-label");
-
         Label yourLibraries = new Label("Le tue librerie");
         yourLibraries.getStyleClass().add("your-libraries-label");
+        yourLibraries.setStyle("-fx-padding: 10 0 5 0; -fx-font-weight: bold;");
 
-        this.getChildren().addAll(
-                home,
-                user,
-                yourLibraries
-        );
+        topContent.getChildren().addAll(home, yourLibraries);
+        this.getChildren().add(topContent);
 
-        loadLibraries(root);
+        // 2. CHIAMATA CORRETTA: passiamo anche topContent
+        loadLibraries(root, topContent);
+
+        // 3. SPACER
+        Region spacer = new Region();
+        VBox.setVgrow(spacer, Priority.ALWAYS);
+
+        // 4. BOTTONE UTENTE STILIZZATO
+        HBox userBtn = createUserBox(root);
+
+        this.getChildren().addAll(spacer, userBtn);
     }
 
-    private void loadLibraries(RootView root) {
-        Client client = root.getClient();
+    private HBox createUserBox(RootView root) {
+        HBox box = new HBox(12);
+        box.setAlignment(Pos.CENTER_LEFT);
+        box.setPadding(new Insets(10));
+        box.setCursor(javafx.scene.Cursor.HAND);
 
+        // Stile "Pillola" scura
+        box.setStyle("-fx-background-color: #3a3a3c; -fx-background-radius: 15;");
+
+        // Hover effect
+        box.setOnMouseEntered(e -> box.setStyle("-fx-background-color: #48484a; -fx-background-radius: 15;"));
+        box.setOnMouseExited(e -> box.setStyle("-fx-background-color: #3a3a3c; -fx-background-radius: 15;"));
+        box.setOnMouseClicked(e -> root.showUserArea(username));
+
+        // Avatar con icona 👤
+        StackPane avatar = new StackPane();
+        javafx.scene.shape.Circle circle = new javafx.scene.shape.Circle(16, Color.web("#8e8e93"));
+        Label userIcon = new Label("👤");
+        userIcon.setStyle("-fx-text-fill: white; -fx-font-size: 16px;");
+        avatar.getChildren().addAll(circle, userIcon);
+
+        Label nameLabel = new Label(username);
+        nameLabel.setStyle("-fx-text-fill: white; -fx-font-weight: 500; -fx-font-size: 14px;");
+
+        box.getChildren().addAll(avatar, nameLabel);
+        VBox.setMargin(box, new Insets(10, 0, 5, 0));
+        return box;
+    }
+
+    private void loadLibraries(RootView root, VBox topContent) {
+        Client client = root.getClient();
         String risposta = client.send("get_user_libraries;" + username);
 
-        if (risposta != null && !risposta.isEmpty()) {
+        // Se la risposta è valida e non è un messaggio di "nessuna libreria"
+        if (risposta != null && !risposta.isBlank() && !risposta.contains("ERROR") && !risposta.equals("NO_LIBRARIES")) {
             String[] libs = risposta.split(",");
 
             for (String lib : libs) {
-                String nomeLibreria = client.send("get_user_library;id;" + lib);
-                if (nomeLibreria == null || nomeLibreria.isEmpty()) continue;
+                String dati = client.send("get_user_library;id;" + lib);
+                if (dati == null || dati.isEmpty() || dati.startsWith("ERROR")) continue;
 
-                Label libLabel = new Label((nomeLibreria.trim()).split(";")[1]);
-                libLabel.setStyle("-fx-padding: 5 20 5 40;");
+                HBox libRow = new HBox(10);
+                libRow.setAlignment(Pos.CENTER_LEFT);
+                libRow.setPadding(new Insets(5, 10, 5, 20)); // Padding ridotto per far stare la X
+
+                // Label Nome Libreria
+                Label libLabel = new Label((dati.trim()).split(";")[1]);
+                libLabel.getStyleClass().add("default-label");
+                libLabel.setMaxWidth(Double.MAX_VALUE);
+                HBox.setHgrow(libLabel, Priority.ALWAYS);
+
+                // CORRETTO: mostra la libreria specifica, non la Home
                 libLabel.setOnMouseClicked(e -> root.showLibrary(lib));
 
-                // Menu contestuale
-                ContextMenu menu = new ContextMenu();
-                MenuItem delete = new MenuItem("Elimina libreria");
-                delete.setOnAction(e -> {
-                    Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-                    confirm.setTitle("Conferma eliminazione");
-                    confirm.setHeaderText("Sei sicuro?");
-                    confirm.setContentText("L'operazione non può essere annullata.");
+                // --- TASTO ELIMINA / ANNULLA ---
+                StackPane actionBtn = new StackPane();
+                actionBtn.setVisible(false);
+                actionBtn.setPadding(new Insets(4, 8, 4, 8));
+                actionBtn.setCursor(javafx.scene.Cursor.HAND);
 
-                    confirm.showAndWait().ifPresent(button -> {
-                        if (button == javafx.scene.control.ButtonType.OK) {
-                            client.send("remove_library;" + lib);
-                            root.showLoggedSidebar(username);
-                        }
-                    });
+                Label btnText = new Label("✕");
+                btnText.setStyle("-fx-text-fill: #ff3b30; -fx-font-size: 11px; -fx-font-weight: bold;");
+                actionBtn.setStyle("-fx-background-color: rgba(255, 59, 48, 0.1); -fx-background-radius: 8;");
+                actionBtn.getChildren().add(btnText);
+
+                // LOGICA COUNTDOWN
+                javafx.animation.Timeline countdown = new javafx.animation.Timeline();
+                final int[] secondsLeft = {5};
+
+                countdown.getKeyFrames().add(new javafx.animation.KeyFrame(javafx.util.Duration.seconds(1), e -> {
+                    secondsLeft[0]--;
+                    if (secondsLeft[0] > 0) {
+                        btnText.setText("Annulla (" + secondsLeft[0] + ")");
+                    } else {
+                        countdown.stop();
+                        client.send("remove_library;" + lib);
+                        root.showLoggedSidebar(username); // Refresh sidebar
+                    }
+                }));
+                countdown.setCycleCount(5);
+
+                actionBtn.setOnMouseClicked(e -> {
+                    if (countdown.getStatus() == javafx.animation.Animation.Status.RUNNING) {
+                        countdown.stop();
+                        secondsLeft[0] = 5;
+                        btnText.setText("✕");
+                        actionBtn.setVisible(false);
+                    } else {
+                        btnText.setText("Annulla (5)");
+                        countdown.play();
+                    }
+                    e.consume(); // Importante: non deve scatenare il click sulla libreria
                 });
 
-                menu.getItems().add(delete);
-                libLabel.setOnContextMenuRequested(e ->
-                        menu.show(libLabel, e.getScreenX(), e.getScreenY())
-                );
-                libLabel.getStyleClass().add("default-label");
+                // TASTO DESTRO -> MOSTRA X
+                libLabel.setOnContextMenuRequested(e -> actionBtn.setVisible(true));
 
-                this.getChildren().add(libLabel);
+                libRow.getChildren().addAll(libLabel, actionBtn);
+                topContent.getChildren().add(libRow);
             }
         }
 
-        // ➕ Nuova libreria
+        // --- TASTO NUOVA LIBRERIA ---
         Label newLib = new Label("+ Nuova libreria");
-        newLib.setStyle("-fx-padding: 10 20 5 40;");
-        newLib.setOnMouseClicked(e -> {
-            javafx.scene.control.TextInputDialog dialog = new javafx.scene.control.TextInputDialog();
-            dialog.setTitle("Nuova Libreria");
-            dialog.setHeaderText("Crea una nuova libreria");
-            dialog.setContentText("Nome:");
-
-            dialog.showAndWait().ifPresent(name -> {
-                if (!name.trim().isEmpty()) {
-                    boolean ok = root.getClient().addLibrary(name, username);
-                    if (ok) root.showLoggedSidebar(username);
-                }
-            });
-        });
         newLib.getStyleClass().add("default-label");
+        newLib.setStyle("-fx-padding: 10 20 5 20;");
 
-        this.getChildren().addAll(newLib);
+        // CHIAMA IL NUOVO OVERLAY INVECE DEL DIALOG
+        newLib.setOnMouseClicked(e -> showAddLibraryOverlay(root));
+
+        topContent.getChildren().add(newLib);
+    }
+
+    private void showAddLibraryOverlay(RootView root) {
+        // 1. Contenitore totale COMPLETAMENTE TRASPARENTE
+        StackPane overlay = new StackPane();
+        overlay.setStyle("-fx-background-color: rgba(0,0,0,0.2);");
+
+        // 2. Il pannello centrale (il box)
+        BorderPane overlayPanel = new BorderPane();
+        overlayPanel.getStyleClass().add("reglog-overlay-panel");
+
+        // Impostiamo sfondo e ombra direttamente per l'effetto "floating"
+        overlayPanel.setStyle(
+                "-fx-background-color: #f1ede5; " +
+                        "-fx-background-radius: 20; " +
+                        "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 20, 0, 0, 10);"
+        );
+
+        overlayPanel.setMaxWidth(335);
+        overlayPanel.setMaxHeight(215);
+
+        // Chiusura al click fuori (sullo StackPane trasparente)
+        overlay.setOnMouseClicked(e -> {
+            if (e.getTarget() == overlay) {
+                root.getMainContentContainer().getChildren().remove(overlay);
+            }
+        });
+
+        VBox content = new VBox(15);
+        content.setAlignment(Pos.CENTER);
+        content.setPadding(new Insets(30));
+
+        Label title = new Label("Nuova Libreria");
+        title.getStyleClass().add("reglog-title");
+
+        TextField libraryNameField = new TextField();
+        libraryNameField.getStyleClass().add("reglog-field");
+        libraryNameField.setPromptText("Nome della libreria...");
+
+        Label feedbackLabel = new Label();
+        feedbackLabel.setStyle("-fx-text-fill: #E21A1A; -fx-font-size: 11px;");
+
+        // Bottoni
+        Button createButton = new Button("Crea");
+        createButton.getStyleClass().add("reglog-primary-button");
+        createButton.setDefaultButton(true);
+
+        Button cancelButton = new Button("Annulla");
+        cancelButton.getStyleClass().add("reglog-secondary-button");
+
+        HBox buttons = new HBox(12, cancelButton, createButton);
+        buttons.setAlignment(Pos.CENTER);
+
+        // Azioni
+        cancelButton.setOnAction(e -> root.getMainContentContainer().getChildren().remove(overlay));
+        createButton.setOnAction(e -> {
+            String name = libraryNameField.getText().trim();
+            if (name.isEmpty()) {
+                feedbackLabel.setText("Inserisci un nome!");
+                return;
+            }
+            if (root.getClient().addLibrary(name, username)) {
+                root.showLoggedSidebar(username);
+                root.getMainContentContainer().getChildren().remove(overlay);
+            } else {
+                feedbackLabel.setText("Errore durante la creazione.");
+            }
+        });
+
+        content.getChildren().addAll(title, libraryNameField, feedbackLabel, buttons);
+        overlayPanel.setCenter(content);
+
+        overlay.getChildren().add(overlayPanel);
+        root.getMainContentContainer().getChildren().add(overlay);
+
+        libraryNameField.requestFocus();
     }
 }

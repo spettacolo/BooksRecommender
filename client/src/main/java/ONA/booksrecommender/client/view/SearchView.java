@@ -49,7 +49,7 @@ public class SearchView extends VBox {
         header.getStyleClass().add("home-header");
 
         Label titleLabel = new Label((query == null || query.isBlank()) ? "Risultati ricerca" : "Risultati per: " + query);
-        titleLabel.getStyleClass().add("search-title-label");
+        titleLabel.getStyleClass().add("header-title");
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
