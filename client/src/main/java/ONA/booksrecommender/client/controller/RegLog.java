@@ -100,7 +100,7 @@ public class RegLog {
             String u = usernameField.getText().trim();
             String p = passwordField.getText().trim();
             if (u.isEmpty() || p.isEmpty()) {
-                feedbackLabel.setText("Compila tutti i campi!");
+                feedbackLabel.setText("Compila tutti i campi");
                 return;
             }
             if (checkLogin(client, u, p)) {
@@ -178,11 +178,11 @@ public class RegLog {
             String email = emailField.getText().trim();
             String password = passwordField.getText().trim();
             if (nome.isEmpty() || cognome.isEmpty() || username.isEmpty() || cf.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                feedbackLabel.setText("Compila tutti i campi!");
+                feedbackLabel.setText("Compila tutti i campi");
                 return;
             }
             if (!signUp(client, username, nome, cognome, cf, email, password)) {
-                feedbackLabel.setText("Username già esistente!");
+                feedbackLabel.setText("Username già esistente");
                 return;
             }
             root.setUsername(username);

@@ -1,0 +1,697 @@
+    .root {
+        -fx-background-color: rgb(44,44,46);
+    }
+
+    .standard-font-fam {
+        -fx-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+        Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    }
+
+    .title-font {
+        -fx-font-family: "Georgia", "Times New Roman", serif;
+    }
+
+/* ===== ROOT ======================================== */
+    .main-content-container {
+        -fx-background-color: rgb(44,44,46);
+        -fx-padding: 0;
+        -fx-border-width: 0;
+        -fx-border-color: transparent;
+    }
+
+    .main-scroll-pane {
+        -fx-background: transparent;
+        -fx-background-color: transparent;
+        -fx-border-color: transparent;
+        -fx-background-insets: 0;
+        -fx-padding: 0;
+        -fx-focus-color: transparent;
+        -fx-faint-focus-color: transparent;
+        -fx-control-inner-background: transparent;
+    }
+
+/* ===== SIDEBAR ======================================== */
+    .sidebar {
+        -fx-background-color: rgb(44,44,46);
+    }
+
+    .default-label {
+        -fx-text-fill: #f2f2f7;
+        -fx-font-size: 14px;
+    }
+
+    .your-libraries-label {
+        -fx-text-fill: #f2f2f7;
+        -fx-font-weight: bold;
+    }
+/* ===== HOMEVIEW ======================================== */
+
+    .home-scroll-pane > .scroll-bar:vertical {
+        -fx-opacity: 0;
+        -fx-background-color: transparent;
+        -fx-padding: 0;
+    }
+
+    .home-scroll-pane {
+        -fx-background: transparent;
+        -fx-background-color: transparent;
+        -fx-border-color: transparent;
+        -fx-border-width: 0;
+        -fx-padding: 0;
+    }
+
+    .home-scroll-pane .viewport {
+        -fx-background-color: transparent;
+        -fx-border-color: transparent;
+        -fx-padding: 0;
+    }
+
+    .home-scroll-pane .content {
+        -fx-background-color: transparent;
+        -fx-border-color: transparent;
+    }
+
+    /* ===== HEADER PRINCIPALE ===== */
+    .home-header {
+        -fx-padding: 18 40 18 40;
+        -fx-background-color: rgb(44,44,46);
+    }
+
+    /* Titolo */
+    .header-title {
+        -fx-text-fill: #f2f2f7;
+        -fx-font-size: 22px;
+        -fx-font-weight: 700;
+        -fx-font-family: "Georgia", "Times New Roman", serif;
+    }
+
+    /* ===== SEZIONI PER GENERE ===== */
+    /* Stile per ogni sezione dei generi */
+    .genre-section {
+        -fx-background-color: linear-gradient(to bottom, rgb(72,72,74), rgb(44,44,46));
+        -fx-padding: 20 0 20 0;
+        -fx-spacing: 20;
+        -fx-fill-width: true;
+    }
+
+    /* Sottotitoli dei generi */
+    .genre-subtitle {
+        -fx-text-fill: #f0f0f0; /* testo chiaro */
+        -fx-font-size: 18px;
+        -fx-font-weight: bold;
+    }
+
+    /* ScrollPane dei libri trasparente */
+    .books-scroll {
+        -fx-background-color: transparent;
+        -fx-background: transparent;
+        -fx-border-color: transparent;
+        -fx-padding: 0;
+    }
+
+    /* Row dei libri */
+    .books-row {
+        -fx-background-color: transparent;
+    }
+
+    /* Cover dei libri */
+    .cover-container {
+        -fx-background-color: transparent;
+    }
+
+    /* Label generica dentro la sezione */
+    .genre-section Label {
+        -fx-text-fill: #f0f0f0;
+    }
+
+    /* ===== SCROLL ORIZZONTALE DEI LIBRI ===== */
+    .books-scroll {
+        -fx-background-color: transparent;
+        -fx-background-insets: 0;
+        -fx-padding: 6 0 6 0;
+    }
+
+    /* rende invisibili le scrollbar senza Java */
+    .books-scroll .scroll-bar {
+        -fx-opacity: 0;
+    }
+
+    /* ===== RIGA DELLE COVER ===== */
+    .books-row {
+        -fx-background-color: transparent;
+    }
+
+
+    .dark-home {
+        -fx-background-color: #1c1c1e;
+    }
+
+    /* libri senza testo sotto */
+    .book-card {
+        -fx-background-color: transparent;
+    }
+
+    .book-cover {
+        -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 12, 0.2, 0, 4);
+        -fx-background-radius: 12;
+    }
+    /* effetto hover sulle copertine */
+    .book-cover:hover {
+        -fx-opacity: 0.85;
+        -fx-scale-x: 1.02;
+        -fx-scale-y: 1.02;
+    }
+
+    /* ===== TESTI (TITOLI E SOTTOTITOLI) ===== */
+    .title {
+        -fx-text-fill: #f2f2f7;
+        -fx-font-size: 24px;
+        -fx-font-weight: 600;
+        -fx-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+            Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    }
+
+    .subtitle {
+        -fx-text-fill: #8e8e93;
+        -fx-font-size: 16px;
+        -fx-font-weight: 400;
+        -fx-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+            Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    }
+
+    /* ===== ETICHETTE DEI GENERI ===== */
+    .genre-label {
+        -fx-background-color: #3a3a3c;
+        -fx-text-fill: #f2f2f7;
+        -fx-padding: 4 12 4 12;
+        -fx-background-radius: 12;
+        -fx-font-size: 13px;
+        -fx-font-weight: 500;
+        -fx-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+            Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        -fx-cursor: hand;
+        -fx-user-select: none;
+    }
+
+    /* ===== BARRA DI RICERCA ===== */
+
+    /* Search Field minimal, trasparente, placeholder chiaro */
+    .search-field {
+        -fx-background-color: rgba(70,70,72,0.6); /* leggermente trasparente */
+        -fx-background-radius: 25px;
+        -fx-border-color: #8E8E93FF; /* bordo grigio chiaro */
+        -fx-border-radius: 25px;
+        -fx-border-width: 0.5px;
+        -fx-text-fill: #f2f2f7; /* testo chiaro */
+        -fx-prompt-text-fill: #c0c0c0; /* placeholder grigio chiaro */
+        -fx-font-size: 14px;
+        -fx-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+        Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    }
+
+    /* ===== OVERLAY DEI LIBRI ===== */
+    .book-overlay {
+        -fx-background-color: rgba(28, 28, 30, 0.95);
+        -fx-background-radius: 16;
+        -fx-padding: 24;
+        -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.7), 20, 0.3, 0, 8);
+        -fx-text-fill: #000000;
+        -fx-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+            Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    }
+
+    /* ===== PULSANTI +, -, X (CHIUSURA OVERLAY) ===== */
+    .button-plus, .button-minus, .button-close {
+        -fx-background-color: #3a3a3c;
+        -fx-text-fill: #f2f2f7;
+        -fx-font-size: 18px;
+        -fx-font-weight: 700;
+        -fx-background-radius: 50%;
+        -fx-min-width: 32px;
+        -fx-min-height: 32px;
+        -fx-max-width: 32px;
+        -fx-max-height: 32px;
+        -fx-alignment: center;
+        -fx-cursor: hand;
+        -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 6, 0.2, 0, 2);
+        -fx-padding: 0;
+        -fx-user-select: none;
+    }
+    .button-plus:hover, .button-minus:hover, .button-close:hover {
+        -fx-background-color: #000000;
+        -fx-text-fill: #1c1c1e;
+    }
+
+    /* ===== PROGRESS BAR DEI RATING ===== */
+    .rating-progress-bar {
+        -fx-background-color: #3a3a3c;
+        -fx-accent: #000000;
+        -fx-background-radius: 8;
+        -fx-pref-height: 12px;
+        -fx-border-radius: 8;
+        -fx-padding: 0;
+    }
+    .rating-progress-bar .bar {
+        -fx-background-color: #000000;
+        -fx-background-radius: 8;
+    }
+
+    /* ===== STELLE DI RATING ===== */
+    .rating-stars {
+        -fx-text-fill: #000000;
+        -fx-font-size: 16px;
+        -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 2, 0.1, 0, 1);
+        -fx-font-family: "Segoe UI Symbol", "Apple Symbols", "Arial Unicode MS", sans-serif;
+    }
+
+
+    /* ===========================
+       OVERLAY GENERALE
+       =========================== */
+
+    /* SFONDO SEMITRASPARENTE ESTERNO */
+    .reglog-dark-bg {
+        -fx-background-color: rgba(0, 0, 0, 0.2);
+    }
+
+    /* PANNELLO OVERLAY (vetro satinato) */
+    .reglog-panel {
+        -fx-background-color: rgb(241, 237, 229); /* sabbia fine satinata */
+        -fx-background-radius: 16;
+        -fx-border-color: #c6c6cc;
+        -fx-border-width: 0.5px;
+        -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.18), 14, 0, 0, 6);
+    }
+
+    /* FORM INTERNO */
+    .reglog-form {
+        -fx-background-color: transparent;
+    }
+
+    /* TEXTFIELD SOTTILI E MINIMAL */
+    .reglog-field {
+        -fx-background-color: rgba(255,255,255,0.75);
+        -fx-border-color: #c6c6cc;
+        -fx-border-radius: 12;
+        -fx-background-radius: 12;
+        -fx-text-fill: #1c1c1e;
+        -fx-prompt-text-fill: #8e8e93;
+        -fx-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+        Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        -fx-padding: 7 10;
+    }
+
+    /* TITOLO (font più “Apple”) */
+    .reglog-title {
+        -fx-font-size: 22px;
+        -fx-font-weight: 600;
+        -fx-text-fill: #1c1c1e;
+        -fx-font-family: "Georgia", "Times New Roman", serif;
+        -fx-font-weight: bold;
+    }
+
+    /* LINK */
+    .reglog-link {
+        -fx-text-fill: #6b6b70;
+    }
+
+    /* BOTTONE PRINCIPALE */
+    .reglog-primary-button {
+        -fx-background-color: #3a3a3c;
+        -fx-text-fill: #f2f2f7;
+        -fx-background-radius: 12;
+        -fx-padding: 8 18;
+    }
+
+    /* BOTTONE SECONDARIO */
+    .reglog-secondary-button {
+        -fx-background-color: #e5e5ea;
+        -fx-text-fill: #1c1c1e;
+        -fx-background-radius: 12;
+        -fx-padding: 8 18;
+    }
+
+    /* X DI CHIUSURA */
+    .reglog-close {
+        -fx-font-size: 16px;
+        -fx-text-fill: #1c1c1e;
+        -fx-cursor: hand;
+    }
+
+/* BOOK DETAILS ================ */
+    .book-details-text {
+        -fx-text-fill: #1c1c1e;
+    }
+
+    /* Il binario (lo sfondo totale della barra) */
+    .custom-progress-bar {
+        -fx-background-color: #8e8e93; /* Grigio molto scuro */
+        -fx-background-insets: 0;
+        -fx-background-radius: 5;
+        -fx-padding: 0;
+    }
+
+    /* La traccia interna (necessaria per alcuni temi) */
+    .custom-progress-bar .track {
+        -fx-background-color: transparent;
+    }
+
+    /* La parte che avanza (il progresso vero e proprio) */
+    .custom-progress-bar .bar {
+        -fx-background-color: #1c1c1e;
+        -fx-background-insets: 0;
+        -fx-background-radius: 5;
+    }
+
+/* SEARCHVIEW ================== */
+    /* SEARCHVIEW - DARK THEME COHERENCE */
+
+    .search-view-main {
+        -fx-background-color: rgb(44,44,46);
+    }
+
+    /* ScrollPane della ricerca deve essere trasparente come gli altri */
+    .search-scroll-pane {
+        -fx-background: transparent;
+        -fx-background-color: transparent;
+        -fx-border-color: transparent;
+        -fx-control-inner-background: transparent;
+    }
+
+    .results-container {
+        -fx-padding: 10 40 20 40;
+        -fx-spacing: 12;
+        -fx-background-color: transparent;
+    }
+
+    /* Tab labels coerenti con il font Apple della sidebar */
+    .tab-label {
+        -fx-cursor: hand;
+        -fx-font-size: 14px;
+        -fx-text-fill: #8e8e93; /* Grigio come i sottotitoli */
+        -fx-padding: 0 0 5 0;
+        -fx-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .tab-label-active {
+        -fx-text-fill: #f2f2f7; /* Bianco Apple */
+        -fx-font-weight: bold;
+        -fx-border-color: #f2f2f7;
+        -fx-border-width: 0 0 2 0;
+    }
+
+    .search-title-label {
+        -fx-text-fill: #f2f2f7;
+        -fx-font-size: 22px;
+        -fx-font-weight: 700;
+        -fx-font-family: "Georgia", serif; /* Coerente con header-title */
+    }
+
+    /* Vista autore - Anno */
+    .year-header-label {
+        -fx-font-weight: bold;
+        -fx-font-size: 16px;
+        -fx-text-fill: #f2f2f7;
+    }
+
+    .year-separator-line {
+        -fx-background-color: #3a3a3c; /* Separatore scuro ma visibile */
+        -fx-pref-height: 1;
+    }
+
+    /* Riga del libro coerente */
+    .book-row {
+        -fx-background-color: transparent;
+        -fx-border-color: rgba(142, 142, 147, 0.2); /* Bordo molto sottile e scuro */
+        -fx-border-width: 0 0 0.5 0;
+        -fx-padding: 12 15 12 15;
+        -fx-cursor: hand;
+        -fx-transition: 0.2s;
+    }
+
+    .book-row:hover {
+        -fx-background-color: rgba(255, 255, 255, 0.05); /* Leggero schiarimento */
+    }
+
+    .book-title {
+        -fx-text-fill: #f2f2f7;
+        -fx-font-weight: 600;
+        -fx-font-size: 15px;
+    }
+
+    .book-author {
+        -fx-text-fill: #8e8e93;
+        -fx-font-size: 13px;
+    }
+
+    /* Nasconde la scrollbar verticale */
+    .search-scroll-pane > .scroll-bar:vertical {
+        -fx-opacity: 0;
+        -fx-background-color: transparent;
+        -fx-padding: 0;
+        -fx-pref-width: 0;
+    }
+
+    .search-scroll-pane .scroll-bar .track,
+    .search-scroll-pane .scroll-bar .thumb {
+        -fx-background-color: transparent;
+    }
+
+    /*                          ======^.^=====                       */
+.context-menu .menu-item:focused {
+    -fx-background-color: #2c2c2e;
+}
+.context-menu .menu-item:focused .label {
+    -fx-text-fill: white;
+}
+
+    .library-context-menu {
+        -fx-background-color: rgba(242, 239, 232, 0.92);
+        -fx-background-radius: 12;
+        -fx-border-radius: 12;
+        -fx-border-color: #d1cdc1;
+        -fx-border-width: 1;
+        -fx-padding: 0, 0, 0, 1 ;
+        -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.12), 12, 0, 0, 4);
+    }
+
+    .library-context-menu .menu-item {
+        -fx-background-radius: 12;
+        -fx-background-color: transparent;
+        -fx-padding: 8 18;
+    }
+
+    .library-context-item {
+        -fx-background-radius: 12;
+        -fx-text-fill: #1c1c1e;
+        -fx-font-size: 14px;
+    }
+
+    .library-context-item:hover {
+        -fx-background-radius: 12;
+        -fx-background-color: rgba(28,28,30,0.06);
+    }
+
+    /* Titolo principale del libro */
+    .book-details-title {
+        font-size: 20px;
+        font-weight: bold;
+    }
+
+    /* Autore del libro */
+    .book-details-author {
+        font-size: 14px;
+    }
+
+    /* Editore e anno */
+    .book-details-publisher {
+        font-size: 14px;
+    }
+
+    /* Categoria */
+    .book-details-category {
+        font-size: 14px;
+    }
+
+    /* Label della media valutazioni (stelle e count) */
+    .book-details-rating-label {
+        font-size: 16px;
+    }
+
+    /* Contenitore principale dell'overlay */
+    .book-details-main-content {
+        -fx-background-color: rgb(241, 237, 229);
+    }
+
+    /* Titoli delle sezioni (es. Sinossi, Recensioni, Consigli) */
+    .book-details-section-title {
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    /* Descrizione del libro / sinossi */
+    .book-details-description {
+        -fx-wrap-text: true;
+    }
+
+    /* Separatore/divider */
+    .book-details-divider {
+        padding: 20px 0 10px 0;
+    }
+
+    /* Label quando non ci sono recensioni */
+    .book-details-no-reviews {
+        font-style: italic;
+    }
+
+    /* Label del valore medio valutazione */
+    .book-details-rating-value {
+        font-size: 48px;
+        font-weight: bold;
+    }
+
+    /* Label del testo "/5" accanto alla media */
+    .book-details-rating-over-five {
+        font-size: 14px;
+    }
+
+    /* Label del count delle valutazioni */
+    .book-details-rating-count {
+        font-size: 12px;
+    }
+
+    /* Stelle di una singola riga nella sezione recensioni */
+    .book-details-review-stars {
+        font-size: 14px;
+        color: #ff9500;
+    }
+
+    /* Barra di progresso della valutazione */
+    .book-details-rating-bar {
+        -fx-pref-height: 6px;
+    }
+
+    /* ScrollPane orizzontale per card recensioni */
+    .book-details-scroll {
+        -fx-background-color: transparent;
+        -fx-padding: 0;
+    }
+
+    /* Singola card recensione */
+    .book-details-review-card {
+        min-width: 300px;
+        max-width: 300px;
+        padding: 15px;
+        -fx-background-color: #2c2c2e;
+        -fx-background-radius: 15px;
+    }
+
+    /* Label con nome utente della recensione */
+    .book-details-review-title {
+        font-weight: bold;
+        font-size: 13px;
+        color: white;
+    }
+
+    /* Testo della recensione */
+    .book-details-review-note {
+        font-size: 14px;
+        color: #ebebeb;
+        -fx-line-spacing: 1.1;
+        max-height: 120px;
+    }
+
+    /* Bottone + per aggiungere consigli / recensioni */
+    .book-details-advice-button {
+        font-size: 22px;
+        cursor: hand;
+        font-weight: bold;
+    }
+
+    /* Label quando non ci sono consigli */
+    .book-details-no-advice {
+        font-style: italic;
+        color: gray;
+    }
+
+    /* Sfondo scuro semi-trasparente per overlay */
+    .book-details-dark-bg {
+        -fx-background-color: rgba(0,0,0,0.4);
+    }
+
+    /* Contenitore esterno overlay */
+    .book-details-overlay {
+        -fx-background-color: transparent;
+        -fx-padding: 50px;
+    }
+
+    /* Pannello centrale overlay */
+    .book-details-overlay-panel {
+        -fx-background-color: white;
+        -fx-background-radius: 14 14 0 0;
+        -fx-border-radius: 14 14 0 0;
+    }
+
+    /* Pulsante di invio recensione */
+    .book-details-review-submit {
+        -fx-background-color: #1c1c1e;
+        -fx-text-fill: white;
+        -fx-font-weight: bold;
+        -fx-background-radius: 12;
+        -fx-padding: 10 0;
+        -fx-font-size: 14px;
+    }
+
+    /* Pulsante annulla recensione */
+    .book-details-review-cancel {
+        -fx-background-color: transparent;
+        -fx-text-fill: #666;
+        -fx-font-size: 14px;
+    }
+
+    /* TextField valutazioni */
+    .book-details-textfield {
+        -fx-background-color: white;
+        -fx-text-fill: #1c1c1e;
+        -fx-background-radius: 8;
+        -fx-border-radius: 8;
+        -fx-border-color: #1c1c1e;
+        -fx-font-size: 14px;
+        -fx-font-weight: bold;
+    }
+
+    /* TextArea note recensione */
+    .book-details-textarea {
+        -fx-background-color: white;
+        -fx-control-inner-background: white;
+        -fx-background-radius: 12;
+        -fx-border-radius: 12;
+        -fx-border-color: #1c1c1e;
+        -fx-padding: 10;
+        -fx-font-size: 13px;
+    }
+
+    /* Label per conteggio caratteri nella TextArea */
+    .book-details-charcount {
+        font-size: 10px;
+        color: #666;
+    }
+
+    /* Generale per tutti i testi base */
+    .book-details-text {
+        font-family: 'System';
+    }
+
+    .starsLbl {
+        -fx-text-fill: #ff9500;
+        -fx-font-size: 14px;
+    }
+
+    .userLbl {
+        -fx-font-weight: bold; -fx-text-fill: white; -fx-font-size: 13px;
+    }
+
+    .book-details-card {
+        -fx-background-color: #2c2c2e;
+        -fx-background-radius: 15;
+    }
