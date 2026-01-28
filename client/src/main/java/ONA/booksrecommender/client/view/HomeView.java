@@ -19,6 +19,14 @@ public class HomeView extends VBox {
     private HBox searchBar;
     private StackPane overlayContainer;
 
+    /**
+     * Costruttore della vista Home.
+     * Inizializza il layout principale, configura il gestore delle ricerche e organizza
+     * la gerarchia visiva includendo la barra di ricerca nell'header e il contenitore
+     * per gli overlay dei dettagli libro.
+     *
+     * @param root Il riferimento alla {@link RootView} per accedere al client e alla gestione dei contenuti.
+     */
     public HomeView(RootView root) {
         this.client = root.getClient();
         this.setFillWidth(true);
@@ -43,6 +51,13 @@ public class HomeView extends VBox {
         this.getChildren().add(mainStack);
     }
 
+    /**
+     * Crea il contenitore principale scorrevole della Home.
+     * Genera l'header della pagina e inizializza le diverse sezioni (mensole) divise
+     * per genere letterario, inserendole in uno {@link ScrollPane}.
+     *
+     * @return Uno {@link ScrollPane} contenente l'intera struttura della Home.
+     */
     private ScrollPane createMainContent() {
         mainContent = new VBox();
         mainContent.setFillWidth(true);
@@ -75,7 +90,14 @@ public class HomeView extends VBox {
         return scrollPane;
     }
 
-    // Singola mensola orizzontale (titolo + riga di libri)
+    /**
+     * Crea una sezione dedicata a un genere specifico o ai libri più popolari.
+     * Ogni sezione include un titolo (sottotitolo della categoria) e una riga
+     * a scorrimento orizzontale contenente le copertine dei libri.
+     *
+     * @param genreName Il nome del genere da visualizzare (usa "none" per i più popolari).
+     * @return Un {@link VBox} che rappresenta la "mensola" del genere specificato.
+     */
     private VBox createGenreSection(String genreName) {
         VBox section = new VBox();
         section.getStyleClass().add("genre-section");
@@ -97,6 +119,16 @@ public class HomeView extends VBox {
         return section;
     }
 
+    /**
+     * Genera la riga orizzontale scorrevole dei libri per un determinato genere.
+     * Il caricamento dei dati avviene in modo asincrono tramite un {@link Task} per
+     * non bloccare il thread dell'interfaccia utente durante la comunicazione con il server.
+     * All'interno del task, ogni libro viene trasformato in una card cliccabile che
+     * apre l'overlay dei dettagli.
+     *
+     * @param genreName Il genere di cui recuperare i libri tramite il server.
+     * @return Uno {@link ScrollPane} configurato per lo scorrimento orizzontale dei libri.
+     */
     private ScrollPane createGenreBooksScroll(String genreName) {
         HBox row = new HBox(30);
         row.setAlignment(Pos.BOTTOM_CENTER);

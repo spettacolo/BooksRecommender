@@ -35,12 +35,30 @@ public class BookDetails {
 
     private final Client client = new Client();
 
+    /**
+     * Costruttore per la visualizzazione dei dettagli di un libro.
+     * Inizializza l'ID del libro e lo username dell'utente loggato, caricando
+     * immediatamente i dati dal server.
+     *
+     * @param bookId   L'identificativo univoco del libro.
+     * @param username Lo username dell'utente (può essere nullo se non loggato).
+     */
     public BookDetails(int bookId, String username) {
         this.bookId = bookId;
         this.username = username;
         loadBookDetails();
     }
 
+    /**
+     * Costruttore per la visualizzazione dei dettagli di un libro con riferimento all'area utente.
+     * Oltre a caricare i dati del libro, memorizza un riferimento alla {@link UserAreaView}
+     * per permettere l'aggiornamento dinamico dell'interfaccia (es. refresh delle sezioni)
+     * dopo l'aggiunta di recensioni o consigli.
+     *
+     * @param bookId   L'identificativo univoco del libro.
+     * @param username Lo username dell'utente loggato.
+     * @param userArea L'istanza della vista area utente da aggiornare in caso di modifiche.
+     */
     public BookDetails(int bookId, String username, UserAreaView userArea) {
         this.bookId = bookId;
         this.username = username;
@@ -48,6 +66,11 @@ public class BookDetails {
         loadBookDetails();
     }
 
+    /**
+     * Recupera le informazioni dettagliate del libro dal server.
+     * Esegue il parsing della risposta per popolare i campi relativi a titolo, autori,
+     * anno, editore, categoria, URL della copertina e decodifica la descrizione in Base64.
+     */
     private void loadBookDetails() {
         String response = client.send("get_book;id;" + bookId);
         if (response == null || response.startsWith("ERROR")) {
@@ -77,6 +100,13 @@ public class BookDetails {
         } else this.descrizione = "";
     }
 
+    /**
+     * Genera un'etichetta testuale contenente la media delle valutazioni espressa in stelle.
+     * Recupera tutte le recensioni del libro, calcola la media aritmetica dei voti
+     * e restituisce una stringa formata da caratteri "★" e "☆".
+     *
+     * @return Una {@link Label} con la rappresentazione visuale del rating.
+     */
     private Label buildRatingLabel() {
         String response = client.send("get_book_reviews;" + bookId);
         if (response == null || response.isEmpty()) return new Label("Nessuna recensione");
@@ -104,6 +134,14 @@ public class BookDetails {
         return label;
     }
 
+    /**
+     * Crea l'interfaccia grafica principale (overlay) per i dettagli del libro.
+     * Organizza le informazioni in sezioni: intestazione con controlli di aggiunta/rimozione,
+     * corpo centrale con copertina e sinossi, sezione recensioni con grafici a barre
+     * e sezione dei libri consigliati dagli altri utenti.
+     *
+     * @return Un componente {@link StackPane} pronto per essere aggiunto alla vista radice.
+     */
     public StackPane createOverlay() {
         final StackPane overlay = new StackPane();
         VBox content = new VBox(20);
@@ -544,7 +582,14 @@ public class BookDetails {
         return overlay;
     }
 
-    // Visualizzazione del menu per aggiungere o rimuovere il libro da una libreria
+    /**
+     * Visualizza un menu contestuale per gestire l'inserimento o la rimozione del libro
+     * dalle librerie personali dell'utente.
+     *
+     * @param anchor    Il componente grafico a cui agganciare il menu (solitamente i tasti + o -).
+     * @param libraries La lista di librerie disponibili per l'operazione.
+     * @param isAdd     {@code true} se il menu deve gestire l'aggiunta, {@code false} per la rimozione.
+     */
     private void showLibraryMenu(javafx.scene.Node anchor, List<AddRmBook.LibraryInfo> libraries, boolean isAdd) {
         ContextMenu contextMenu = new ContextMenu();
         contextMenu.getStyleClass().add("library-context-menu");
@@ -585,7 +630,14 @@ public class BookDetails {
         contextMenu.show(anchor, BOTTOM, xOffset, 8);
     }
 
-    // Popup per l’inserimento di una nuova recensione
+    /**
+     * Mostra un popup per l'inserimento di una nuova recensione.
+     * Permette all'utente di assegnare un voto (1-5) a cinque diverse categorie
+     * (Stile, Contenuto, Gradimento, Originalità, Edizione) e di scrivere una nota testuale.
+     * La nota viene codificata in Base64 prima dell'invio al server.
+     *
+     * @param parentOverlay Lo StackPane in cui iniettare il modulo di recensione.
+     */
     private void showReviewOverlay(StackPane parentOverlay) {
         StackPane reviewOverlay = new StackPane();
         reviewOverlay.setStyle("-fx-background-color: rgba(0,0,0,0.4);");

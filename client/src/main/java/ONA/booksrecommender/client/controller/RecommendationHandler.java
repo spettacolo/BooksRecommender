@@ -25,6 +25,18 @@ import java.util.stream.Collectors;
 
 public class RecommendationHandler {
 
+    /**
+     * Crea e visualizza un'interfaccia grafica (overlay) che permette all'utente di
+     * selezionare fino a 3 libri dalle proprie librerie da consigliare in associazione a un altro volume.
+     * Gestisce l'intero flusso: recupero dei libri dell'utente, selezione visiva,
+     * invio delle richieste al server e aggiornamento dell'interfaccia.
+     *
+     * @param bookId        L'ID del libro per il quale si stanno aggiungendo i consigli.
+     * @param username      Il nome utente del soggetto che effettua l'operazione.
+     * @param client        L'istanza del client per comunicare con il server.
+     * @param parentOverlay Lo StackPane radice su cui aggiungere l'overlay della selezione.
+     * @param userArea      L'istanza della vista dell'area utente per rinfrescare i dati al termine.
+     */
     public static void addRecommendation(int bookId, String username, Client client, StackPane parentOverlay, UserAreaView userArea) {
         // 1. Sfondo scuro semi-trasparente
         StackPane selectionOverlay = new StackPane();
@@ -133,6 +145,16 @@ public class RecommendationHandler {
         parentOverlay.getChildren().add(selectionOverlay);
     }
 
+    /**
+     * Crea una card grafica stilizzata per la visualizzazione di un libro all'interno del selettore.
+     * Gestisce il caricamento dell'immagine di copertina, gli effetti visivi e la logica
+     * di selezione (inclusa la limitazione a un massimo di 3 elementi).
+     *
+     * @param b           L'oggetto {@link Book} da rappresentare nella card.
+     * @param selectedIds Il set contenente gli ID dei libri attualmente selezionati.
+     * @param confirmBtn  Il pulsante di conferma da aggiornare in base allo stato della selezione.
+     * @return Un componente {@link StackPane} configurato con immagine e overlay di selezione.
+     */
     private static StackPane createStyledCard(Book b, Set<Integer> selectedIds, Button confirmBtn) {
         StackPane card = new StackPane();
         card.setPrefSize(100, 150);
@@ -194,6 +216,15 @@ public class RecommendationHandler {
         return card;
     }
 
+    /**
+     * Recupera l'elenco completo dei libri posseduti dall'utente interrogando il server.
+     * Il metodo analizza tutte le librerie dell'utente, estrae gli ID univoci e
+     * richiede i dettagli di ogni libro per creare una lista di oggetti {@link Book}.
+     *
+     * @param username Il nome utente di cui recuperare i libri.
+     * @param client   L'istanza del client per la comunicazione.
+     * @return Una {@link List} di oggetti {@link Book} presenti nelle librerie dell'utente.
+     */
     private static List<Book> fetchUserBooks(String username, Client client) {
         List<Book> books = new ArrayList<>();
         String libsResp = client.send("get_user_libraries;" + username);

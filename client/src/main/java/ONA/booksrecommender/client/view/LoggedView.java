@@ -12,6 +12,15 @@ public class LoggedView extends VBox {
 
     private String username;
 
+    /**
+     * Costruttore della vista laterale per l'utente autenticato.
+     * Configura il layout della sidebar, inizializza i link di navigazione rapida (Home),
+     * carica dinamicamente l'elenco delle librerie dell'utente e imposta il pannello
+     * del profilo in basso.
+     *
+     * @param root     Il riferimento alla {@link RootView} per la gestione della navigazione.
+     * @param username Lo username dell'utente loggato.
+     */
     public LoggedView(RootView root, String username) {
         this.username = username;
         this.setSpacing(10);
@@ -42,6 +51,14 @@ public class LoggedView extends VBox {
         this.getChildren().addAll(spacer, userBtn);
     }
 
+    /**
+     * Crea il pannello del profilo utente situato nella parte inferiore della sidebar.
+     * Include un'icona (avatar) e il nome dell'utente. Gestisce gli effetti visivi
+     * al passaggio del mouse e l'apertura dell'area utente al click.
+     *
+     * @param root La vista radice per attivare il cambio di sezione.
+     * @return Un {@link HBox} contenente gli elementi del profilo utente.
+     */
     private HBox createUserBox(RootView root) {
         HBox box = new HBox(12);
         box.setAlignment(Pos.CENTER_LEFT);
@@ -68,6 +85,15 @@ public class LoggedView extends VBox {
         return box;
     }
 
+    /**
+     * Recupera l'elenco delle librerie dell'utente dal server e le visualizza nella sidebar.
+     * Per ogni libreria, aggiunge un link di navigazione e un meccanismo di eliminazione
+     * "a conferma ritardata" (countdown di 5 secondi) attivabile tramite tasto destro.
+     * In coda all'elenco, aggiunge il pulsante per la creazione di una nuova libreria.
+     *
+     * @param root       La vista radice per aggiornare il contenuto principale o la sidebar.
+     * @param topContent Il contenitore verticale dove inserire le voci delle librerie.
+     */
     private void loadLibraries(RootView root, VBox topContent) {
         Client client = root.getClient();
         String risposta = client.send("get_user_libraries;" + username);
@@ -149,6 +175,13 @@ public class LoggedView extends VBox {
         topContent.getChildren().add(newLib);
     }
 
+    /**
+     * Visualizza un overlay grafico per la creazione di una nuova libreria.
+     * Presenta un modulo con campo di testo per il nome della libreria e gestisce
+     * l'invio della richiesta di creazione al server, aggiornando la sidebar in caso di successo.
+     *
+     * @param root La vista radice necessaria per aggiungere l'overlay al contenitore principale.
+     */
     private void showAddLibraryOverlay(RootView root) {
         StackPane overlay = new StackPane();
         overlay.setStyle("-fx-background-color: rgba(0,0,0,0.2);");

@@ -13,6 +13,15 @@ public class LibraryView extends StackPane {
 
     private StackPane overlayContainer;
 
+    /**
+     * Costruttore della vista Libreria.
+     * Inizializza il layout per visualizzare i libri contenuti in una specifica libreria dell'utente.
+     * Configura la barra di ricerca, recupera i dati della libreria dal server e popola
+     * una griglia dinamica (FlowPane) con le copertine dei libri.
+     *
+     * @param root L'istanza di {@link RootView} per l'accesso ai servizi globali e al client.
+     * @param lib  L'ID della libreria da caricare e visualizzare.
+     */
     public LibraryView(RootView root, String lib) {
         Client client = root.getClient();
 

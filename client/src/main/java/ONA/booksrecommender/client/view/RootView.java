@@ -18,6 +18,12 @@ public class RootView extends HBox {
     private static String username = "";
     private ScrollPane mainScrollPane;
 
+    /**
+     * Costruttore della vista radice dell'applicazione.
+     * Inizializza la struttura a due colonne: una sidebar fissa a sinistra e un contenitore
+     * dinamico per il contenuto principale a destra. Configura inoltre lo {@link ScrollPane}
+     * globale e imposta lo stato iniziale visualizzando la sidebar per utenti non loggati e la Home.
+     */
     public RootView() {
 
         this.setSpacing(0);
@@ -74,18 +80,35 @@ public class RootView extends HBox {
         showHome();
     }
 
+    /**
+     * Restituisce l'istanza del client utilizzata per le comunicazioni con il server.
+     *
+     * @return L'oggetto {@link Client} attivo.
+     */
     public Client getClient() {
         return client;
     }
 
+    /**
+     * Visualizza nella sidebar i controlli per gli utenti non autenticati (es. tasto Accedi/Registrati).
+     */
     public void showUnloggedSidebar() {
         sidebarContainer.getChildren().setAll(new UnLoggedView(this));
     }
 
+    /**
+     * Visualizza nella sidebar i controlli dedicati all'utente autenticato,
+     * come l'elenco delle librerie personali e il profilo.
+     *
+     * @param username Lo username dell'utente loggato.
+     */
     public void showLoggedSidebar(String username) {
         sidebarContainer.getChildren().setAll(new LoggedView(this, username));
     }
 
+    /**
+     * Carica e visualizza la {@link HomeView} nel contenitore principale dell'applicazione.
+     */
     public void showHome() {
         HomeView view = new HomeView(this);
         view.setMaxWidth(Double.MAX_VALUE);
@@ -94,11 +117,22 @@ public class RootView extends HBox {
         mainContentContainer.getChildren().setAll(view);
     }
 
+    /**
+     * Carica e visualizza l'area profilo dell'utente nel contenitore principale.
+     *
+     * @param username Lo username dell'utente di cui mostrare l'attività.
+     */
     public void showUserArea(String username) {
         UserAreaView view = new UserAreaView(this, username);
         mainContentContainer.getChildren().setAll(view);
     }
 
+    /**
+     * Visualizza i risultati di una ricerca di libri nel contenitore principale.
+     *
+     * @param query   La stringa cercata dall'utente.
+     * @param results La lista di oggetti {@link Book} trovati dal server.
+     */
     public void showSearchResults(String query, List<Book> results) {
         SearchView view = new SearchView(this, query, results);
         view.setMaxWidth(Double.MAX_VALUE);
@@ -107,6 +141,11 @@ public class RootView extends HBox {
         mainContentContainer.getChildren().setAll(view);
     }
 
+    /**
+     * Carica e visualizza il contenuto di una specifica libreria nel contenitore principale.
+     *
+     * @param lib L'identificativo (ID) della libreria da visualizzare.
+     */
     public void showLibrary(String lib) {
         LibraryView view = new LibraryView(this, lib);
 
@@ -118,16 +157,32 @@ public class RootView extends HBox {
         mainContentContainer.getChildren().setAll(view);
     }
 
+    /**
+     * Restituisce lo username dell'utente attualmente loggato nella sessione.
+     *
+     * @return Lo username come stringa, o una stringa vuota se non loggato.
+     */
     public static String getUsername() {
         System.out.println(username);
         return username;
     }
 
+    /**
+     * Imposta lo username dell'utente corrente per la sessione globale.
+     *
+     * @param username Il nome utente da memorizzare.
+     */
     public void setUsername(String username) {
         RootView.username = username;
         System.out.println("set username: " + username);
     }
 
+    /**
+     * Restituisce il contenitore {@link StackPane} principale dove vengono iniettate le diverse viste.
+     * Utilizzato dai controller per aggiungere overlay o popup sopra il contenuto corrente.
+     *
+     * @return Il contenitore principale del contenuto.
+     */
     public StackPane getMainContentContainer() {
         return mainContentContainer;
     }

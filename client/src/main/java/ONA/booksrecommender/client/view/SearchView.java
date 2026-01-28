@@ -29,6 +29,16 @@ public class SearchView extends VBox {
     private boolean isLoading = false;
     private String currentTab = "title";
 
+    /**
+     * Costruttore della vista di ricerca.
+     * Inizializza l'interfaccia per mostrare i risultati, configura l'header con la barra di ricerca,
+     * imposta i tab per il filtraggio (Titolo/Autore) e predispone lo scroll infinito
+     * per il caricamento dinamico di ulteriori risultati.
+     *
+     * @param root    Il riferimento alla {@link RootView} per la gestione globale e l'accesso al client.
+     * @param query   La stringa di ricerca iniziale.
+     * @param results La lista iniziale di oggetti {@link Book} restituiti dal server.
+     */
     public SearchView(RootView root, String query, List<Book> results) {
         this.root = root;
         this.currentQuery = query;
@@ -116,11 +126,20 @@ public class SearchView extends VBox {
         this.getChildren().add(mainStack);
     }
 
+    /**
+     * Aggiorna i risultati visualizzati in base alla query corrente e al tab selezionato.
+     * Viene invocato quando l'utente cambia il criterio di ricerca (es. da Titolo ad Autore).
+     */
     private void updateResults() {
         this.currentResults = searchHandler.searchBooks(currentQuery, currentTab, 0);
         renderView();
     }
 
+    /**
+     * Carica in modo asincrono un nuovo set di risultati dal server.
+     * Implementa la logica di paginazione: incrementa l'offset, richiede i libri successivi
+     * in un thread separato e aggiorna l'interfaccia grafica sul thread {@link Platform#runLater}.
+     */
     private void loadMoreResults() {
         isLoading = true;
         currentOffset += LIMIT;
@@ -138,6 +157,11 @@ public class SearchView extends VBox {
         }).start();
     }
 
+    /**
+     * Gestisce il rendering grafico della lista dei risultati nel contenitore principale.
+     * Se la lista è vuota mostra un messaggio informativo, altrimenti popola il box
+     * seguendo lo stile del tab attivo (lista semplice per titolo o raggruppata per autore).
+     */
     private void renderView() {
         resultsBox.getChildren().clear();
         if (currentResults.isEmpty()) {
@@ -154,6 +178,11 @@ public class SearchView extends VBox {
         }
     }
 
+    /**
+     * Esegue il rendering specifico per la ricerca per autore.
+     * Ordina i libri per anno di pubblicazione (dal più recente) e inserisce
+     * degli header visivi per separare i volumi prodotti in anni differenti.
+     */
     private void renderAutoreView() {
         currentResults.sort((b1, b2) -> Integer.compare(b2.getPublicationYear(), b1.getPublicationYear()));
         int lastYear = -1;
@@ -173,6 +202,14 @@ public class SearchView extends VBox {
         }
     }
 
+    /**
+     * Crea una riga grafica rappresentante un singolo libro.
+     * Include la miniatura della copertina, il titolo e gli autori. Configura inoltre
+     * l'evento di click per aprire l'overlay dei dettagli tramite {@link BookDetails}.
+     *
+     * @param b L'oggetto {@link Book} da visualizzare.
+     * @return Un {@link HBox} formattato come riga della lista risultati.
+     */
     private HBox createBookRow(Book b) {
         HBox row = new HBox(20);
         row.getStyleClass().add("book-row");
@@ -206,6 +243,16 @@ public class SearchView extends VBox {
         return row;
     }
 
+    /**
+     * Ripristina l'offset della paginazione a zero.
+     * Utile quando si avvia una nuova ricerca o si cambia tab.
+     */
     public void resetOffset() { this.currentOffset = 0; }
+
+    /**
+     * Aggiorna la query di ricerca corrente e resetta lo stato della paginazione.
+     *
+     * @param query La nuova stringa di ricerca.
+     */
     public void setCurrentQuery(String query) { this.currentQuery = query; resetOffset(); }
 }

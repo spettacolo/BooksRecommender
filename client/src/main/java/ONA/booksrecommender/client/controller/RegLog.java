@@ -16,6 +16,14 @@ public class RegLog {
     private RootView root;
     private Client client;
 
+    /**
+     * Inizializza e visualizza l'overlay grafico per l'autenticazione (Login/Registrazione).
+     * Configura lo sfondo oscurato, il pannello centrale con angoli arrotondati e
+     * gestisce il binding delle dimensioni rispetto al contenitore principale.
+     *
+     * @param rootPane Il contenitore radice della vista (deve essere istanza di {@link RootView}).
+     * @param client   L'istanza del client per le comunicazioni di rete.
+     */
     public void createOverlay(Pane rootPane, Client client) {
         if (!(rootPane instanceof RootView rv)) return;
         this.root = rv;
@@ -68,6 +76,11 @@ public class RegLog {
         showLoginFormInOverlay();
     }
 
+    /**
+     * Configura e mostra il modulo di login all'interno dell'overlay.
+     * Include i campi per username, password e la logica per validare le credenziali
+     * tramite il server e aggiornare lo stato dell'applicazione in caso di successo.
+     */
     public void showLoginFormInOverlay() {
         if (overlay == null) return;
         VBox content = new VBox(6);
@@ -135,6 +148,11 @@ public class RegLog {
         overlayPanel.setCenter(content);
     }
 
+    /**
+     * Configura e mostra il modulo di registrazione all'interno dell'overlay.
+     * Gestisce la raccolta dei dati anagrafici (nome, cognome, CF, email) e delle
+     * credenziali, effettuando la chiamata di registrazione al server.
+     */
     public void showSignUpFormInOverlay() {
         if (overlay == null) return;
         VBox content = new VBox(6);
@@ -218,6 +236,14 @@ public class RegLog {
         overlayPanel.setCenter(content);
     }
 
+    /**
+     * Invia una richiesta di login al server e ne analizza la risposta.
+     *
+     * @param client   L'istanza del client.
+     * @param username Lo username inserito dall'utente.
+     * @param password La password inserita dall'utente.
+     * @return {@code true} se le credenziali sono valide (codice di ritorno 0), {@code false} altrimenti.
+     */
     private boolean checkLogin(Client client, String username, String password) {
         String risposta = client.send("login;" + username + ";" + password);
         if (risposta == null || !risposta.contains(";")) return false;
@@ -225,6 +251,18 @@ public class RegLog {
         return parts.length >= 2 && parts[1].trim().equals("0");
     }
 
+    /**
+     * Invia una richiesta di registrazione nuovo utente al server.
+     *
+     * @param client   L'istanza del client.
+     * @param username Lo username scelto.
+     * @param name     Il nome dell'utente.
+     * @param surname  Il cognome dell'utente.
+     * @param taxId    Il codice fiscale dell'utente.
+     * @param email    L'indirizzo email dell'utente.
+     * @param password La password scelta.
+     * @return {@code true} se la registrazione ha avuto successo (risposta OK), {@code false} se l'utente esiste già o in caso di errore.
+     */
     private boolean signUp(Client client, String username, String name, String surname, String taxId, String email, String password) {
         String comando = "sign_up;" + username + ";" + name + ";" + surname + ";" + taxId + ";" + email + ";" + password;
         String risposta = client.send(comando);

@@ -3,6 +3,20 @@ package ONA.booksrecommender.server;
 import java.util.Scanner;
 
 public class App {
+    /**
+     * Punto di ingresso principale dell'applicazione Server.
+     * Gestisce un'interfaccia a riga di comando (CLI) che permette all'amministratore di:
+     * <ul>
+     * <li>Avviare il server in un thread dedicato.</li>
+     * <li>Fermare il server in modo pulito (graceful shutdown).</li>
+     * <li>Uscire dall'applicazione garantendo la chiusura delle risorse pendenti.</li>
+     * </ul>
+     * * Il metodo utilizza un ciclo di controllo basato su {@link Scanner} per interpretare
+     * i comandi dell'utente e monitora lo stato del thread del server per evitare
+     * avvii multipli o tentativi di arresto di un servizio non attivo.
+     *
+     * @param args Argomenti passati da riga di comando (non utilizzati).
+     */
     public static void main(String[] args) {
         Server server = new Server();
         Thread serverThread = null;

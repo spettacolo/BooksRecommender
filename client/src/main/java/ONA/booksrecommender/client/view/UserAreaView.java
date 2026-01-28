@@ -31,6 +31,14 @@ public class UserAreaView extends VBox {
     private String[] userParts;
     private String currentTab = "activity";
 
+    /**
+     * Costruttore della vista Area Utente.
+     * Inizializza il profilo recuperando i dati anagrafici dal server e configura
+     * il layout principale basato su tab per navigare tra attività e informazioni.
+     *
+     * @param root     Il riferimento alla {@link RootView} per la gestione globale.
+     * @param username Lo username dell'utente loggato di cui mostrare il profilo.
+     */
     public UserAreaView(RootView root, String username) {
         this.root = root;
         this.username = username;
@@ -46,6 +54,11 @@ public class UserAreaView extends VBox {
         setupUI();
     }
 
+    /**
+     * Configura l'interfaccia grafica iniziale dell'area utente.
+     * Crea l'header di benvenuto, il menu a tab (Attività/Info) e il contenitore
+     * dinamico per il caricamento dei contenuti specifici delle sezioni.
+     */
     private void setupUI() {
         HBox header = new HBox();
         header.getStyleClass().add("home-header");
@@ -82,6 +95,15 @@ public class UserAreaView extends VBox {
         showActivitySection();
     }
 
+    /**
+     * Gestisce il cambio di visualizzazione tra i diversi tab del profilo.
+     * Aggiorna gli stili grafici delle etichette per riflettere lo stato attivo
+     * e richiama i metodi di popolamento del contenuto dinamico.
+     *
+     * @param tab      Il nome del tab da attivare ("activity" o "info").
+     * @param active   L'etichetta del tab cliccato.
+     * @param inactive L'etichetta del tab da disattivare.
+     */
     private void switchTab(String tab, Label active, Label inactive) {
         if (currentTab.equals(tab)) return;
         currentTab = tab;
@@ -90,6 +112,11 @@ public class UserAreaView extends VBox {
         if (tab.equals("activity")) showActivitySection(); else showInfoSection();
     }
 
+    /**
+     * Carica e visualizza la sezione dedicata all'attività dell'utente.
+     * Recupera dal server l'elenco delle recensioni scritte e dei consigli forniti,
+     * generando per ciascun libro una "SuperCard" interattiva.
+     */
     public void showActivitySection() {
         dynamicContent.getChildren().clear();
         String rispostaRecensioni = root.getClient().send("get_user_reviews;" + username);
@@ -134,6 +161,22 @@ public class UserAreaView extends VBox {
         dynamicContent.getChildren().add(flowPane);
     }
 
+    /**
+     * Crea una card complessa che riassume l'attività dell'utente su un singolo libro.
+     * La card include:
+     * <ul>
+     * <li>Dettagli del libro (copertina, titolo).</li>
+     * <li>Valutazione e commento dell'utente (decodificato da Base64).</li>
+     * <li>Elenco dei libri consigliati dall'utente per quel volume.</li>
+     * <li>Controlli di eliminazione con sistema di countdown (5 secondi) per recensioni e singoli consigli.</li>
+     * </ul>
+     *
+     * @param mainId       L'ID del libro recensito.
+     * @param score        Il voto assegnato dall'utente.
+     * @param note         Il testo della recensione (già decodificato).
+     * @param suggestedIds Lista di ID dei libri consigliati in associazione.
+     * @return Un {@link StackPane} contenente la card e i relativi overlay di eliminazione.
+     */
     private StackPane createSuperCard(String mainId, String score, String note, List<String> suggestedIds) {
         String mainBookData = root.getClient().send("get_book;id;" + mainId);
         String[] b = mainBookData.split(";");
@@ -307,12 +350,23 @@ public class UserAreaView extends VBox {
 
         return rootCard;
     }
+
+    /**
+     * Apre l'overlay dei dettagli di un libro partendo dal suo identificativo.
+     *
+     * @param id L'identificativo numerico del libro da visualizzare.
+     */
     private void openBookDetails(int id) {
         BookDetails details = new BookDetails(id, username);
         StackPane overlay = details.createOverlay();
         Platform.runLater(() -> root.getMainContentContainer().getChildren().add(overlay));
     }
 
+    /**
+     * Carica e visualizza la sezione delle informazioni personali.
+     * Mostra i dati anagrafici dell'utente recuperati durante l'inizializzazione
+     * e fornisce l'opzione di logout per terminare la sessione corrente.
+     */
     private void showInfoSection() {
         dynamicContent.getChildren().clear();
         VBox infoContainer = new VBox(15);
@@ -332,6 +386,14 @@ public class UserAreaView extends VBox {
         dynamicContent.getChildren().addAll(infoContainer, logout);
     }
 
+    /**
+     * Crea una riga formattata per la visualizzazione di una coppia etichetta-valore
+     * all'interno della sezione informazioni.
+     *
+     * @param label L'etichetta del campo (es. "Email").
+     * @param value Il valore corrispondente recuperato dal profilo.
+     * @return Un {@link HBox} contenente le informazioni stilizzate.
+     */
     private HBox createInfoRow(String label, String value) {
         HBox row = new HBox(15);
         Label lbl = new Label(label + ":");

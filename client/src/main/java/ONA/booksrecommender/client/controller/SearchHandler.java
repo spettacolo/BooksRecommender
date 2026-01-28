@@ -19,10 +19,25 @@ public class SearchHandler {
 
     private Client client;
 
+    /**
+     * Costruttore della classe SearchHandler.
+     * Inizializza il gestore delle ricerche con il client necessario per la comunicazione con il server.
+     *
+     * @param client L'istanza del {@link Client} per inviare le query di ricerca.
+     */
     public SearchHandler(Client client) {
         this.client = client;
     }
 
+    /**
+     * Crea e configura graficamente la barra di ricerca.
+     * Il metodo imposta il campo di testo, il prompt e definisce l'azione di ricerca:
+     * al tasto "Invio", sincronizza la query con la vista esistente, interroga il server
+     * e visualizza i risultati nella {@link RootView}.
+     *
+     * @param root La vista radice dell'applicazione necessaria per aggiornare il contenuto principale.
+     * @return Un componente {@link HBox} contenente il campo di ricerca configurato.
+     */
     public HBox createSearchBar(RootView root) {
         HBox searchBar = new HBox(10);
         searchBar.setAlignment(Pos.CENTER_RIGHT);
@@ -46,6 +61,14 @@ public class SearchHandler {
         return searchBar;
     }
 
+    /**
+     * Sincronizza la stringa di ricerca con la visualizzazione attuale dei risultati, se presente.
+     * Naviga nella gerarchia dei nodi della {@link RootView} per individuare un'istanza di
+     * {@link SearchView} e ne aggiorna i parametri di query e offset per una nuova ricerca pulita.
+     *
+     * @param root  La vista radice da cui partire per la ricerca del nodo.
+     * @param query La nuova stringa di ricerca da sincronizzare.
+     */
     private void syncQueryWithExistingView(RootView root, String query) {
         Object mainContent = root.getMainContentContainer();
 
@@ -63,6 +86,16 @@ public class SearchHandler {
         }
     }
 
+    /**
+     * Esegue la ricerca effettiva dei libri inviando una richiesta al server e parsando la risposta.
+     * Gestisce la paginazione tramite l'offset e trasforma la stringa CSV/pipe-separated
+     * ricevuta dal server in una lista di oggetti {@link Book}.
+     *
+     * @param query  La stringa da cercare.
+     * @param type   Il tipo di ricerca (es. "title", "author").
+     * @param offset Il punto di inizio per la paginazione dei risultati.
+     * @return Una {@link List} di oggetti {@link Book} corrispondenti ai criteri di ricerca.
+     */
     public List<Book> searchBooks(String query, String type, int offset) {
         List<Book> results = new ArrayList<>();
         if (query == null || query.isBlank()) return results;

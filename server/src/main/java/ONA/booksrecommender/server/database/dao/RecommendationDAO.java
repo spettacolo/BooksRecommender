@@ -14,10 +14,26 @@ import java.util.HashMap;
 
 public class RecommendationDAO extends BaseDAO implements AutoCloseable {
 
+    /**
+     * Costruttore della classe RecommendationDAO.
+     * Inizializza l'accesso ai dati per i consigli tra libri.
+     *
+     * @param logger     L'istanza di {@link Logger} per registrare le operazioni batch e gli errori.
+     * @param connection La connessione attiva al database PostgreSQL.
+     */
     public RecommendationDAO(Logger logger, Connection connection) {
         super(logger, connection);
     }
 
+    /**
+     * Recupera tutti i consigli associati a un libro specifico.
+     * Poiché il database memorizza ogni abbinamento come riga singola, il metodo raggruppa
+     * i risultati per utente utilizzando una {@link Map}, restituendo una lista di oggetti
+     * {@link Recommendation} dove ogni oggetto contiene tutti i libri suggeriti da un singolo utente.
+     *
+     * @param bookId L'identificativo del libro "sorgente" per il quale cercare i consigli.
+     * @return Una lista di oggetti {@link Recommendation}.
+     */
     public List<Recommendation> getRecommendations(int bookId) {
         String query = "SELECT username, book_id, book_recommended_id FROM recommendations WHERE book_id = ?";
 
@@ -57,6 +73,14 @@ public class RecommendationDAO extends BaseDAO implements AutoCloseable {
         return result;
     }
 
+    /**
+     * Recupera tutti i consigli creati da uno specifico utente.
+     * I risultati vengono raggruppati per "libro sorgente", permettendo di vedere, per ogni libro
+     * recensito dall'utente, quali altri volumi ha suggerito in associazione ad esso.
+     *
+     * @param senderUsername Lo username dell'utente che ha creato i consigli.
+     * @return Una lista di raccomandazioni raggruppate per libro sorgente.
+     */
     public List<Recommendation> getRecommendationsMadeBy(String senderUsername) {
         String query = "SELECT username, book_id, book_recommended_id FROM recommendations WHERE username = ?";
         Map<String, List<String>> groupedRecs = new HashMap<>();
@@ -82,6 +106,15 @@ public class RecommendationDAO extends BaseDAO implements AutoCloseable {
         return result;
     }
 
+    /**
+     * Salva un set di consigli nel database utilizzando una transazione batch.
+     * Per ottimizzare le prestazioni e garantire l'atomicità, tutti i libri suggeriti
+     * nell'oggetto {@link Recommendation} vengono inseriti in un'unica operazione batch.
+     * In caso di errore durante l'inserimento di uno dei record, viene eseguito il rollback.
+     *
+     * @param rec L'oggetto {@link Recommendation} contenente l'utente, il libro sorgente e la lista di suggeriti.
+     * @return {@code true} se l'operazione batch è stata completata con successo, {@code false} altrimenti.
+     */
     public boolean addRecommendation(Recommendation rec) {
         String query = "INSERT INTO recommendations (username, book_id, book_recommended_id) VALUES (?, ?, ?)";
 
@@ -106,7 +139,14 @@ public class RecommendationDAO extends BaseDAO implements AutoCloseable {
             try { connection.setAutoCommit(true); } catch (SQLException e) {}
         }
     }
-    
+
+    /**
+     * Rimuove tutti i consigli creati da un utente per un determinato libro sorgente.
+     *
+     * @param username Lo username dell'utente.
+     * @param bookId   L'ID del libro sorgente.
+     * @return {@code true} se almeno un consiglio è stato rimosso, {@code false} altrimenti.
+     */
     public boolean removeRecommendations(String username, String bookId) {
         String query = "DELETE FROM recommendations WHERE username = ? AND book_id = ?";
 

@@ -18,6 +18,13 @@ import java.util.stream.Collectors;
 import java.util.Base64;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Implementazione del pattern Facade per la gestione delle richieste dei client.
+ * Questa classe funge da punto di smistamento centrale: interpreta i messaggi di testo
+ * ricevuti tramite socket, estrae i parametri e delega l'esecuzione delle operazioni
+ * ai rispettivi DAO (Data Access Objects). Si occupa inoltre della serializzazione
+ * dei risultati in stringhe compatibili con il protocollo di comunicazione del sistema.
+ */
 public class ServerFacade {
     private static final String SEPARATOR = ";";
     private static final String ERROR_MESSAGE = "ERROR" + SEPARATOR + "missing_params";
@@ -30,6 +37,12 @@ public class ServerFacade {
     private final RatingDAO ratingDAO;
     private final RecommendationDAO recommendationDAO;
 
+    /**
+     * Costruttore della classe. Inizializza i riferimenti ai DAO necessari
+     * recuperandoli dall'istanza del database fornita.
+     * * @param logger   L'istanza di {@link Logger} per tracciare le richieste elaborate.
+     * @param database L'istanza di {@link Database} da cui ottenere i DAO.
+     */
     public ServerFacade(Logger logger, Database database) {
         this.logger = logger;
         this.database = database;
@@ -41,6 +54,13 @@ public class ServerFacade {
         this.recommendationDAO = database.getDAO(RecommendationDAO.class);
     }
 
+    /**
+     * Metodo di utilità per serializzare una lista di raccomandazioni in un formato stringa.
+     * Il formato risultante utilizza delimitatori specifici per separare gli ID dei libri
+     * consigliati e le diverse raccomandazioni.
+     * * @param list La lista di oggetti {@link Recommendation} da formattare.
+     * @return Una stringa formattata pronta per la trasmissione via socket.
+     */
     private String formatRecommendationList(List<Recommendation> list) {
         StringBuilder sb = new StringBuilder();
         for (Recommendation rec : list) {
@@ -50,6 +70,15 @@ public class ServerFacade {
         return sb.toString();
     }
 
+    /**
+     * Metodo principale di elaborazione delle richieste.
+     * Analizza il comando contenuto nella stringa {@code req} (basata sul delimitatore SEPARATOR)
+     * ed esegue l'azione corrispondente (login, ricerca libri, gestione librerie, recensioni, ecc.).
+     * Gestisce inoltre la codifica Base64 per i campi testuali che potrebbero contenere
+     * caratteri speciali, garantendo l'integrità del protocollo.
+     * * @param req La stringa grezza ricevuta dal client.
+     * @return La stringa di risposta da inviare al client, contenente i dati richiesti o un codice di errore.
+     */
     public String handleRequest(String req) {
         String[] parts = req.split(SEPARATOR);
         try {
