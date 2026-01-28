@@ -18,16 +18,7 @@ public class RecommendationDAO extends BaseDAO implements AutoCloseable {
         super(logger, connection);
     }
 
-    /**
-     * Recupera tutte le raccomandazioni per un utente.
-     * Aggrega i book_recommended_id trovati nel DB per lo stesso book_id.
-     */
-    /**
-     * Recupera le raccomandazioni per un determinato libro.
-     * Restituisce una lista di oggetti Recommendation, raggruppati per l'utente che le ha ricevute.
-     */
     public List<Recommendation> getRecommendations(int bookId) {
-        // Aggiungiamo 'username' alla SELECT per sapere a chi appartiene la raccomandazione
         String query = "SELECT username, book_id, book_recommended_id FROM recommendations WHERE book_id = ?";
 
         // Mappa: Key = Username, Value = Lista di ID dei libri consigliati
@@ -56,11 +47,9 @@ public class RecommendationDAO extends BaseDAO implements AutoCloseable {
             List<String> recIds = entry.getValue();
 
             try {
-                // Ora passiamo correttamente l'utente recuperato dal DB
                 result.add(new Recommendation(targetUser, bookIdStr, recIds));
             } catch (IllegalArgumentException e) {
                 logger.log("Warning: found " + recIds.size() + " recommendations for user " + targetUser + " on book " + bookIdStr);
-                // Fallback: limitiamo a 3 consigli come richiesto dalla logica del tuo oggetto Recommendation
                 List<String> subList = recIds.subList(0, Math.min(recIds.size(), 3));
                 result.add(new Recommendation(targetUser, bookIdStr, subList));
             }
@@ -69,7 +58,6 @@ public class RecommendationDAO extends BaseDAO implements AutoCloseable {
     }
 
     public List<Recommendation> getRecommendationsMadeBy(String senderUsername) {
-        // Nota: Questa query assume che tu abbia aggiunto la colonna 'sender_username' nella tabella recommendations
         String query = "SELECT username, book_id, book_recommended_id FROM recommendations WHERE username = ?";
         Map<String, List<String>> groupedRecs = new HashMap<>();
 
@@ -77,7 +65,7 @@ public class RecommendationDAO extends BaseDAO implements AutoCloseable {
             stmt.setString(1, senderUsername);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    // Qui l'utente 'username' è il destinatario, 'senderUsername' è chi ha creato il consiglio
+                    // L'utente 'username' è il destinatario, 'senderUsername' è chi ha creato il consiglio
                     String bookId = String.valueOf(rs.getInt("book_id"));
                     String recId = String.valueOf(rs.getInt("book_recommended_id"));
                     groupedRecs.computeIfAbsent(bookId, k -> new ArrayList<>()).add(recId);
@@ -94,38 +82,31 @@ public class RecommendationDAO extends BaseDAO implements AutoCloseable {
         return result;
     }
 
-    /**
-     * Aggiunge una raccomandazione. Dato che l'oggetto Recommendation può contenere più ID,
-     * eseguiamo un inserimento per ogni libro consigliato.
-     */
     public boolean addRecommendation(Recommendation rec) {
         String query = "INSERT INTO recommendations (username, book_id, book_recommended_id) VALUES (?, ?, ?)";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            connection.setAutoCommit(false); // Usiamo una transazione per sicurezza
+            connection.setAutoCommit(false);
 
             for (String recId : rec.getRecommendedBookIds()) {
                 stmt.setString(1, rec.getUserId());
                 stmt.setInt(2, Integer.parseInt(rec.getBookId()));
                 stmt.setInt(3, Integer.parseInt(recId));
-                stmt.addBatch(); // Ottimizza l'inserimento multiplo
+                stmt.addBatch();
             }
 
             int[] rows = stmt.executeBatch();
             connection.commit();
             return rows.length > 0;
         } catch (SQLException e) {
-            try { connection.rollback(); } catch (SQLException ex) { /* ignore */ }
+            try { connection.rollback(); } catch (SQLException ex) {}
             logger.log("Error adding recommendation batch: " + e.getMessage());
             return false;
         } finally {
-            try { connection.setAutoCommit(true); } catch (SQLException e) { /* ignore */ }
+            try { connection.setAutoCommit(true); } catch (SQLException e) {}
         }
     }
-
-    /**
-     * Rimuove tutte le raccomandazioni per un determinato libro letto da un utente.
-     */
+    
     public boolean removeRecommendations(String username, String bookId) {
         String query = "DELETE FROM recommendations WHERE username = ? AND book_id = ?";
 

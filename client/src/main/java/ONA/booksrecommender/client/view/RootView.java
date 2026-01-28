@@ -23,14 +23,14 @@ public class RootView extends HBox {
         this.setSpacing(0);
         this.setStyle("-fx-background-color: rgb(44,44,46); -fx-padding: 0; -fx-border-width: 0;");
 
-        // Sidebar: fissa
+        // Sidebar
         sidebarContainer.setPrefWidth(200);
         sidebarContainer.setMinWidth(200);
         sidebarContainer.setMaxWidth(200);
         sidebarContainer.setStyle("-fx-padding: 30 10 10 10;");
         sidebarContainer.getStyleClass().add("sidebar");
 
-        // MAIN CONTENT: deve espandersi
+        // MAIN CONTENT
         mainContentContainer.setMinWidth(0);
         mainContentContainer.setPrefWidth(Double.MAX_VALUE);
         mainContentContainer.prefWidthProperty().bind(this.widthProperty().subtract(sidebarContainer.widthProperty()));
@@ -57,7 +57,6 @@ public class RootView extends HBox {
         HBox.setHgrow(mainScrollPane, Priority.ALWAYS);
         VBox.setVgrow(mainScrollPane, Priority.ALWAYS);
 
-        // Initialize searchBar once
         searchBar = searchHandler.createSearchBar(this);
 
         VBox rightContainer = new VBox();
@@ -111,7 +110,6 @@ public class RootView extends HBox {
     public void showLibrary(String lib) {
         LibraryView view = new LibraryView(this, lib);
 
-        // 1. Assicurati che la view possa espandersi all'infinito
         view.setMaxWidth(Double.MAX_VALUE);
         view.setMaxHeight(Double.MAX_VALUE);
         VBox.setVgrow(view, Priority.ALWAYS);

@@ -15,12 +15,10 @@ public class LoggedView extends VBox {
     public LoggedView(RootView root, String username) {
         this.username = username;
         this.setSpacing(10);
-        this.setPadding(new Insets(10)); // Padding generale sidebar
+        this.setPadding(new Insets(10));
 
-        // Forza la VBox a occupare tutta l'altezza
         VBox.setVgrow(this, Priority.ALWAYS);
 
-        // 1. CREIAMO IL CONTENITORE SUPERIORE
         VBox topContent = new VBox(5);
 
         Label home = new Label("Home");
@@ -34,14 +32,11 @@ public class LoggedView extends VBox {
         topContent.getChildren().addAll(home, yourLibraries);
         this.getChildren().add(topContent);
 
-        // 2. CHIAMATA CORRETTA: passiamo anche topContent
         loadLibraries(root, topContent);
 
-        // 3. SPACER
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
 
-        // 4. BOTTONE UTENTE STILIZZATO
         HBox userBtn = createUserBox(root);
 
         this.getChildren().addAll(spacer, userBtn);
@@ -53,15 +48,12 @@ public class LoggedView extends VBox {
         box.setPadding(new Insets(10));
         box.setCursor(javafx.scene.Cursor.HAND);
 
-        // Stile "Pillola" scura
         box.setStyle("-fx-background-color: #3a3a3c; -fx-background-radius: 15;");
 
-        // Hover effect
         box.setOnMouseEntered(e -> box.setStyle("-fx-background-color: #48484a; -fx-background-radius: 15;"));
         box.setOnMouseExited(e -> box.setStyle("-fx-background-color: #3a3a3c; -fx-background-radius: 15;"));
         box.setOnMouseClicked(e -> root.showUserArea(username));
 
-        // Avatar con icona 👤
         StackPane avatar = new StackPane();
         javafx.scene.shape.Circle circle = new javafx.scene.shape.Circle(16, Color.web("#8e8e93"));
         Label userIcon = new Label("👤");
@@ -80,7 +72,6 @@ public class LoggedView extends VBox {
         Client client = root.getClient();
         String risposta = client.send("get_user_libraries;" + username);
 
-        // Se la risposta è valida e non è un messaggio di "nessuna libreria"
         if (risposta != null && !risposta.isBlank() && !risposta.contains("ERROR") && !risposta.equals("NO_LIBRARIES")) {
             String[] libs = risposta.split(",");
 
@@ -92,13 +83,11 @@ public class LoggedView extends VBox {
                 libRow.setAlignment(Pos.CENTER_LEFT);
                 libRow.setPadding(new Insets(5, 10, 5, 20)); // Padding ridotto per far stare la X
 
-                // Label Nome Libreria
                 Label libLabel = new Label((dati.trim()).split(";")[1]);
                 libLabel.getStyleClass().add("default-label");
                 libLabel.setMaxWidth(Double.MAX_VALUE);
                 HBox.setHgrow(libLabel, Priority.ALWAYS);
 
-                // CORRETTO: mostra la libreria specifica, non la Home
                 libLabel.setOnMouseClicked(e -> root.showLibrary(lib));
 
                 // --- TASTO ELIMINA / ANNULLA ---
@@ -112,7 +101,7 @@ public class LoggedView extends VBox {
                 actionBtn.setStyle("-fx-background-color: rgba(255, 59, 48, 0.1); -fx-background-radius: 8;");
                 actionBtn.getChildren().add(btnText);
 
-                // LOGICA COUNTDOWN
+                // COUNTDOWN
                 javafx.animation.Timeline countdown = new javafx.animation.Timeline();
                 final int[] secondsLeft = {5};
 
@@ -123,7 +112,7 @@ public class LoggedView extends VBox {
                     } else {
                         countdown.stop();
                         client.send("remove_library;" + lib);
-                        root.showLoggedSidebar(username); // Refresh sidebar
+                        root.showLoggedSidebar(username);
                     }
                 }));
                 countdown.setCycleCount(5);
@@ -138,7 +127,7 @@ public class LoggedView extends VBox {
                         btnText.setText("Annulla (5)");
                         countdown.play();
                     }
-                    e.consume(); // Importante: non deve scatenare il click sulla libreria
+                    e.consume();
                 });
 
                 // TASTO DESTRO -> MOSTRA X
@@ -161,15 +150,12 @@ public class LoggedView extends VBox {
     }
 
     private void showAddLibraryOverlay(RootView root) {
-        // 1. Contenitore totale COMPLETAMENTE TRASPARENTE
         StackPane overlay = new StackPane();
         overlay.setStyle("-fx-background-color: rgba(0,0,0,0.2);");
 
-        // 2. Il pannello centrale (il box)
         BorderPane overlayPanel = new BorderPane();
         overlayPanel.getStyleClass().add("reglog-overlay-panel");
 
-        // Impostiamo sfondo e ombra direttamente per l'effetto "floating"
         overlayPanel.setStyle(
                 "-fx-background-color: #f1ede5; " +
                         "-fx-background-radius: 20; " +
@@ -179,7 +165,6 @@ public class LoggedView extends VBox {
         overlayPanel.setMaxWidth(335);
         overlayPanel.setMaxHeight(215);
 
-        // Chiusura al click fuori (sullo StackPane trasparente)
         overlay.setOnMouseClicked(e -> {
             if (e.getTarget() == overlay) {
                 root.getMainContentContainer().getChildren().remove(overlay);

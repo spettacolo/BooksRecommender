@@ -22,7 +22,7 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
     public Library getLibrary(int id) {
         List<Book> books = new ArrayList<>();
 
-        // 1. Recupero dei libri: usa book_id dalla tabella library_books
+        // 1. Recupero dei libri
         String booksQuery = "SELECT book_id FROM library_books WHERE library_id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(booksQuery)) {
             stmt.setInt(1, id);
@@ -40,7 +40,7 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
             return null;
         }
 
-        // 2. Recupero dei dettagli della libreria dalla tabella libraries
+        // 2. Recupero dei dettagli della libreria
         String libraryQuery = "SELECT * FROM libraries WHERE library_id = ?";
         try (PreparedStatement libStmt = connection.prepareStatement(libraryQuery)) {
             libStmt.setInt(1, id);
@@ -83,10 +83,6 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
         }
     }
 
-    public List<Library> getLibraries(Book book) {
-        return null;
-    }
-
     public List<Library> getLibraries(String username) {
         String query = "SELECT * FROM libraries WHERE username = ?";
 
@@ -107,7 +103,7 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
             }
         } catch (SQLException e) {
             logger.log("Error during libraries retrieval: " + e.getMessage());
-            return new ArrayList<>(); // Restituisce lista vuota invece di null
+            return new ArrayList<>();
         }
     }
 
@@ -171,10 +167,6 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
         }
     }
 
-    /*public boolean updateBookLinkedLibrary(Book book, Library library) {
-        return true;
-    }*/
-
     public boolean removeBook(Book book, Library library) {
         String query = "DELETE FROM library_books WHERE book_id = ? AND library_id = ?";
 
@@ -183,7 +175,6 @@ public class LibraryDAO extends BaseDAO implements AutoCloseable {
             stmt.setInt(2, library.getId());
 
             int rows = stmt.executeUpdate();
-            // Ritorna true se almeno una riga è stata eliminata
             return rows >= 1;
         } catch (SQLException e) {
             logger.log("Error removing book from library: " + e.getMessage());

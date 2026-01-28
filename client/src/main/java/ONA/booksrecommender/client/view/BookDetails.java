@@ -48,7 +48,6 @@ public class BookDetails {
         loadBookDetails();
     }
 
-    // Caricamento dal server dei dati del libro nei campi della classe
     private void loadBookDetails() {
         String response = client.send("get_book;id;" + bookId);
         if (response == null || response.startsWith("ERROR")) {
@@ -78,7 +77,6 @@ public class BookDetails {
         } else this.descrizione = "";
     }
 
-    // Calcolo della media delle valutazioni e conversione in stelle
     private Label buildRatingLabel() {
         String response = client.send("get_book_reviews;" + bookId);
         if (response == null || response.isEmpty()) return new Label("Nessuna recensione");
@@ -106,7 +104,6 @@ public class BookDetails {
         return label;
     }
 
-    // Costruzione dell’overlay grafico dei dettagli del libro
     public StackPane createOverlay() {
         final StackPane overlay = new StackPane();
         VBox content = new VBox(20);
@@ -221,7 +218,6 @@ public class BookDetails {
         if (username != null && !username.isEmpty()) {
             List<AddRmBook.LibraryInfo> libsWithBook = AddRmBook.getLibrariesWithBook(client, username, bookId);
             if (libsWithBook != null && !libsWithBook.isEmpty()) {
-                // Spacer per spingere il tasto + tutto a destra
                 Region reviewSpacer = new Region();
                 HBox.setHgrow(reviewSpacer, Priority.ALWAYS);
 
@@ -313,7 +309,7 @@ public class BookDetails {
                 // ScrollPane per lo scorrimento laterale
                 ScrollPane horizontalScroll = new ScrollPane(horizontalCardsBox);
 
-                // 1. Nascondiamo entrambe le scrollbar
+                // 1. Nascondere entrambe le scrollbar
                 horizontalScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
                 horizontalScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 
@@ -395,7 +391,6 @@ public class BookDetails {
                         Label noteLbl = new Label(noteDecoded);
                         noteLbl.setWrapText(true);
                         noteLbl.setStyle("-fx-text-fill: #ebebeb; -fx-font-size: 14px; -fx-line-spacing: 1.1;");
-                        // Impedisce al testo di sparire se troppo lungo
                         noteLbl.setMaxHeight(120);
 
                         card.getChildren().addAll(topRow, starsLbl, noteLbl);
@@ -435,13 +430,13 @@ public class BookDetails {
             }
         }
 
-        // CONSIGLI SECTION
+        // SEZIONE CONSIGLI
         VBox adviceSection = new VBox(15);
         adviceSection.getChildren().add(adviceHeader);
 
         String adviceResponse = client.send("get_book_advices;" + bookId);
 
-        // Logica per gestire la risposta: 80633;15451,94877,4413|80633;49032,41754|
+        // Logica per gestire la risposta
         if (adviceResponse != null && !adviceResponse.isBlank() && !adviceResponse.equals("NO_RECOMMENDATIONS")) {
             FlowPane adviceGrid = new FlowPane(20, 20);
             adviceGrid.setAlignment(Pos.TOP_LEFT);
@@ -470,7 +465,6 @@ public class BookDetails {
                     // Filtro: Non mostrare il libro corrente e non duplicare se già aggiunto
                     if (targetId == this.bookId || displayedIds.contains(targetId)) continue;
 
-                    // Recuperiamo i dettagli dal server per questo ID specifico
                     String bookData = client.send("get_book;id;" + targetId);
                     if (bookData == null || bookData.startsWith("ERROR")) continue;
 
@@ -486,17 +480,14 @@ public class BookDetails {
                             BookDetails nextBook = new BookDetails(targetId, username);
                             StackPane nextOverlay = nextBook.createOverlay();
 
-                            // Invece di aggiungere sopra, potresti voler rimuovere quello vecchio
-                            // o assicurarti che il nuovo copra tutto perfettamente.
                             Pane root = (Pane) overlay.getParent();
                             if (root != null) {
-                                // root.getChildren().remove(overlay); // Opzionale: chiude il precedente
                                 root.getChildren().add(nextOverlay);
                             }
                         });
 
                         adviceGrid.getChildren().add(coverContainer);
-                        displayedIds.add(targetId); // Segna come visualizzato
+                        displayedIds.add(targetId);
                     }
                 }
             }
@@ -580,18 +571,17 @@ public class BookDetails {
             );
         });
 
-        // 1. Calcoliamo la larghezza del menu per poterlo allineare a sinistra del tasto
-        // Usiamo un trucco: forziamo il calcolo della dimensione della skin
+        // 1. Calcolare la larghezza del menu per poterlo allineare a sinistra del tasto
         double menuWidth = contextMenu.prefWidth(-1);
         if (menuWidth <= 0) menuWidth = 150; // Fallback se non ancora calcolato
 
-        // 2. Calcoliamo l'offset:
-        // Vogliamo che il lato DESTRO del menu coincida con il lato DESTRO del tasto.
+        // 2. Calcolare l'offset:
+        // Obiettivo: il lato destro del menu deve coincidere con il lato destro del tasto
         // Offset = (Larghezza Tasto) - (Larghezza Menu)
         double anchorWidth = anchor.getBoundsInLocal().getWidth();
         double xOffset = anchorWidth - menuWidth;
 
-        // 3. Mostriamo il menu con l'offset calcolato
+        // 3. Mostrare il menu con l'offset calcolato
         contextMenu.show(anchor, BOTTOM, xOffset, 8);
     }
 
@@ -620,7 +610,6 @@ public class BookDetails {
         ratingsGrid.setVgap(12);
         ratingsGrid.setAlignment(Pos.TOP_LEFT);
 
-        // FORZIAMO LA LARGHEZZA per non tagliare il "/5"
         ratingsGrid.setMinWidth(175);
         ratingsGrid.setPrefWidth(175);
 
@@ -648,7 +637,6 @@ public class BookDetails {
             HBox inputWrapper = new HBox(4, tf, outOfFive);
             inputWrapper.setAlignment(Pos.BOTTOM_LEFT);
 
-            // Opzionale: un piccolo padding inferiore per non far toccare il testo al bordo
             outOfFive.setPadding(new Insets(0, 0, 4, 0));
 
             tf.textProperty().addListener((obs, oldV, newV) -> {
@@ -673,7 +661,6 @@ public class BookDetails {
         notesArea.setPromptText("Raccontaci la tua opinione (opzionale)...");
         notesArea.setWrapText(true);
 
-        // (38px * 5) + (12px * 4 gap) + correzione padding = 238px circa
         notesArea.setPrefHeight(238);
         notesArea.setMinHeight(238);
         notesArea.setMaxHeight(238);
@@ -706,7 +693,6 @@ public class BookDetails {
         submitBtn.setStyle("-fx-background-color: #1c1c1e; -fx-text-fill: white; -fx-font-weight: bold; " +
                 "-fx-background-radius: 12; -fx-padding: 10 0; -fx-font-size: 14px;");
 
-        // ... (restante logica di invio invariata)
         submitBtn.setOnAction(ev -> {
             try {
                 for (TextField tf : inputs) if (tf.getText().trim().isEmpty()) return;

@@ -38,7 +38,6 @@ public class UserAreaView extends VBox {
         this.setAlignment(Pos.TOP_LEFT);
 
         Client client = root.getClient();
-        // Recupero info utente: username;nome;cognome;email
         String risposta = client.send("get_user;" + username + ";" + true);
         this.userParts = (risposta != null && !risposta.startsWith("ERROR"))
                 ? risposta.split(";")
@@ -48,7 +47,6 @@ public class UserAreaView extends VBox {
     }
 
     private void setupUI() {
-        // Header con il saluto
         HBox header = new HBox();
         header.getStyleClass().add("home-header");
         header.setAlignment(Pos.CENTER_LEFT);
@@ -178,7 +176,7 @@ public class UserAreaView extends VBox {
         lblNote.setWrapText(true);
         lblNote.setMinHeight(40);
 
-        // Sezione Consigliati (Copertine Mini)
+        // Sezione Consigliati
         VBox adviceSection = new VBox(8);
         if (suggestedIds != null && !suggestedIds.isEmpty()) {
             Label lblHint = new Label("LIBRI CONSIGLIATI:");
@@ -223,9 +221,7 @@ public class UserAreaView extends VBox {
                         miniSecondsLeft.getAndDecrement();
                         miniTimerLabel.setText(String.valueOf(miniSecondsLeft.get()));
                         if (miniSecondsLeft.get() <= 0) {
-                            // Esecuzione effettiva della rimozione
                             root.getClient().send("remove_book_advice;" + username + ";" + mainId + ";" + sId);
-                            // Ricarichiamo l'area per aggiornare la vista
                             showActivitySection();
                         }
                     }));
@@ -246,7 +242,6 @@ public class UserAreaView extends VBox {
                         miniDeleteOverlay.setVisible(false);
                     });
 
-                    // Tooltip informativo
                     Tooltip.install(miniCardRoot, new Tooltip("Clicca per rimuovere: " + sb[1]));
 
                     imagesBox.getChildren().add(miniCardRoot);
@@ -270,7 +265,7 @@ public class UserAreaView extends VBox {
 
         deleteOverlay.getChildren().addAll(lblTimer, btnUndo);
 
-        // Tasto "-" di eliminazione (posizionato in alto a destra)
+        // Tasto "-" di eliminazione
         StackPane deleteIcon = new StackPane();
         Label minus = new Label("-");
         minus.setStyle("-fx-text-fill: #E21A1A; -fx-font-weight: bold; -fx-font-size: 22px; -fx-padding: 0 0 2 0;");

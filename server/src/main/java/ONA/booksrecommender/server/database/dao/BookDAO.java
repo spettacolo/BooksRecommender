@@ -18,9 +18,6 @@ import java.net.http.HttpResponse;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
-//import com.fasterxml.jackson.databind.JsonNode;
-//import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.IOException;
 
 public class BookDAO extends BaseDAO implements AutoCloseable {
@@ -201,89 +198,6 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
         }
     }
 
-    /*public String getBookImageUrl(String title) {
-        String req = "https://www.googleapis.com/books/v1/volumes?q=" + title;
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(req))
-                .GET()
-                .build();
-        try {
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-            try {
-                ObjectMapper mapper = new ObjectMapper();
-                String jsonResponse = response.body();
-                JsonNode rootNode = mapper.readTree(jsonResponse);
-                JsonNode itemsNode = rootNode.get("items");
-
-                String selfLinkValue = null;
-
-                if (itemsNode != null && itemsNode.isArray() && !itemsNode.isEmpty()) {
-                    JsonNode firstItem = itemsNode.get(0);
-                    JsonNode selfLinkNode = firstItem.get("selfLink");
-
-                    if (selfLinkNode != null) {
-                        selfLinkValue = selfLinkNode.asText();
-
-                        HttpRequest secondRequest = HttpRequest.newBuilder()
-                                .uri(URI.create(selfLinkValue))
-                                .GET()
-                                .build();
-                        HttpResponse<String> secondResponse = client.send(secondRequest, HttpResponse.BodyHandlers.ofString());
-                        String detailedJson = secondResponse.body();
-                        ObjectMapper mapper2 = new ObjectMapper();
-                        JsonNode detailedRootNode = mapper2.readTree(detailedJson);
-
-                        JsonNode imageLinksNode = detailedRootNode
-                                .path("volumeInfo")
-                                .path("imageLinks");
-
-                        JsonNode imageNode = imageLinksNode.path("extraLarge");
-
-                        if (imageNode.isMissingNode()) {
-                            imageNode = imageLinksNode.path("large");
-                        }
-
-                        if (imageNode.isMissingNode()) {
-                            imageNode = imageLinksNode.path("medium");
-                        }
-
-                        if (imageNode.isMissingNode()) {
-                            imageNode = imageLinksNode.path("small");
-                        }
-
-                        if (imageNode.isMissingNode()) {
-                            imageNode = imageLinksNode.path("thumbnail");
-                        }
-
-                        if (imageNode.isMissingNode()) {
-                            imageNode = imageLinksNode.path("smallThumbnail");
-                        }
-
-                        if (imageNode != null) {
-                            System.out.println(imageNode.asText());
-                            return imageNode.asText();
-                        } else {
-                            System.out.println("URL immagine non trovato nel dettaglio del volume. Uso placeholder");
-                            return "https://i.ibb.co/QLTNDQc/bookplaceholder.png";
-                        }
-                    } else {
-                        System.out.println("Il campo 'selfLink' non è stato trovato nel primo elemento.");
-                        return "https://i.ibb.co/QLTNDQc/bookplaceholder.png";
-                    }
-                } else {
-                    System.out.println("L'array 'items' non esiste o è vuoto.");
-                    return "https://i.ibb.co/QLTNDQc/bookplaceholder.png";
-                }
-            } catch (IOException e) {
-                System.err.println("Errore durante il parsing JSON: " + e.getMessage());
-            }
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }*/
-
     public String getBookImageUrl(int book_id) {
         String query = "SELECT image_url " +
                 "FROM book_images " +
@@ -305,34 +219,7 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
         }
     }
 
-    /*  =^.^=
-    public List<Book> getAuthorBooks(String author) {
-        String query = "SELECT ba.book_id " +
-                "FROM authors a " +
-                "JOIN book_authors ba ON a.author_id = ba.author_id " +
-                "WHERE a.author_name = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, author);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                List<Book> books = new ArrayList<>();
-
-                while (rs.next()) {
-                    Book book = getBook(rs.getInt("book_id"));
-                    if (book != null) {
-                        books.add(book);
-                    }
-                }
-
-                return books;
-            }
-        } catch (SQLException e) {
-            logger.log("Error during book retrieval: " + e.getMessage());
-            return new ArrayList<>();
-        }
-    }
-    */
+    //  =^.^=
 
     public List<Book> getAuthorBooks(String author, int limit, int offset) {
         String query = "SELECT ba.book_id " +

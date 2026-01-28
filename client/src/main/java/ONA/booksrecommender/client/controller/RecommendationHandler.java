@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 
 public class RecommendationHandler {
 
-    // Aggiunto UserAreaView come parametro opzionale per il refresh
     public static void addRecommendation(int bookId, String username, Client client, StackPane parentOverlay, UserAreaView userArea) {
         // 1. Sfondo scuro semi-trasparente
         StackPane selectionOverlay = new StackPane();
@@ -85,8 +84,6 @@ public class RecommendationHandler {
         }
 
         // AZIONE CONFERMA
-// AZIONE CONFERMA nel RecommendationHandler.java
-// AZIONE CONFERMA nel RecommendationHandler.java
         confirmBtn.setOnAction(e -> {
             if (selectedIds.isEmpty()) {
                 confirmBtn.setText("Seleziona almeno un libro");
@@ -99,11 +96,9 @@ public class RecommendationHandler {
             boolean allOk = true;
 
             // 2. CICLO DI INVIO: Inviamo una richiesta distinta per ogni libro selezionato
-            // Invece di "ID1,ID2,ID3", inviamo tre richieste separate
             for (Integer sId : selectedIds) {
                 String response = client.send("add_book_advice;" + username + ";" + bookId + ";" + sId);
 
-                // Se anche una sola fallisce, teniamo traccia dell'errore
                 if (response == null || !response.contains("OK")) {
                     allOk = false;
                 }
@@ -130,7 +125,7 @@ public class RecommendationHandler {
         container.getChildren().addAll(titleArea, scroll, confirmBtn);
         selectionOverlay.getChildren().add(container);
 
-        // Chiudi se clicchi fuori dal box
+        // Chiusura se si clicca fuori dal box
         selectionOverlay.setOnMouseClicked(e -> {
             if (e.getTarget() == selectionOverlay) parentOverlay.getChildren().remove(selectionOverlay);
         });
@@ -163,7 +158,6 @@ public class RecommendationHandler {
         clip.setArcWidth(15); clip.setArcHeight(15);
         iv.setClip(clip);
 
-        // ... resto del codice invariato
         clip.setArcWidth(15); clip.setArcHeight(15);
         iv.setClip(clip);
 
@@ -180,7 +174,7 @@ public class RecommendationHandler {
 
         card.setOnMouseClicked(e -> {
             if (selectedIds.contains(b.getId())) {
-                // Se il libro è già selezionato, lo rimuovo (funziona sempre)
+                // Se il libro è già selezionato, lo rimuovo
                 selectedIds.remove(b.getId());
                 selOverlay.setVisible(false);
             } else {
@@ -189,11 +183,10 @@ public class RecommendationHandler {
                     selectedIds.add(b.getId());
                     selOverlay.setVisible(true);
                 } else {
-                    // Opzionale: un piccolo alert se l'utente prova a selezionare il quarto
+                    // Alert se l'utente prova a selezionare il quarto
                     System.out.println("Puoi selezionare al massimo 3 libri.");
                 }
             }
-            // Aggiorno lo stato del pulsante e il testo del contatore
             confirmBtn.setDisable(selectedIds.isEmpty());
             confirmBtn.setText("Conferma Consigli (" + selectedIds.size() + "/3)");
         });

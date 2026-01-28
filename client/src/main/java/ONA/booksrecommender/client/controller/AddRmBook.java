@@ -20,8 +20,6 @@ public class AddRmBook {
             String[] parts = libBooksResponse.split(";");
             boolean containsBook = false;
 
-            // FIX: La lista dei libri inizia dall'indice 3.
-            // parts[0]=ID, parts[1]=Nome, parts[2]=Username, parts[3]=LibriID
             if (parts.length > 3 && !parts[3].isBlank()) {
                 String[] bookIds = parts[3].split(",");
                 for (String bId : bookIds) {
@@ -58,7 +56,6 @@ public class AddRmBook {
             String[] parts = libBooksResponse.split(";");
             boolean containsBook = false;
 
-            // FIX: Iniziamo il controllo dall'indice 3
             if (parts.length > 3 && !parts[3].isBlank()) {
                 String[] bookIds = parts[3].split(",");
                 for (String bId : bookIds) {

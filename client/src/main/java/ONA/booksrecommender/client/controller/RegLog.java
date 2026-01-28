@@ -21,7 +21,7 @@ public class RegLog {
         this.root = rv;
         this.client = client;
 
-        // BLOCCO SICURO: se esiste già un overlay nel main container, non fare nulla
+        // Controlla se esiste già un overlay nel main container
         boolean exists = root.getMainContentContainer().getChildren().stream()
                 .anyMatch(n -> n.getStyleClass().contains("reglog-overlay"));
         if (exists) return;
@@ -46,7 +46,6 @@ public class RegLog {
 
         overlayPanel = new BorderPane();
         overlayPanel.getStyleClass().add("reglog-panel");
-        // Dimensioni FISSE dell'overlay (larghezza uguale per login e signup)
         overlayPanel.setPrefWidth(420);
         overlayPanel.setMinWidth(420);
         overlayPanel.setMaxWidth(420);
@@ -66,7 +65,6 @@ public class RegLog {
 
         root.getMainContentContainer().getChildren().add(overlay);
 
-        // Mostra il login inizialmente DENTRO lo stesso overlay
         showLoginFormInOverlay();
     }
 
@@ -131,7 +129,6 @@ public class RegLog {
             registerLink
         );
 
-        // Altezza FISSA per LOGIN (contenuto NON scorrevole)
         overlayPanel.setPrefHeight(290);
         overlayPanel.setMinHeight(290);
         overlayPanel.setMaxHeight(290);
@@ -215,7 +212,6 @@ public class RegLog {
             loginLink
         );
 
-        // Altezza FISSA diversa per SIGN UP (contenuto NON scorrevole)
         overlayPanel.setPrefHeight(460);
         overlayPanel.setMinHeight(460);
         overlayPanel.setMaxHeight(460);

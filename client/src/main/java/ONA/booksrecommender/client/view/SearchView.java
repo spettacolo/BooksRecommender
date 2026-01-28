@@ -97,12 +97,11 @@ public class SearchView extends VBox {
 
         renderView();
 
-        // --- SCROLL E LISTENER (Scrollbar nascosta tramite CSS) ---
+        // --- SCROLL E LISTENER ---
         ScrollPane scroll = new ScrollPane(mainContent);
         scroll.getStyleClass().add("search-scroll-pane");
         scroll.setFitToWidth(true);
         scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        // Nascondiamo logicamente la barra, il CSS farà il resto per l'estetica
         scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         VBox.setVgrow(scroll, Priority.ALWAYS);
 

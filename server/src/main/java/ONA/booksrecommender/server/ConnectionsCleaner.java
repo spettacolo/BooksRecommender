@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ConnectionsCleaner implements Runnable {
-    private final Map<Socket, Long> activeConnections; // socket -> ultimo messaggio ricevuto
+    private final Map<Socket, Long> activeConnections;
     private final long timeoutMillis;
     private volatile boolean running = true;
 
@@ -34,7 +34,7 @@ public class ConnectionsCleaner implements Runnable {
                 }
             }
             try {
-                Thread.sleep(5000); // ogni 5 secondi controlla
+                Thread.sleep(5000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

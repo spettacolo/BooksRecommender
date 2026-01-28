@@ -5,7 +5,7 @@ import java.net.*;
 
 import java.sql.SQLException;
 import ONA.booksrecommender.server.database.Database;
-import ONA.booksrecommender.server.database.dao.*; // UserDAO + BookDAO
+import ONA.booksrecommender.server.database.dao.*;
 
 import ONA.booksrecommender.utils.Logger;
 
@@ -32,9 +32,6 @@ public class Server implements Runnable {
     private boolean initDatabase() {
         try{
             this.database = new Database(logger);
-            //this.userDAO = new UserDAO(database.getConnection());
-            //this.bookDAO = new BookDAO(database.getConnection());
-            // TODO: Aggiungere gli altri DAO (e.g.: recensioni, consigli, librerie)
             logger.log("Database started successfully");
             this.serverFacade = new ServerFacade(logger, database);
             logger.log("Server facade initialized successfully");
@@ -55,12 +52,6 @@ public class Server implements Runnable {
             logger.log("Database init failed. Stopping the server");
             return;
         }
-        
-        /*try { // inizializzare connessione al db
-            System.out.println("Errore");
-        } catch (Exception e) {
-            logger.log("Error: " + e);
-        }*/
         
         try (ServerSocket ss = new ServerSocket(PORT)) {
             this.serverSocket = ss;
@@ -107,13 +98,11 @@ public class Server implements Runnable {
                 out.println(response);
             }
         } catch (IOException e) {
-            // e.printStackTrace();
-            logger.log("Error " + e.getMessage()); // TODO forse: cambiare in e.printStackTrace(); per ottenere l'errore completo
-        } finally {                                // per farlo, però, devo prima salvarlo in un PrintWriter
-            try {                                  // StringWriter sw = new StringWriter();
-                socket.close();                    // e.printStackTrace(new PrintWriter(sw));
-            } catch (IOException e) {              // String logMsg = "Errore di esempio: " + sw.toString();
-                // e.printStackTrace();
+            logger.log("Error " + e.getMessage());
+        } finally {
+            try {
+                socket.close();
+            } catch (IOException e) {
                 logger.log("Error " + e.getMessage());
             }
         }
@@ -129,7 +118,6 @@ public class Server implements Runnable {
                 serverSocket.close(); // forza la chiusura del blocking accept()
             }
         } catch (IOException e) {
-            // e.printStackTrace();
             logger.log("Error " + e.getMessage());
         }
     }

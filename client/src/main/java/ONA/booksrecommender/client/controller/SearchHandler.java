@@ -37,7 +37,6 @@ public class SearchHandler {
             if (!query.isEmpty()) {
                 syncQueryWithExistingView(root, query);
 
-                // La ricerca iniziale dalla barra ha sempre offset 0
                 List<Book> results = searchBooks(query, "title", 0);
                 root.showSearchResults(query, results);
             }
@@ -48,7 +47,6 @@ public class SearchHandler {
     }
 
     private void syncQueryWithExistingView(RootView root, String query) {
-        // Ho mantenuto il tuo metodo aggiornato con root.getMainContentContainer()
         Object mainContent = root.getMainContentContainer();
 
         if (mainContent instanceof StackPane) {
@@ -58,7 +56,6 @@ public class SearchHandler {
                     ScrollPane scroll = (ScrollPane) node;
                     if (scroll.getContent() instanceof SearchView) {
                         ((SearchView) scroll.getContent()).setCurrentQuery(query);
-                        // RESETTA l'offset della vista quando si fa una nuova ricerca dalla barra
                         ((SearchView) scroll.getContent()).resetOffset();
                     }
                 }
@@ -66,16 +63,11 @@ public class SearchHandler {
         }
     }
 
-    /**
-     * Esegue la ricerca dei libri comunicando con il server con supporto all'OFFSET.
-     */
     public List<Book> searchBooks(String query, String type, int offset) {
         List<Book> results = new ArrayList<>();
         if (query == null || query.isBlank()) return results;
 
         try {
-            // Invio comando: get_book;tipo;query;offset
-            // Esempio: get_book;author;Manzoni;20
             String command = "get_book;" + type + ";" + query + ";" + offset;
 
             String risposta = this.client.send(command);

@@ -20,27 +20,6 @@ public class RatingDAO extends BaseDAO implements AutoCloseable {
         this.bookDAO = bookDAO;
     }
 
-    // prendi la recensione fatta dall'utente X sul libro Y
-    public Rating getRating(int bookId, String username) {
-        String query = "SELECT * FROM ratings WHERE book_id = ? AND username = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setInt(1, bookId);
-            stmt.setString(2, username);
-            try (ResultSet rs = stmt.executeQuery()) {
-
-                if (!rs.next()) {
-                    return null;
-                }
-
-                return new Rating(rs.getString("username"), rs.getString("book_id"), rs.getInt("style"), rs.getInt("content"), rs.getInt("liking"), rs.getInt("originality"), rs.getInt("edition"), rs.getString("notes"));
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    // prendi tutte le recensioni di un libro
     public List<Rating> getRatings(int bookId) {
         String query = "SELECT * FROM ratings WHERE book_id = ?";
 
@@ -62,7 +41,6 @@ public class RatingDAO extends BaseDAO implements AutoCloseable {
         }
     }
 
-    // prendi tutte le recensioni di un utente
     public List<Rating> getRatings(String username) {
         String query = "SELECT * FROM ratings WHERE username = ?";
 
@@ -85,13 +63,7 @@ public class RatingDAO extends BaseDAO implements AutoCloseable {
     }
 
     public boolean addRating(int bookId, String username, int style, int content, int liking, int originality, int edition, String notes) {
-        /* 3 opzioni:
-            1- controllo se c'è già la valutazione
-            2- aggiorno la valutazione già esistente
-            3- controllo, chiedo all'utente e se accetta allora viene aggiornata (conviene? no)
-         */
         if (notes == null) notes = "EMPTY";
-        // TODO: da fare controllo duplicati
         String query = "INSERT INTO ratings (username, book_id, style, content, liking, originality, edition, notes) VALUES (?, ?, ? ,? ,? ,? ,? ,?)";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
@@ -149,7 +121,4 @@ public class RatingDAO extends BaseDAO implements AutoCloseable {
             return false;
         }
     }
-
-    // TODO: toString() ?
-
 }

@@ -83,15 +83,6 @@ public class ServerFacade {
                     return ok ? "SIGNUP" + SEPARATOR + "OK" : "SIGNUP" + SEPARATOR + "FAIL";
                 }
                 case "get_book": {
-                    // get_book;search_type;[id]/[title]/[author[;year]]
-                    /* TODO: Come decodificare il campo descrizione lato client:
-                    import java.util.Base64;
-                    import java.nio.charset.StandardCharsets;
-                    String descrizioneDecodificata = new String(
-                        Base64.getDecoder().decode(parts[7]),
-                        StandardCharsets.UTF_8
-                    );
-                    */
                     if (parts.length < 3) return ERROR_MESSAGE;
                     switch (parts[1]) {
                         case "id": {
@@ -102,26 +93,19 @@ public class ServerFacade {
                             String encodedDesc = Base64.getEncoder().encodeToString(
                                     book.getDescription().getBytes(StandardCharsets.UTF_8)
                             );
-                            // TODO: valutare l'utilizzo di book.toString() in base a cosa è più comodo
                             return String.join(SEPARATOR, Integer.toString(book.getId()), book.getTitle(), authorsString, Integer.toString(book.getPublicationYear()), book.getPublisher(), book.getCategory(), book.getCoverImageUrl(), encodedDesc);
                         }
                         case "list": {
                             String[] booksIdList = parts[2].split(",");
 
                             List<Integer> bookIds = Arrays.stream(booksIdList)
-                                    .map(String::trim) // Rimuove spazi bianchi (utile in caso ci siano " 101, 205")
-                                    .map(Integer::parseInt) // Converte ogni Stringa in Integer
-                                    .toList(); // Raccoglie gli Integer in una List
+                                    .map(String::trim)
+                                    .map(Integer::parseInt)
+                                    .toList();
                             List<Book> books = bookDAO.getBooks(bookIds);
                         }
                         case "title": {
-                            //Book book = bookDAO.getBook(parts[2]);
                             List<Book> booksObj = bookDAO.getBooks(parts[2]);
-                            //logger.log(booksObj.toString());
-                            //logger.log(book.toString());
-                            //List<String> authors = book.getAuthors();
-                            //String authorsString = String.join(", ", authors);
-                            // TODO: valutare l'utilizzo di book.toString() in base a cosa è più comodo
                             StringBuilder books = new StringBuilder();
                             for (Book book : booksObj) {
                                 List<String> authors = book.getAuthors();
@@ -135,23 +119,6 @@ public class ServerFacade {
 
                             return books.toString();
                         }
-                        /* case "author": { // filtro autore-anno TODO: ordinamento asc/desc, poi farò
-                            boolean b = !((parts[3]).equalsIgnoreCase("ASC") || (parts[3]).equalsIgnoreCase("DESC"));
-                            if (b) return ERROR_MESSAGE;
-                            List<Book> booksObj = bookDAO.getAuthorBooks(parts[2], parts[3]);
-                            StringBuilder books = new StringBuilder();
-                            for (Book book : booksObj) {
-                                List<String> authors = book.getAuthors();
-                                String authorsString = String.join(", ", authors);
-                                String encodedDesc = Base64.getEncoder().encodeToString(
-                                        book.getDescription().getBytes(StandardCharsets.UTF_8)
-                                );
-                                books.append(String.join(SEPARATOR, Integer.toString(book.getId()), book.getTitle(), authorsString, Integer.toString(book.getPublicationYear()), book.getPublisher(), book.getCategory(), book.getCoverImageUrl(), encodedDesc));
-                                books.append("|");
-                            }
-
-                            return books.toString();
-                        }*/
 
                         // -----------------------------    =^.^=   --------------------------
                         case "author": {
@@ -159,7 +126,6 @@ public class ServerFacade {
 
                             String authorName = parts[2];
 
-                            // Leggiamo l'offset dal client (parts[3]), se non c'è mettiamo 0
                             int offset = 0;
                             if (parts.length > 3) {
                                 try {
@@ -171,7 +137,6 @@ public class ServerFacade {
 
                             int limit = 20; // Numero di libri per ogni "caricamento"
 
-                            // CHIAMATA CORRETTA: Passiamo i 3 parametri richiesti dal nuovo BookDAO
                             List<Book> booksObj = bookDAO.getAuthorBooks(authorName, limit, offset);
 
                             if (booksObj == null || booksObj.isEmpty()) {
@@ -183,7 +148,6 @@ public class ServerFacade {
                                 List<String> authors = book.getAuthors();
                                 String authorsString = String.join(", ", authors);
 
-                                // Codifica descrizione per evitare conflitti con il separatore ";"
                                 String encodedDesc = "";
                                 if (book.getDescription() != null) {
                                     encodedDesc = Base64.getEncoder().encodeToString(
@@ -207,77 +171,39 @@ public class ServerFacade {
 
                         case "authors": { // ricerca autori di un libro
                             List<String> authors = bookDAO.getBookAuthors(Integer.parseInt(parts[2]));
-                            // , anziché ; perché è una lista di elementi e non più elementi differenti
                             return String.join(",", authors);
                         }
                         case "top": { // top inteso come i 20 libri più frequenti nelle librerie
                             List<Book> booksObj = bookDAO.getBooks(parts[2], Integer.parseInt(parts[3]));
-                            //logger.log(booksObj.toString());
                             StringBuilder books = new StringBuilder();
                             for (Book book : booksObj) {
                                 List<String> authors = book.getAuthors();
                                 String authorsString = String.join(", ", authors);
                                 books.append(String.join(SEPARATOR, Integer.toString(book.getId()), book.getTitle(), authorsString, Integer.toString(book.getPublicationYear()), book.getPublisher(), book.getCategory(), book.getCoverImageUrl()));
                                 books.append("|");
-                                // logger.log(book.toString());
                             }
                             return books.toString();
-
-                            /*switch (parts[2]) {
-                                case "general": {
-                                    List<Book> booksObj = bookDAO.getBooks(parts[2]);
-                                    //logger.log(booksObj.toString());
-                                    StringBuilder books = new StringBuilder();
-                                    for (Book book : booksObj) {
-                                        List<String> authors = book.getAuthors();
-                                        String authorsString = String.join(", ", authors);
-                                        books.append(String.join(SEPARATOR, Integer.toString(book.getId()), book.getTitle(), authorsString, Integer.toString(book.getPublicationYear()), book.getPublisher(), book.getCategory(), book.getCoverImageUrl()));
-                                        books.append("|");
-                                }
-                                case "thrillers": {
-
-                                }
-                                case "romance": {
-
-                                }
-                                case "fiction": {
-
-                                }
-                                case "gardening": {
-
-                                }
-                                case "regional & ethnic": {
-
-                                }
-                                case "business & economics": {
-
-                                }
-                                default: {
-                                    // senza filtri
-                                }*/
                         }
                     }
                 }
-                /*case "test_get_book_image":
-                    return bookDAO.getBookImageUrl("%22Harry+Potter+e+il+calice+di+fuoco%22");*/
                 case "get_user_library":
                     if (parts.length < 3) return ERROR_MESSAGE;
                     switch (parts[1]) {
                         case "id": {
                             Library library = libraryDAO.getLibrary(Integer.parseInt(parts[2]));
                             List<Integer> bookIdIntegers = library.getBookIds();
-                            String bookIds = bookIdIntegers.stream() // 1. Create a Stream<Integer>
-                                    .map(String::valueOf)   // 2. Map each Integer to a String
-                                    .collect(Collectors.joining(",")); // 3. Collect the Strings, joining them with a comma
+                            String bookIds = bookIdIntegers.stream()
+                                    .map(String::valueOf)
+                                    .collect(Collectors.joining(","));
                             return String.join(SEPARATOR, Integer.toString(library.getId()), library.getName(), library.getUserId(), bookIds);
                         }
                         case "name": {
                             if (parts.length < 4) return ERROR_MESSAGE;
                             Library library = libraryDAO.getLibrary(parts[2], parts[3]);
                             List<Integer> bookIdIntegers = library.getBookIds();
-                            String bookIds = bookIdIntegers.stream() // 1. Create a Stream<Integer>
-                                    .map(String::valueOf)   // 2. Map each Integer to a String
-                                    .collect(Collectors.joining(",")); // 3. Collect the Strings, joining them with a comma
+                            String bookIds = bookIdIntegers.stream()
+                                    .map(String::valueOf)
+                                    .collect(Collectors.joining(","));
                             return String.join(SEPARATOR, Integer.toString(library.getId()), library.getName(), library.getUserId(), bookIds);
                         }
                         default:
@@ -287,17 +213,11 @@ public class ServerFacade {
                     if (parts.length < 2) return ERROR_MESSAGE;
                     List<Library> libraries = libraryDAO.getLibraries(parts[1]);
                     String libraryIds = libraries.stream()
-                            .map(Library::getId)        // 1. Mappa ogni oggetto Library al suo ID (che assumiamo sia un Integer o Long)
+                            .map(Library::getId)        // 1. Mappa ogni oggetto Library al suo ID
                             .map(String::valueOf)       // 2. Converte l'ID numerico in String
                             .collect(Collectors.joining(",")); // 3. Unisce tutte le Stringhe con la virgola come delimitatore
-                    return libraryIds; // restituisco solo gli id (o i nomi, nicho cosa preferisci?) per comodità, poi verranno fatte richieste a parte lato client per le singole librerie
+                    return libraryIds;
                 }
-                /*case "add_user":
-                    if (parts.length < 7) { return "ERROR;missing_args"; }
-                    return userDAO.signUpUser(parts[1], );
-                    return "UNKNOWN_COMMAND";*/
-                /*case "add_book":
-                    return "UNKNOWN_COMMAND";*/
                 case "add_library": {
                     if (parts.length < 3) return ERROR_MESSAGE;
                     String library = parts[1];
@@ -354,7 +274,7 @@ public class ServerFacade {
                         // Gestione nota null o vuota per evitare crash
                         String noteToEncode = (rating.getNotes() == null) ? "" : rating.getNotes();
 
-                        // Codifichiamo in Base64 per l'invio sul socket (evita che i ';' nella nota rompano il parsing)
+                        // Codifica in Base64 per l'invio sul socket (evita che i ';' nella nota rompano il parsing)
                         String encodedNote = Base64.getEncoder().encodeToString(
                                 noteToEncode.getBytes(StandardCharsets.UTF_8)
                         );
@@ -404,7 +324,7 @@ public class ServerFacade {
                 }
 
                 case "add_book_review": {
-                    // Formato atteso: add_book_review;book_id;username;style;content;liking;originality;edition;encoded_notes
+                    // Formato: add_book_review;book_id;username;style;content;liking;originality;edition;encoded_notes
                     if (parts.length < 8) return ERROR_MESSAGE;
 
                     try {
@@ -418,16 +338,15 @@ public class ServerFacade {
 
                         String notesToSave = "";
 
-                        // Controlliamo se esiste il nono elemento (indice 8) per le note
+                        // Controllo se esiste il nono elemento (indice 8) per le note
                         if (parts.length >= 9 && parts[8] != null && !parts[8].isBlank() && !parts[8].equalsIgnoreCase("EMPTY")) {
                             try {
                                 // PULIZIA E DECODIFICA FORZATA
                                 String rawBase64 = parts[8].trim();
-                                // Usiamo il MimeDecoder che ignora eventuali sporcizie inviate dal client
                                 byte[] decodedBytes = Base64.getMimeDecoder().decode(rawBase64);
                                 notesToSave = new String(decodedBytes, StandardCharsets.UTF_8);
 
-                                // LOG DI CONTROLLO (Controlla la console del server!)
+                                // LOG DI CONTROLLO
                                 System.out.println("[SERVER] Nota decodificata correttamente: " + notesToSave);
                             } catch (Exception e) {
                                 // Se la decodifica fallisce, forse il client ha mandato testo piano?
@@ -436,7 +355,6 @@ public class ServerFacade {
                             }
                         }
 
-                        // PASSAGGIO AL DAO: notesToSave ORA È TESTO IN CHIARO (es: "bibia")
                         boolean ok = ratingDAO.addRating(bookId, username, style, content, enjoy, orig, edit, notesToSave);
 
                         return ok ? "ADD_BOOK_REVIEW" + SEPARATOR + "OK" : "ADD_BOOK_REVIEW" + SEPARATOR + "FAIL";
@@ -447,7 +365,7 @@ public class ServerFacade {
                 }
 
                 case "remove_book_review": {
-                    // Formato atteso: remove_book_review;book_id;username
+                    // Formato: remove_book_review;book_id;username
                     if (parts.length < 3) return ERROR_MESSAGE;
                     try {
                         int bookId = Integer.parseInt(parts[1]);
@@ -475,7 +393,7 @@ public class ServerFacade {
                 }
 
                 case "add_book_advice": {
-                    // Formato richiesta: add_book_advice;username;book_id;rec_id1,rec_id2,rec_id3
+                    // Formato: add_book_advice;username;book_id;rec_id1,rec_id2,rec_id3
                     if (parts.length < 4) return ERROR_MESSAGE;
 
                     String username = parts[1];
@@ -493,7 +411,7 @@ public class ServerFacade {
                 }
 
                 case "remove_book_advice": {
-                    // Formato richiesta: remove_book_advice;username;book_id
+                    // Formato: remove_book_advice;username;book_id
                     if (parts.length < 3) return ERROR_MESSAGE;
                     String username = parts[1];
                     String bookId = parts[2];

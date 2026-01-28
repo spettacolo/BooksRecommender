@@ -19,13 +19,12 @@ public class LibraryView extends StackPane {
         SearchHandler searchHandler = new SearchHandler(client);
         HBox searchBar = searchHandler.createSearchBar(root);
 
-        // 1. CONTENITORE PRINCIPALE (Sotto l'overlay)
+        // 1. CONTENITORE PRINCIPALE
         VBox mainContent = new VBox();
         mainContent.setFillWidth(true);
         VBox.setVgrow(mainContent, javafx.scene.layout.Priority.ALWAYS);
-        mainContent.setPadding(new Insets(0, 20, 0, 20)); // Margini laterali
+        mainContent.setPadding(new Insets(0, 20, 0, 20));
 
-        // Richiesta al server del contenuto della libreria
         String risposta = client.send("get_user_library;id;" + lib);
         System.out.println(risposta);
 
@@ -42,17 +41,12 @@ public class LibraryView extends StackPane {
 
         header.getChildren().addAll(nomeLibreria, spacer, searchBar);
 
-        // Griglia delle copertine
-        // ... [Import e parte iniziale invariati fino all'header] ...
-
-        // SOSTITUIAMO IL GRIDPANE CON UN FLOWPANE
         FlowPane flowGrid = new FlowPane();
-        flowGrid.setHgap(25); // Spazio orizzontale tra le copertine
-        flowGrid.setVgap(30); // Spazio verticale tra le righe
+        flowGrid.setHgap(25);
+        flowGrid.setVgap(30);
         flowGrid.setPadding(new Insets(20, 40, 40, 40));
         flowGrid.setAlignment(Pos.TOP_LEFT);
 
-        // Questo permette al FlowPane di espandersi orizzontalmente
         flowGrid.setMaxWidth(Double.MAX_VALUE);
         flowGrid.setPrefWrapLength(Region.USE_COMPUTED_SIZE);
 
@@ -71,7 +65,6 @@ public class LibraryView extends StackPane {
             String coverUrl = parts[6];
             int bookId = Integer.parseInt(parts[0]);
 
-            // Creazione del nodo copertina
             StackPane coverNode = client.createScaledCover(coverUrl, 130, 200);
             coverNode.setStyle("-fx-cursor: hand;");
 
@@ -91,12 +84,10 @@ public class LibraryView extends StackPane {
                 });
             });
 
-            // Aggiungiamo semplicemente al FlowPane, gestisce lui righe e colonne
             flowGrid.getChildren().add(coverNode);
             hasAnyBook = true;
         }
 
-        // Messaggio se vuota
         if (!hasAnyBook) {
             VBox emptyBox = new VBox();
             emptyBox.setAlignment(Pos.CENTER);
@@ -109,9 +100,8 @@ public class LibraryView extends StackPane {
             flowGrid.getChildren().add(emptyBox);
         }
 
-        // ScrollPane per la griglia fluida
         ScrollPane scrollPane = new ScrollPane(flowGrid);
-        scrollPane.setFitToWidth(true); // FONDAMENTALE: adatta il FlowPane alla larghezza dello scroll
+        scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
         scrollPane.setPannable(true);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -119,19 +109,17 @@ public class LibraryView extends StackPane {
         scrollPane.setStyle("-fx-background-color:transparent; -fx-background: transparent;");
         VBox.setVgrow(scrollPane, Priority.ALWAYS);
 
-        // Aggiunge gli elementi al contenuto principale
         mainContent.getChildren().addAll(header, scrollPane);
 
         // Livello superiore per gli overlay (dettagli libro, popup, ecc.)
         overlayContainer = new StackPane();
-        overlayContainer.setPickOnBounds(false); // IMPORTANTE: permette di cliccare i libri quando l'overlay è vuoto
+        overlayContainer.setPickOnBounds(false);
 
         // Aggiunta dei due strati alla LibraryView
         this.getChildren().addAll(mainContent, overlayContainer);
         StackPane.setAlignment(mainContent, Pos.TOP_LEFT);
         StackPane.setAlignment(overlayContainer, Pos.CENTER);
 
-        // Impostazioni di dimensione per LibraryView
         this.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
     }
 }
