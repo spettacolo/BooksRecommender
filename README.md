@@ -6,7 +6,6 @@ Requisiti
 - Sistema operativo: macOS (Intel o Apple Silicon) o Linux
 
 Per Mac Apple Silicon scaricare la versione AARCH64 di JavaFX.
-Per Windows
 
 
 -------------------------------------------------------------------------------------------
