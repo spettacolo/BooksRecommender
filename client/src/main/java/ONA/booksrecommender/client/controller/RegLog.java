@@ -16,12 +16,20 @@ public class RegLog {
     private RootView root;
     private Client client;
 
+    /**
+     * Inizializza e visualizza l'overlay grafico per l'autenticazione (Login/Registrazione).
+     * Configura lo sfondo oscurato, il pannello centrale con angoli arrotondati e
+     * gestisce il binding delle dimensioni rispetto al contenitore principale.
+     *
+     * @param rootPane Il contenitore radice della vista (deve essere istanza di {@link RootView}).
+     * @param client   L'istanza del client per le comunicazioni di rete.
+     */
     public void createOverlay(Pane rootPane, Client client) {
         if (!(rootPane instanceof RootView rv)) return;
         this.root = rv;
         this.client = client;
 
-        // BLOCCO SICURO: se esiste già un overlay nel main container, non fare nulla
+        // Controlla se esiste già un overlay nel main container
         boolean exists = root.getMainContentContainer().getChildren().stream()
                 .anyMatch(n -> n.getStyleClass().contains("reglog-overlay"));
         if (exists) return;
@@ -46,7 +54,6 @@ public class RegLog {
 
         overlayPanel = new BorderPane();
         overlayPanel.getStyleClass().add("reglog-panel");
-        // Dimensioni FISSE dell'overlay (larghezza uguale per login e signup)
         overlayPanel.setPrefWidth(420);
         overlayPanel.setMinWidth(420);
         overlayPanel.setMaxWidth(420);
@@ -66,10 +73,14 @@ public class RegLog {
 
         root.getMainContentContainer().getChildren().add(overlay);
 
-        // Mostra il login inizialmente DENTRO lo stesso overlay
         showLoginFormInOverlay();
     }
 
+    /**
+     * Configura e mostra il modulo di login all'interno dell'overlay.
+     * Include i campi per username, password e la logica per validare le credenziali
+     * tramite il server e aggiornare lo stato dell'applicazione in caso di successo.
+     */
     public void showLoginFormInOverlay() {
         if (overlay == null) return;
         VBox content = new VBox(6);
@@ -91,6 +102,7 @@ public class RegLog {
         passwordField.getStyleClass().add("reglog-field");
         passwordField.setPromptText("Password");
         Label feedbackLabel = new Label();
+        feedbackLabel.setStyle("-fx-text-fill: #E21A1A;");
 
         Button loginButton = new Button("Accedi");
         loginButton.getStyleClass().add("reglog-primary-button");
@@ -99,7 +111,7 @@ public class RegLog {
             String u = usernameField.getText().trim();
             String p = passwordField.getText().trim();
             if (u.isEmpty() || p.isEmpty()) {
-                feedbackLabel.setText("Compila tutti i campi!");
+                feedbackLabel.setText("Compila tutti i campi");
                 return;
             }
             if (checkLogin(client, u, p)) {
@@ -130,13 +142,17 @@ public class RegLog {
             registerLink
         );
 
-        // Altezza FISSA per LOGIN (contenuto NON scorrevole)
         overlayPanel.setPrefHeight(290);
         overlayPanel.setMinHeight(290);
         overlayPanel.setMaxHeight(290);
         overlayPanel.setCenter(content);
     }
 
+    /**
+     * Configura e mostra il modulo di registrazione all'interno dell'overlay.
+     * Gestisce la raccolta dei dati anagrafici (nome, cognome, CF, email) e delle
+     * credenziali, effettuando la chiamata di registrazione al server.
+     */
     public void showSignUpFormInOverlay() {
         if (overlay == null) return;
         VBox content = new VBox(6);
@@ -164,6 +180,7 @@ public class RegLog {
         PasswordField passwordField = new PasswordField(); passwordField.setPromptText("Password");
         passwordField.getStyleClass().add("reglog-field");
         Label feedbackLabel = new Label();
+        feedbackLabel.setStyle("-fx-text-fill: #E21A1A;");
 
         Button registerButton = new Button("Registrati");
         registerButton.getStyleClass().add("reglog-primary-button");
@@ -176,11 +193,11 @@ public class RegLog {
             String email = emailField.getText().trim();
             String password = passwordField.getText().trim();
             if (nome.isEmpty() || cognome.isEmpty() || username.isEmpty() || cf.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                feedbackLabel.setText("Compila tutti i campi!");
+                feedbackLabel.setText("Compila tutti i campi");
                 return;
             }
             if (!signUp(client, username, nome, cognome, cf, email, password)) {
-                feedbackLabel.setText("Username già esistente!");
+                feedbackLabel.setText("Username già esistente");
                 return;
             }
             root.setUsername(username);
@@ -213,13 +230,20 @@ public class RegLog {
             loginLink
         );
 
-        // Altezza FISSA diversa per SIGN UP (contenuto NON scorrevole)
         overlayPanel.setPrefHeight(460);
         overlayPanel.setMinHeight(460);
         overlayPanel.setMaxHeight(460);
         overlayPanel.setCenter(content);
     }
 
+    /**
+     * Invia una richiesta di login al server e ne analizza la risposta.
+     *
+     * @param client   L'istanza del client.
+     * @param username Lo username inserito dall'utente.
+     * @param password La password inserita dall'utente.
+     * @return {@code true} se le credenziali sono valide (codice di ritorno 0), {@code false} altrimenti.
+     */
     private boolean checkLogin(Client client, String username, String password) {
         String risposta = client.send("login;" + username + ";" + password);
         if (risposta == null || !risposta.contains(";")) return false;
@@ -227,6 +251,18 @@ public class RegLog {
         return parts.length >= 2 && parts[1].trim().equals("0");
     }
 
+    /**
+     * Invia una richiesta di registrazione nuovo utente al server.
+     *
+     * @param client   L'istanza del client.
+     * @param username Lo username scelto.
+     * @param name     Il nome dell'utente.
+     * @param surname  Il cognome dell'utente.
+     * @param taxId    Il codice fiscale dell'utente.
+     * @param email    L'indirizzo email dell'utente.
+     * @param password La password scelta.
+     * @return {@code true} se la registrazione ha avuto successo (risposta OK), {@code false} se l'utente esiste già o in caso di errore.
+     */
     private boolean signUp(Client client, String username, String name, String surname, String taxId, String email, String password) {
         String comando = "sign_up;" + username + ";" + name + ";" + surname + ";" + taxId + ";" + email + ";" + password;
         String risposta = client.send(comando);

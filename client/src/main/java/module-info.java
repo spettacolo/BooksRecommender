@@ -5,7 +5,6 @@ module booksrecommender.client {
     requires booksrecommender.common;
     requires java.desktop;
     requires javafx.graphics;
-    //requires booksrecommender.client;
 
     exports ONA.booksrecommender.client;
     exports ONA.booksrecommender.client.view;

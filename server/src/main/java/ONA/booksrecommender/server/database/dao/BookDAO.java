@@ -18,19 +18,32 @@ import java.net.http.HttpResponse;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
-//import com.fasterxml.jackson.databind.JsonNode;
-//import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.IOException;
 
 public class BookDAO extends BaseDAO implements AutoCloseable {
     private HttpClient client;
 
+    /**
+     * Costruttore della classe BookDAO.
+     * Inizializza l'accesso ai dati per i libri e configura un {@link HttpClient} per eventuali
+     * integrazioni esterne (sebbene la logica attuale si basi principalmente su query SQL).
+     *
+     * @param logger     L'istanza di {@link Logger} per tracciare le query.
+     * @param connection La connessione attiva al database.
+     */
     public BookDAO(Logger logger, Connection connection) {
         super(logger, connection);
         this.client = HttpClient.newHttpClient();
     }
 
+    /**
+     * Recupera un singolo libro dal database partendo dal suo ID univoco.
+     * Esegue il caricamento pigro degli autori e dell'URL della copertina tramite
+     * chiamate a metodi specializzati, assemblando l'oggetto {@link Book} completo.
+     *
+     * @param id L'identificativo del libro.
+     * @return Un oggetto {@link Book} se trovato, {@code null} altrimenti.
+     */
     public Book getBook(int id) {
         String query = "SELECT * FROM books WHERE book_id = ?";
 
@@ -72,6 +85,12 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
         }
     }
 
+    /**
+     * Recupera una lista di libri corrispondenti a un elenco di identificativi.
+     *
+     * @param ids La lista di ID dei libri da recuperare.
+     * @return Una lista di oggetti {@link Book} popolati.
+     */
     public List<Book> getBooks(List<Integer> ids) {
         List<Book> books = new ArrayList<>();
         if (ids == null) {
@@ -91,6 +110,13 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
         }
     }
 
+    /**
+     * Esegue una ricerca testuale per titolo utilizzando l'operatore {@code ILIKE}.
+     * I risultati sono ordinati per anno di pubblicazione crescente e limitati a 20 occorrenze.
+     *
+     * @param title Il titolo (o parte di esso) da cercare.
+     * @return Una lista di libri che corrispondono ai criteri di ricerca.
+     */
     public List<Book> getBooks(String title) {
         List<Book> books = new ArrayList<>();
         if (title == null) {
@@ -138,6 +164,15 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
         }
     }
 
+    /**
+     * Recupera libri basandosi sulla categoria o sulla popolarità.
+     * Se la categoria è "none", restituisce i libri più popolari basandosi sulla frequenza
+     * nelle librerie degli utenti. Altrimenti, restituisce libri casuali della categoria specificata.
+     *
+     * @param category La categoria dei libri (o "none" per i più popolari).
+     * @param limit    Il numero massimo di risultati da restituire.
+     * @return Una lista di libri filtrati.
+     */
     public List<Book> getBooks(String category, int limit) {
         List<Book> books = new ArrayList<>();
         if (category == null) {
@@ -201,89 +236,12 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
         }
     }
 
-    /*public String getBookImageUrl(String title) {
-        String req = "https://www.googleapis.com/books/v1/volumes?q=" + title;
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(req))
-                .GET()
-                .build();
-        try {
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-            try {
-                ObjectMapper mapper = new ObjectMapper();
-                String jsonResponse = response.body();
-                JsonNode rootNode = mapper.readTree(jsonResponse);
-                JsonNode itemsNode = rootNode.get("items");
-
-                String selfLinkValue = null;
-
-                if (itemsNode != null && itemsNode.isArray() && !itemsNode.isEmpty()) {
-                    JsonNode firstItem = itemsNode.get(0);
-                    JsonNode selfLinkNode = firstItem.get("selfLink");
-
-                    if (selfLinkNode != null) {
-                        selfLinkValue = selfLinkNode.asText();
-
-                        HttpRequest secondRequest = HttpRequest.newBuilder()
-                                .uri(URI.create(selfLinkValue))
-                                .GET()
-                                .build();
-                        HttpResponse<String> secondResponse = client.send(secondRequest, HttpResponse.BodyHandlers.ofString());
-                        String detailedJson = secondResponse.body();
-                        ObjectMapper mapper2 = new ObjectMapper();
-                        JsonNode detailedRootNode = mapper2.readTree(detailedJson);
-
-                        JsonNode imageLinksNode = detailedRootNode
-                                .path("volumeInfo")
-                                .path("imageLinks");
-
-                        JsonNode imageNode = imageLinksNode.path("extraLarge");
-
-                        if (imageNode.isMissingNode()) {
-                            imageNode = imageLinksNode.path("large");
-                        }
-
-                        if (imageNode.isMissingNode()) {
-                            imageNode = imageLinksNode.path("medium");
-                        }
-
-                        if (imageNode.isMissingNode()) {
-                            imageNode = imageLinksNode.path("small");
-                        }
-
-                        if (imageNode.isMissingNode()) {
-                            imageNode = imageLinksNode.path("thumbnail");
-                        }
-
-                        if (imageNode.isMissingNode()) {
-                            imageNode = imageLinksNode.path("smallThumbnail");
-                        }
-
-                        if (imageNode != null) {
-                            System.out.println(imageNode.asText());
-                            return imageNode.asText();
-                        } else {
-                            System.out.println("URL immagine non trovato nel dettaglio del volume. Uso placeholder");
-                            return "https://i.ibb.co/QLTNDQc/bookplaceholder.png";
-                        }
-                    } else {
-                        System.out.println("Il campo 'selfLink' non è stato trovato nel primo elemento.");
-                        return "https://i.ibb.co/QLTNDQc/bookplaceholder.png";
-                    }
-                } else {
-                    System.out.println("L'array 'items' non esiste o è vuoto.");
-                    return "https://i.ibb.co/QLTNDQc/bookplaceholder.png";
-                }
-            } catch (IOException e) {
-                System.err.println("Errore durante il parsing JSON: " + e.getMessage());
-            }
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }*/
-
+    /**
+     * Recupera l'URL dell'immagine di copertina associata a un libro specifico.
+     *
+     * @param book_id L'ID del libro.
+     * @return La stringa dell'URL dell'immagine, o {@code null} se non presente.
+     */
     public String getBookImageUrl(int book_id) {
         String query = "SELECT image_url " +
                 "FROM book_images " +
@@ -305,35 +263,15 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
         }
     }
 
-    /*  =^.^=
-    public List<Book> getAuthorBooks(String author) {
-        String query = "SELECT ba.book_id " +
-                "FROM authors a " +
-                "JOIN book_authors ba ON a.author_id = ba.author_id " +
-                "WHERE a.author_name = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, author);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                List<Book> books = new ArrayList<>();
-
-                while (rs.next()) {
-                    Book book = getBook(rs.getInt("book_id"));
-                    if (book != null) {
-                        books.add(book);
-                    }
-                }
-
-                return books;
-            }
-        } catch (SQLException e) {
-            logger.log("Error during book retrieval: " + e.getMessage());
-            return new ArrayList<>();
-        }
-    }
-    */
-
+    /**
+     * Recupera i libri scritti da un determinato autore con supporto alla paginazione.
+     * La query esegue join tra le tabelle {@code authors}, {@code book_authors} e {@code books}.
+     *
+     * @param author Il nome dell'autore (anche parziale).
+     * @param limit  Numero di risultati per pagina.
+     * @param offset Punto di inizio per la paginazione.
+     * @return Una lista di libri dell'autore specificato, ordinati dal più recente.
+     */
     public List<Book> getAuthorBooks(String author, int limit, int offset) {
         String query = "SELECT ba.book_id " +
                 "FROM authors a " +
@@ -362,6 +300,12 @@ public class BookDAO extends BaseDAO implements AutoCloseable {
         }
     }
 
+    /**
+     * Recupera i nomi di tutti gli autori associati a un singolo libro.
+     *
+     * @param id L'identificativo del libro.
+     * @return Una lista di stringhe contenente i nomi degli autori.
+     */
     public List<String> getBookAuthors(int id) {
         String authorsQuery = "SELECT a.author_name " +
                 "FROM authors a " +

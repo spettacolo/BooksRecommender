@@ -11,6 +11,14 @@ import javafx.scene.control.TextArea;
 
 public class UnLoggedView extends VBox {
 
+    /**
+     * Costruttore della vista laterale per utenti non autenticati.
+     * Configura i link di navigazione di base (Home) e i trigger per l'autenticazione.
+     * Se l'utente tenta di accedere a funzioni riservate (come la gestione delle librerie),
+     * viene mostrato l'overlay di login/registrazione tramite il controller {@link RegLog}.
+     *
+     * @param root Il riferimento alla {@link RootView} per la gestione della navigazione e degli overlay.
+     */
     public UnLoggedView(RootView root) {
         this.setSpacing(10);
 

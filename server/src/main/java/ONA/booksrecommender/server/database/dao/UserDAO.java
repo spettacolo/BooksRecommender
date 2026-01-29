@@ -1,7 +1,6 @@
 package ONA.booksrecommender.server.database.dao;
 
 import ONA.booksrecommender.objects.User;
-import ONA.booksrecommender.server.errors.UserNotFoundException;
 import ONA.booksrecommender.utils.Logger;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -12,10 +11,28 @@ import java.sql.SQLException;
 
 public class UserDAO extends BaseDAO implements AutoCloseable {
 
+    /**
+     * Costruttore della classe UserDAO.
+     * Inizializza l'accesso ai dati per la gestione delle utenze, sfruttando la
+     * connessione fornita da {@link BaseDAO}.
+     *
+     * @param logger     L'istanza di {@link Logger} per registrare tentativi di accesso e operazioni.
+     * @param connection La connessione attiva al database PostgreSQL.
+     */
     public UserDAO(Logger logger, Connection connection) {
         super(logger, connection); // crea la connessione nel costruttore di BaseDAO
     }
 
+    /**
+     * Recupera i dati di un utente dal database tramite lo username.
+     * Il metodo supporta una modalità di recupero differenziata: se viene richiesto per il login,
+     * include l'hash della password nell'oggetto restituito; altrimenti, restituisce un
+     * profilo pubblico/informativo con il campo password nullo.
+     *
+     * @param userId Lo username dell'utente da cercare.
+     * @param login  Flag booleano: se {@code true}, carica anche l'hash della password.
+     * @return Un oggetto {@link User} se trovato, {@code null} altrimenti.
+     */
     public User getUser(String userId, boolean login) {
         String query;
 
@@ -28,18 +45,9 @@ public class UserDAO extends BaseDAO implements AutoCloseable {
             PreparedStatement stmt = connection.prepareStatement(query);
             stmt.setString(1, userId);
 
-            //ResultSet rs = stmt.executeQuery();
-
-            /*if (!rs.next()) {
-                return null;
-            }*/
-
-            //logger.log(rs.getString("username"));
-            //return new User(rs.getString("username"), rs.getString("name"), rs.getString("surname"), rs.getString("tax_code"), rs.getString("email"), login ? rs.getString("password") : null);
-
             try (ResultSet rs = stmt.executeQuery()) {
                 if (!rs.next()) {
-                    return null; // nessun utente trovato
+                    return null;
                 }
                 return new User(
                         rs.getString("username"),
@@ -51,12 +59,25 @@ public class UserDAO extends BaseDAO implements AutoCloseable {
                 );
             }
         } catch (SQLException e) {
-            // e.printStackTrace();
             logger.log("Error during login: " + e.getMessage());
             return null;
         }
     }
 
+    /**
+     * Gestisce la procedura di autenticazione dell'utente.
+     * Recupera l'hash memorizzato nel database e lo confronta con la password fornita in chiaro
+     * utilizzando {@link BCryptPasswordEncoder}.
+     *
+     * @param userId   Lo username fornito dall'utente.
+     * @param password La password in chiaro da verificare.
+     * @return Un codice intero:
+     * <ul>
+     * <li>{@code 0}: Autenticazione riuscita.</li>
+     * <li>{@code -2}: Password errata.</li>
+     * <li>{@code -3}: Utente non trovato o errore di sistema.</li>
+     * </ul>
+     */
     public int login(String userId, String password) {
         try {
             User user = getUser(userId, true);
@@ -65,36 +86,41 @@ public class UserDAO extends BaseDAO implements AutoCloseable {
                 return -3;
 
             BCryptPasswordEncoder passwordManager = new BCryptPasswordEncoder();
-            // Verifica della password
             boolean isMatch = passwordManager.matches(password, user.getPassword());
 
-            // if (!user.getPassword().equals(password)) return -2;
             if (!isMatch) return -2;
 
             return 0;
         } catch (Exception e) {
-            // e.printStackTrace();
             logger.log("Error during user retrieval: " + e.getMessage());
             return -3;
         }
     }
 
-    // TODO: fixare con getUser
+    /**
+     * Registra un nuovo utente nel sistema.
+     * Verifica preventivamente che lo username non sia già occupato. Prima dell'inserimento,
+     * la password viene cifrata in modo sicuro tramite l'algoritmo BCrypt.
+     *
+     * @param userId     Username univoco scelto dall'utente.
+     * @param name       Nome dell'utente.
+     * @param surname    Cognome dell'utente.
+     * @param fiscalCode Codice Fiscale dell'utente.
+     * @param email      Indirizzo email dell'utente.
+     * @param password   Password in chiaro che verrà hashata prima del salvataggio.
+     * @return {@code true} se la registrazione è avvenuta con successo, {@code false} se lo username esiste già o per errori SQL.
+     */
     public boolean signUpUser(String userId, String name, String surname, String fiscalCode, String email, String password) {
         String insertQuery = "INSERT INTO users(username, name, surname, tax_code, email, password) VALUES (?, ?, ?, ?, ?, ?)";
         try {
             User user = getUser(userId, false);
 
             if (user != null) {
-                return false; // User already exists
+                return false;
             }
 
             BCryptPasswordEncoder passwordManager = new BCryptPasswordEncoder();
-            // Hash the password
-            // The BCrypt algorithm handles salting internally, making it easy to use.
             String hashedPassword = passwordManager.encode(password);
-            // Verifica che la password sia stata cryptata correttamente
-            // boolean isMatch = passwordEncoder.matches(password, hashedPassword);
 
             try (PreparedStatement insertStmt = connection.prepareStatement(insertQuery)) {
                 insertStmt.setString(1, userId);
@@ -109,7 +135,6 @@ public class UserDAO extends BaseDAO implements AutoCloseable {
             }
 
         } catch (SQLException e) {
-            // e.printStackTrace();
             logger.log("Error during user signup: " + e.getMessage());
             return false;
         }

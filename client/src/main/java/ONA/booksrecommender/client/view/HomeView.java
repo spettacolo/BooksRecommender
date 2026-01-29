@@ -2,16 +2,12 @@ package ONA.booksrecommender.client.view;
 
 import ONA.booksrecommender.client.Client;
 import ONA.booksrecommender.client.controller.SearchHandler;
-import ONA.booksrecommender.client.view.BookDetails;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.*;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.concurrent.Task;
 import javafx.application.Platform;
-import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.Region;
 import javafx.geometry.Pos;
 
@@ -21,26 +17,32 @@ public class HomeView extends VBox {
     private SearchHandler searchHandler;
     private Client client;
     private HBox searchBar;
-    private StackPane overlayContainer; // aggiunto campo overlayContainer
+    private StackPane overlayContainer;
 
+    /**
+     * Costruttore della vista Home.
+     * Inizializza il layout principale, configura il gestore delle ricerche e organizza
+     * la gerarchia visiva includendo la barra di ricerca nell'header e il contenitore
+     * per gli overlay dei dettagli libro.
+     *
+     * @param root Il riferimento alla {@link RootView} per accedere al client e alla gestione dei contenuti.
+     */
     public HomeView(RootView root) {
         this.client = root.getClient();
-
-        // HomeView deve riempire tutto lo spazio
         this.setFillWidth(true);
 
         searchHandler = new SearchHandler(client);
-
         ScrollPane mainContentPane = createMainContent();
 
+        // Overlay per mostrare i dettagli dei libri sopra la Home senza cambiare pagina
         overlayContainer = new StackPane();
         overlayContainer.setPickOnBounds(false);
 
+        // StackPane per tenere i contenuti e i popup nello stesso livello visivo
         StackPane mainStack = new StackPane(mainContentPane, overlayContainer);
 
+        // Preparazione della barra di ricerca e piazzamento nell'angolo a destra dell'header
         searchBar = searchHandler.createSearchBar(root);
-
-        // Add searchBar to the header inside mainContent
         HBox header = (HBox) mainContent.getChildren().get(0);
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -49,6 +51,13 @@ public class HomeView extends VBox {
         this.getChildren().add(mainStack);
     }
 
+    /**
+     * Crea il contenitore principale scorrevole della Home.
+     * Genera l'header della pagina e inizializza le diverse sezioni (mensole) divise
+     * per genere letterario, inserendole in uno {@link ScrollPane}.
+     *
+     * @return Uno {@link ScrollPane} contenente l'intera struttura della Home.
+     */
     private ScrollPane createMainContent() {
         mainContent = new VBox();
         mainContent.setFillWidth(true);
@@ -81,6 +90,14 @@ public class HomeView extends VBox {
         return scrollPane;
     }
 
+    /**
+     * Crea una sezione dedicata a un genere specifico o ai libri più popolari.
+     * Ogni sezione include un titolo (sottotitolo della categoria) e una riga
+     * a scorrimento orizzontale contenente le copertine dei libri.
+     *
+     * @param genreName Il nome del genere da visualizzare (usa "none" per i più popolari).
+     * @return Un {@link VBox} che rappresenta la "mensola" del genere specificato.
+     */
     private VBox createGenreSection(String genreName) {
         VBox section = new VBox();
         section.getStyleClass().add("genre-section");
@@ -90,19 +107,28 @@ public class HomeView extends VBox {
         Label subtitle;
         if ("none".equals(genreName)) {
             subtitle = new Label("I più popolari >");
-            subtitle.getStyleClass().add("genre-subtitle");
-
         } else {
             subtitle = new Label(genreName + " >");
-            subtitle.getStyleClass().add("genre-subtitle");
         }
+        subtitle.getStyleClass().add("genre-subtitle");
         subtitle.setPadding(new Insets(0, 0, 0, 10));
+
         ScrollPane booksScroll = createGenreBooksScroll(genreName);
 
         section.getChildren().addAll(subtitle, booksScroll);
         return section;
     }
 
+    /**
+     * Genera la riga orizzontale scorrevole dei libri per un determinato genere.
+     * Il caricamento dei dati avviene in modo asincrono tramite un {@link Task} per
+     * non bloccare il thread dell'interfaccia utente durante la comunicazione con il server.
+     * All'interno del task, ogni libro viene trasformato in una card cliccabile che
+     * apre l'overlay dei dettagli.
+     *
+     * @param genreName Il genere di cui recuperare i libri tramite il server.
+     * @return Uno {@link ScrollPane} configurato per lo scorrimento orizzontale dei libri.
+     */
     private ScrollPane createGenreBooksScroll(String genreName) {
         HBox row = new HBox(30);
         row.setAlignment(Pos.BOTTOM_CENTER);
@@ -113,14 +139,12 @@ public class HomeView extends VBox {
         wrapper.setFillWidth(true);
 
         ScrollPane scroll = new ScrollPane();
-        scroll.setFitToHeight(false);
         scroll.getStyleClass().add("books-scroll");
-
         scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scroll.setPannable(true);
         scroll.setContent(wrapper);
 
+        // Task eseguito fuori dal thread FX per non bloccare l'interfaccia
         Task<Void> task = new Task<>() {
             @Override
             protected Void call() {

@@ -12,7 +12,6 @@ public class Library {
     private int id;
     private String name;
     private String userId;
-    //private List<String> bookIds; // TODO: cambiare da lista di String a lista di Book
     private List<Book> books;
 
     /**
